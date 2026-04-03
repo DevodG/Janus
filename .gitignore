@@ -6,4 +6,11 @@ frontend/.next/
 **/__pycache__/
 *.pyc
 backend/app/data/memory/*.json
+backend/app/data/simulations/*.json
 backend/app/data/logs/*
+backend/app/data/knowledge/*.json
+backend/app/data/skills/*.json
+backend/app/data/prompt_versions/*.json
+backend/app/data/learning/*.json
+.venv/
+*.log
