@@ -114,72 +114,72 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 3: Agent Enhancement with Domain Intelligence
 
-- [ ] 7. Enhance Switchboard with domain detection
-  - [ ] 7.1 Add domain pack dimension to routing
+- [x] 7. Enhance Switchboard with domain detection
+  - [x] 7.1 Add domain pack dimension to routing
     - Modify `backend/app/agents/switchboard.py` to add domain_pack to routing decision
     - Implement domain detection using domain registry
     - Update RouteDecision schema in `backend/app/schemas.py`
     - _Requirements: 4.1, 5.6_
   
-  - [ ] 7.2 Implement complexity-based routing logic
+  - [x] 7.2 Implement complexity-based routing logic
     - Ensure simple queries (≤5 words) route to solo mode
     - Ensure medium queries (≤25 words) route to standard mode
     - Ensure complex queries (>25 words) route to deep mode
     - _Requirements: 4.2, 4.3, 4.4_
   
-  - [ ] 7.3 Implement simulation keyword detection
+  - [x] 7.3 Implement simulation keyword detection
     - Add simulation trigger keyword detection
     - Load keywords from environment configuration
     - Set task_family="simulation" when keywords detected
     - _Requirements: 4.5, 4.6, 4.7_
 
-- [ ] 8. Enhance Research Agent with domain capabilities
-  - [ ] 8.1 Integrate domain pack research enhancement
+- [x] 8. Enhance Research Agent with domain capabilities
+  - [x] 8.1 Integrate domain pack research enhancement
     - Modify `backend/app/agents/research.py` to detect domain
     - Call domain pack enhance_research() when domain detected
     - Add structured entity extraction output
     - _Requirements: 5.3, 7.1, 7.2, 7.3, 7.4_
   
-  - [ ] 8.2 Update research agent prompt
+  - [x] 8.2 Update research agent prompt
     - Update `backend/app/prompts/research.txt` with domain intelligence instructions
     - Add instructions for entity and ticker extraction
     - Add instructions for structured output
     - _Requirements: 7.14_
 
-- [ ] 9. Enhance Verifier Agent with domain capabilities
-  - [ ] 9.1 Integrate domain pack verification enhancement
+- [x] 9. Enhance Verifier Agent with domain capabilities
+  - [x] 9.1 Integrate domain pack verification enhancement
     - Modify `backend/app/agents/verifier.py` to detect domain
     - Call domain pack enhance_verification() when domain detected
     - Add structured credibility scoring output
     - _Requirements: 5.3, 7.7, 7.8, 7.9_
   
-  - [ ] 9.2 Update verifier agent prompt
+  - [x] 9.2 Update verifier agent prompt
     - Update `backend/app/prompts/verifier.txt` with domain intelligence instructions
     - Add instructions for rumor and scam detection
     - Add instructions for uncertainty surfacing
     - _Requirements: 7.14_
 
-- [ ] 10. Enhance Planner and Synthesizer Agents
-  - [ ] 10.1 Add simulation mode suggestion to Planner
+- [x] 10. Enhance Planner and Synthesizer Agents
+  - [x] 10.1 Add simulation mode suggestion to Planner
     - Modify `backend/app/agents/planner.py` to detect simulation opportunities
     - Add simulation_suggested field to output
     - Update `backend/app/prompts/planner.txt` with simulation guidance
     - _Requirements: 7.6, 7.14_
   
-  - [ ] 10.2 Add uncertainty quantification to Synthesizer
+  - [x] 10.2 Add uncertainty quantification to Synthesizer
     - Modify `backend/app/agents/synthesizer.py` to quantify uncertainty
     - Add simulation recommendation logic
     - Update `backend/app/prompts/synthesizer.txt` with uncertainty instructions
     - _Requirements: 7.11, 7.12, 7.13, 7.14_
 
-- [ ] 11. Update graph execution with domain context
-  - [ ] 11.1 Pass domain pack context through pipeline
+- [x] 11. Update graph execution with domain context
+  - [x] 11.1 Pass domain pack context through pipeline
     - Modify `backend/app/graph.py` to detect domain early
     - Pass domain context to all agents
     - Ensure domain-enhanced execution flows correctly
     - _Requirements: 2.5, 5.3, 7.15_
 
-- [ ] 12. Checkpoint - Verify agent enhancements
+- [x] 12. Checkpoint - Verify agent enhancements
   - Ensure Switchboard detects finance domain correctly
   - Verify Research agent extracts entities and tickers
   - Verify Verifier agent scores credibility
@@ -188,32 +188,32 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 4: Simulation Integration Enhancement
 
-- [ ] 13. Enhance simulation workflow and case linking
-  - [ ] 13.1 Add case linking to simulation router
+- [x] 13. Enhance simulation workflow and case linking
+  - [x] 13.1 Add case linking to simulation router
     - Modify `backend/app/routers/simulation.py` to link case_id
     - Improve error messages for MiroFish failures
     - Add better status reporting
     - _Requirements: 8.1, 8.11, 8.12_
   
-  - [ ] 13.2 Enhance simulation store with search and filtering
+  - [x] 13.2 Enhance simulation store with search and filtering
     - Modify `backend/app/services/simulation_store.py`
     - Add simulation search by title or prediction_goal
     - Add simulation filtering by status
     - _Requirements: 8.10_
   
-  - [ ] 13.3 Update case storage for simulation linking
+  - [x] 13.3 Update case storage for simulation linking
     - Modify `backend/app/services/case_store.py` to add simulation_id field
     - Add case-to-simulation lookup functionality
     - Update CaseRecord schema in `backend/app/schemas.py`
     - _Requirements: 10.8, 14.9_
   
-  - [ ] 13.4 Add simulation workflow to graph execution
+  - [x] 13.4 Add simulation workflow to graph execution
     - Modify `backend/app/graph.py` to add simulation handoff logic
     - Add simulation result synthesis
     - Ensure simulation results flow into final answer
     - _Requirements: 3.4, 8.13_
 
-- [ ] 14. Checkpoint - Verify simulation integration
+- [x] 14. Checkpoint - Verify simulation integration
   - Ensure simulation requests create linked cases
   - Verify cases with simulations show simulation_id
   - Verify simulation results are synthesized correctly
@@ -221,8 +221,8 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 5: API Discovery Subsystem
 
-- [ ] 15. Create API discovery infrastructure
-  - [ ] 15.1 Create API discovery structure
+- [x] 15. Create API discovery infrastructure
+  - [x] 15.1 Create API discovery structure
     - Create `backend/app/services/api_discovery/__init__.py`
     - Create `backend/app/services/api_discovery/catalog_loader.py`
     - Create `backend/app/services/api_discovery/classifier.py`
@@ -230,12 +230,12 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Create `backend/app/services/api_discovery/metadata_store.py`
     - _Requirements: 9.3, 9.4_
   
-  - [ ] 15.2 Implement catalog loader
+  - [x] 15.2 Implement catalog loader
     - Implement load_public_apis_catalog() to fetch from GitHub or local cache
     - Parse API entries with name, description, auth, HTTPS, CORS, category, link
     - _Requirements: 9.3, 9.6_
   
-  - [ ] 15.3 Implement API classifier and scorer
+  - [x] 15.3 Implement API classifier and scorer
     - Implement classify_api() to categorize APIs by domain
     - Implement score_api_usefulness() to prioritize APIs for integration
     - Consider auth simplicity, HTTPS, CORS, category relevance
@@ -247,7 +247,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Add `GET /api-discovery/top-scored` endpoint
     - _Requirements: 9.4_
 
-- [ ] 16. Checkpoint - Verify API discovery
+- [x] 16. Checkpoint - Verify API discovery
   - Ensure catalog loads successfully
   - Verify APIs are classified correctly
   - Verify scoring produces reasonable priorities
@@ -255,94 +255,94 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 6: Frontend Enhancement
 
-- [ ] 17. Create layout and navigation infrastructure
-  - [ ] 17.1 Create layout components
+- [x] 17. Create layout and navigation infrastructure
+  - [x] 17.1 Create layout components
     - Create `frontend/src/components/layout/Header.tsx` with branding and navigation
     - Create `frontend/src/components/layout/Navigation.tsx` with tab navigation
     - Modify `frontend/src/app/layout.tsx` to use new layout components
     - _Requirements: 12.1, 12.2_
   
-  - [ ] 17.2 Create common UI components
+  - [x] 17.2 Create common UI components
     - Create `frontend/src/components/common/Badge.tsx` for status indicators
     - Create `frontend/src/components/common/Card.tsx` for content containers
     - Create `frontend/src/components/common/LoadingSpinner.tsx` for loading states
     - Create `frontend/src/components/common/ErrorMessage.tsx` for error display
     - _Requirements: 12.10, 12.11, 12.15_
   
-  - [ ] 17.3 Create API client and type definitions
+  - [x] 17.3 Create API client and type definitions
     - Create `frontend/src/lib/api.ts` with MiroOrgClient class
     - Implement methods for all backend endpoints
     - Create `frontend/src/lib/types.ts` with TypeScript interfaces
     - _Requirements: 11.21_
 
-- [ ] 18. Create Main Dashboard page
-  - [ ] 18.1 Implement dashboard with system overview
+- [x] 18. Create Main Dashboard page
+  - [x] 18.1 Implement dashboard with system overview
     - Modify `frontend/src/app/page.tsx` to show quick stats
     - Display recent cases summary
     - Display system health status
     - Add navigation to main features
     - _Requirements: 12.2_
 
-- [ ] 19. Create Analyze page and components
-  - [ ] 19.1 Create Analyze page structure
+- [x] 19. Create Analyze page and components
+  - [x] 19.1 Create Analyze page structure
     - Create `frontend/src/app/analyze/page.tsx` with analysis interface
     - Create `frontend/src/components/analyze/TaskInput.tsx` for user input
     - Create `frontend/src/components/analyze/ModeSelector.tsx` for mode selection
     - _Requirements: 12.3, 12.7, 12.8_
   
-  - [ ] 19.2 Create result display components
+  - [x] 19.2 Create result display components
     - Create `frontend/src/components/analyze/ResultViewer.tsx` for final answers
     - Create `frontend/src/components/analyze/AgentOutputPanel.tsx` for agent outputs
     - Display route/debug badges and confidence indicators
     - _Requirements: 12.9, 12.10, 12.11, 12.14_
 
-- [ ] 20. Create Cases page and components
-  - [ ] 20.1 Create Cases history interface
+- [x] 20. Create Cases page and components
+  - [x] 20.1 Create Cases history interface
     - Create `frontend/src/app/cases/page.tsx` with case list
     - Create `frontend/src/components/cases/CaseList.tsx` for listing cases
     - Create `frontend/src/components/cases/CaseCard.tsx` for case preview
     - _Requirements: 12.4, 12.17_
   
-  - [ ] 20.2 Create Case detail view
+  - [x] 20.2 Create Case detail view
     - Create `frontend/src/app/cases/[id]/page.tsx` for case details
     - Create `frontend/src/components/cases/CaseDetail.tsx` for full case display
     - Display case_id, routing decision, agent outputs, timestamps
     - _Requirements: 12.17_
 
-- [ ] 21. Create Simulation page and components
-  - [ ] 21.1 Create Simulation submission interface
+- [x] 21. Create Simulation page and components
+  - [x] 21.1 Create Simulation submission interface
     - Create `frontend/src/app/simulation/page.tsx` with simulation form
     - Create `frontend/src/components/simulation/SimulationForm.tsx` for input
     - Create `frontend/src/components/simulation/SimulationStatus.tsx` for status display
     - _Requirements: 12.6, 12.13_
   
-  - [ ] 21.2 Create Simulation detail and chat interface
+  - [x] 21.2 Create Simulation detail and chat interface
     - Create `frontend/src/app/simulation/[id]/page.tsx` for simulation details
     - Create `frontend/src/components/simulation/SimulationReport.tsx` for report display
     - Create `frontend/src/components/simulation/SimulationChat.tsx` for post-simulation chat
     - _Requirements: 12.13_
 
-- [ ] 22. Create Prompt Lab and Config pages
-  - [ ] 22.1 Create Prompt Lab interface
+- [x] 22. Create Prompt Lab and Config pages
+  - [x] 22.1 Create Prompt Lab interface
     - Create `frontend/src/app/prompts/page.tsx` with prompt management
     - Create `frontend/src/components/prompts/PromptList.tsx` for listing prompts
     - Create `frontend/src/components/prompts/PromptEditor.tsx` for editing
     - _Requirements: 12.5_
   
-  - [ ] 22.2 Create Config page
+  - [x] 22.2 Create Config page
     - Create `frontend/src/app/config/page.tsx` with system configuration view
     - Display provider status, feature flags, health checks
     - _Requirements: 12.1_
 
-- [ ] 23. Implement dark theme and styling
-  - [ ] 23.1 Update global styles with dark theme
+- [x] 23. Implement dark theme and styling
+  - [x] 23.1 Update global styles with dark theme
     - Modify `frontend/src/app/globals.css` with dark color palette
     - Implement card-based structure with subtle borders
     - Add animations and transitions
     - Use Inter font family
     - _Requirements: 12.15, 12.16_
 
-- [ ] 24. Checkpoint - Verify frontend functionality
+- [x] 24. Checkpoint - Verify frontend functionality
   - Ensure all pages are accessible via navigation
   - Verify Analyze workflow works end-to-end
   - Verify Case history displays correctly
@@ -353,7 +353,7 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 7: Testing and Documentation
 
-- [ ] 25. Write unit tests for core functionality
+- [~] 25. Write unit tests for core functionality
   - [ ]* 25.1 Write provider abstraction tests
     - Test OpenRouter, Ollama, OpenAI provider calls
     - Test provider fallback behavior
@@ -388,7 +388,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Test error handling for disabled MiroFish
     - _Requirements: 8.1, 8.11, 8.12_
 
-- [ ] 26. Write property-based tests
+- [~] 26. Write property-based tests
   - [ ]* 26.1 Write Property 1: Configuration Environment Isolation
     - **Property 1: Configuration Environment Isolation**
     - **Validates: Requirements 1.8, 6.7**
@@ -479,7 +479,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Test that new domain packs don't require agent changes
     - Create mock domain pack and verify integration
 
-- [ ] 27. Write integration tests
+- [~] 27. Write integration tests
   - [ ]* 27.1 Write end-to-end case execution test
     - Test complete workflow from user input to final answer
     - Verify all agents execute correctly
@@ -502,8 +502,8 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Verify finance pack capabilities are used
     - _Requirements: 5.3, 7.1, 7.7_
 
-- [ ] 28. Create comprehensive documentation
-  - [ ] 28.1 Update main README
+- [x] 28. Create comprehensive documentation
+  - [x] 28.1 Update main README
     - Update `README.md` with architecture overview
     - Document four-layer architecture
     - Document agent roles and responsibilities
@@ -511,26 +511,26 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Add environment variable reference
     - _Requirements: 13.2, 13.3, 13.4, 13.10, 13.11, 13.12_
   
-  - [ ] 28.2 Create architecture documentation
+  - [x] 28.2 Create architecture documentation
     - Create `ARCHITECTURE.md` with detailed architecture description
     - Document component interactions
     - Document data flow
     - _Requirements: 13.10_
   
-  - [ ] 28.3 Create domain pack documentation
+  - [x] 28.3 Create domain pack documentation
     - Create `DOMAIN_PACKS.md` with domain pack integration guide
     - Document how to create new domain packs
     - Document finance pack capabilities
     - _Requirements: 13.13_
   
-  - [ ] 28.4 Create testing documentation
+  - [x] 28.4 Create testing documentation
     - Create `TESTING.md` with testing strategy and guidelines
     - Document unit test patterns
     - Document property-based test patterns
     - Document integration test patterns
     - _Requirements: 14.1, 14.2, 14.3_
   
-  - [ ] 28.5 Create deployment documentation
+  - [x] 28.5 Create deployment documentation
     - Create `DEPLOYMENT.md` with deployment instructions
     - Document environment setup
     - Document dependency installation
@@ -546,27 +546,27 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 8: Cleanup and Optimization
 
-- [ ] 30. Remove dead code and optimize performance
-  - [ ] 30.1 Clean up codebase
+- [x] 30. Remove dead code and optimize performance
+  - [x] 30.1 Clean up codebase
     - Remove unused imports across all files
     - Remove commented code
     - Remove duplicate implementations
     - _Requirements: 1.5_
   
-  - [ ] 30.2 Optimize external API performance
+  - [x] 30.2 Optimize external API performance
     - Add caching for market quotes with 5 minute TTL
     - Verify connection pooling is implemented
     - Verify request timeouts are configured
     - Add rate limiting for external APIs
     - _Requirements: 15.3, 15.4, 15.5, 15.6_
   
-  - [ ] 30.3 Polish error messages and logging
+  - [x] 30.3 Polish error messages and logging
     - Review all error messages for clarity and consistency
     - Review log levels for appropriateness
     - Add missing log entries for key operations
     - _Requirements: 9.3, 9.8_
   
-  - [ ] 30.4 Security review
+  - [x] 30.4 Security review
     - Verify no API keys in source code
     - Verify error messages don't leak internals
     - Verify input validation is comprehensive
@@ -579,7 +579,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Identify and address bottlenecks
     - _Requirements: 15.1, 15.2_
 
-- [ ] 31. Final checkpoint - System verification
+- [x] 31. Final checkpoint - System verification
   - Ensure no dead code remains
   - Verify performance meets requirements
   - Verify error messages are clear and consistent
@@ -589,15 +589,15 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 9: Autonomous Knowledge Evolution Layer
 
-- [ ] 32. Create learning subsystem infrastructure
-  - [ ] 32.1 Create learning service structure
+- [x] 32. Create learning subsystem infrastructure
+  - [x] 32.1 Create learning service structure
     - Create `backend/app/services/learning/__init__.py`
     - Create `backend/app/services/learning/knowledge_ingestor.py`
     - Create `backend/app/services/learning/knowledge_store.py`
     - Create `backend/app/services/learning/learning_engine.py`
     - _Requirements: 17.1, 17.2, 17.3_
   
-  - [ ] 32.2 Create additional learning services
+  - [x] 32.2 Create additional learning services
     - Create `backend/app/services/learning/prompt_optimizer.py`
     - Create `backend/app/services/learning/skill_distiller.py`
     - Create `backend/app/services/learning/trust_manager.py`
@@ -605,22 +605,22 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Create `backend/app/services/learning/scheduler.py`
     - _Requirements: 17.1, 17.17, 17.23, 17.28, 17.40_
   
-  - [ ] 32.3 Create data directories
+  - [x] 32.3 Create data directories
     - Create `backend/app/data/knowledge/` directory
     - Create `backend/app/data/skills/` directory
     - Create `backend/app/data/prompt_versions/` directory
     - Create `backend/app/data/learning/` directory
     - _Requirements: 17.33, 17.34, 17.35, 17.36_
 
-- [ ] 33. Implement knowledge ingestion and storage
-  - [ ] 33.1 Implement knowledge ingestion
+- [x] 33. Implement knowledge ingestion and storage
+  - [x] 33.1 Implement knowledge ingestion
     - Implement ingest_from_search() using Tavily API
     - Implement ingest_from_url() using Jina Reader
     - Implement ingest_from_news() using NewsAPI
     - Implement compress_content() for summarization (2-4KB limit)
     - _Requirements: 17.8, 17.9, 17.10, 17.11_
   
-  - [ ] 33.2 Implement knowledge store
+  - [x] 33.2 Implement knowledge store
     - Implement save_knowledge() with JSON storage
     - Implement get_knowledge() and search_knowledge()
     - Implement delete_expired_knowledge() with auto-cleanup
@@ -628,32 +628,32 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Implement LRU eviction when limit reached
     - _Requirements: 17.4, 17.5, 17.33, 17.38_
   
-  - [ ] 33.3 Add knowledge schemas
+  - [x] 33.3 Add knowledge schemas
     - Add KnowledgeItem schema to `backend/app/schemas.py`
     - Add validation for summary length (2-4KB)
     - Add trust_score and freshness_score fields
     - _Requirements: 17.9_
 
-- [ ] 34. Implement experience learning
-  - [ ] 34.1 Implement case learning
+- [x] 34. Implement experience learning
+  - [x] 34.1 Implement case learning
     - Implement learn_from_case() to extract metadata
     - Implement detect_patterns() for repeated patterns
     - Implement get_route_effectiveness() for routing insights
     - Implement get_prompt_performance() for prompt insights
     - _Requirements: 17.13, 17.14, 17.15, 17.16_
   
-  - [ ] 34.2 Add case learning schemas
+  - [x] 34.2 Add case learning schemas
     - Add CaseLearning schema to `backend/app/schemas.py`
     - Add fields for route_effectiveness, prompt_performance, provider_reliability
     - _Requirements: 17.13_
   
-  - [ ] 34.3 Hook learning into case save flow
+  - [x] 34.3 Hook learning into case save flow
     - Modify `backend/app/services/case_store.py` to call learn_from_case()
     - Store case learning metadata separately
     - _Requirements: 17.44_
 
-- [ ] 35. Implement prompt evolution
-  - [ ] 35.1 Implement prompt versioning
+- [x] 35. Implement prompt evolution
+  - [x] 35.1 Implement prompt versioning
     - Implement create_prompt_variant() using provider API
     - Implement test_prompt_variant() with quality metrics
     - Implement compare_prompts() for A/B testing
@@ -661,66 +661,66 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Implement archive_prompt() for old versions
     - _Requirements: 17.17, 17.18, 17.19, 17.20, 17.21, 17.22_
   
-  - [ ] 35.2 Add prompt version schemas
+  - [x] 35.2 Add prompt version schemas
     - Add PromptVersion schema to `backend/app/schemas.py`
     - Add fields for version, status, win_rate, test_count
     - _Requirements: 17.17_
   
-  - [ ] 35.3 Integrate with prompt management
+  - [x] 35.3 Integrate with prompt management
     - Hook prompt versions into prompt loading
     - Store prompt history in prompt_versions directory
     - _Requirements: 17.47_
 
-- [ ] 36. Implement skill distillation
-  - [ ] 36.1 Implement skill detection and creation
+- [x] 36. Implement skill distillation
+  - [x] 36.1 Implement skill detection and creation
     - Implement detect_skill_candidates() from patterns
     - Implement distill_skill() to create skill records
     - Implement test_skill() for validation
     - Implement apply_skill() for skill usage
     - _Requirements: 17.23, 17.24, 17.25, 17.26, 17.27_
   
-  - [ ] 36.2 Add skill schemas
+  - [x] 36.2 Add skill schemas
     - Add Skill schema to `backend/app/schemas.py`
     - Add fields for trigger_patterns, recommended_agents, preferred_sources
     - _Requirements: 17.24_
   
-  - [ ] 36.3 Integrate skills with agents
+  - [x] 36.3 Integrate skills with agents
     - Hook skill application into agent execution
     - Store skills in skills directory
     - _Requirements: 17.45_
 
-- [ ] 37. Implement trust and freshness management
-  - [ ] 37.1 Implement trust management
+- [x] 37. Implement trust and freshness management
+  - [x] 37.1 Implement trust management
     - Implement get_trust_score() and update_trust()
     - Implement list_trusted_sources() and list_untrusted_sources()
     - Track verification outcomes
     - _Requirements: 17.28, 17.29, 17.30, 17.31, 17.32_
   
-  - [ ] 37.2 Implement freshness management
+  - [x] 37.2 Implement freshness management
     - Implement calculate_freshness() with domain-specific rules
     - Implement update_freshness() and get_stale_items()
     - Implement recommend_refresh() for stale items
     - _Requirements: 17.28, 17.29, 17.30, 17.31_
   
-  - [ ] 37.3 Add trust and freshness schemas
+  - [x] 37.3 Add trust and freshness schemas
     - Add SourceTrust schema to `backend/app/schemas.py`
     - Add FreshnessScore schema to `backend/app/schemas.py`
     - _Requirements: 17.28_
   
-  - [ ] 37.4 Integrate with source selection
+  - [x] 37.4 Integrate with source selection
     - Hook trust scores into research agent source selection
     - Hook freshness scores into knowledge retrieval
     - _Requirements: 17.46_
 
-- [ ] 38. Implement learning scheduler
-  - [ ] 38.1 Implement scheduler with safeguards
+- [x] 38. Implement learning scheduler
+  - [x] 38.1 Implement scheduler with safeguards
     - Implement schedule_task() with interval configuration
     - Implement is_system_idle() to check CPU usage
     - Implement is_battery_ok() to check battery level
     - Implement run_once() for manual triggers
     - _Requirements: 17.40, 17.41, 17.42, 17.43_
   
-  - [ ] 38.2 Add scheduled tasks
+  - [x] 38.2 Add scheduled tasks
     - Schedule knowledge ingestion (every 6 hours)
     - Schedule expired knowledge cleanup (daily)
     - Schedule pattern detection (daily)
@@ -728,7 +728,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Schedule prompt optimization (weekly)
     - _Requirements: 17.6, 17.7, 17.40_
   
-  - [ ] 38.3 Add scheduler configuration
+  - [x] 38.3 Add scheduler configuration
     - Add LEARNING_ENABLED flag to config
     - Add KNOWLEDGE_MAX_SIZE_MB (default 200)
     - Add LEARNING_SCHEDULE_INTERVAL
@@ -736,53 +736,53 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Add domain-specific expiration rules
     - _Requirements: 17.4, 17.5, 17.6, 17.7, 17.12_
 
-- [ ] 39. Add learning API endpoints
-  - [ ] 39.1 Add learning status endpoints
+- [x] 39. Add learning API endpoints
+  - [x] 39.1 Add learning status endpoints
     - Add GET /learning/status endpoint
     - Add POST /learning/run-once endpoint
     - Add GET /learning/insights endpoint
     - _Requirements: 17.49, 17.50, 17.51_
   
-  - [ ] 39.2 Add knowledge endpoints
+  - [x] 39.2 Add knowledge endpoints
     - Add GET /knowledge endpoint for listing
     - Add GET /knowledge/{item_id} endpoint for details
     - Add GET /knowledge/search endpoint with query parameter
     - _Requirements: 17.52, 17.53, 17.54_
   
-  - [ ] 39.3 Add skill endpoints
+  - [x] 39.3 Add skill endpoints
     - Add GET /skills endpoint for listing
     - Add GET /skills/{skill_name} endpoint for details
     - Add POST /skills/distill endpoint for manual distillation
     - _Requirements: 17.55, 17.56, 17.57_
   
-  - [ ] 39.4 Add trust and freshness endpoints
+  - [x] 39.4 Add trust and freshness endpoints
     - Add GET /sources/trust endpoint
     - Add GET /sources/freshness endpoint
     - _Requirements: 17.58, 17.59_
   
-  - [ ] 39.5 Add prompt evolution endpoints
+  - [x] 39.5 Add prompt evolution endpoints
     - Add GET /prompts/versions/{name} endpoint
     - Add POST /prompts/optimize/{name} endpoint
     - Add POST /prompts/promote/{name}/{version} endpoint
     - _Requirements: 17.60, 17.61, 17.62_
 
-- [ ] 40. Integrate learning layer with existing system
-  - [ ] 40.1 Integrate with case execution
+- [x] 40. Integrate learning layer with existing system
+  - [x] 40.1 Integrate with case execution
     - Hook learn_from_case() into case save flow
     - Store case learning metadata
     - _Requirements: 17.44_
   
-  - [ ] 40.2 Integrate with research agent
+  - [x] 40.2 Integrate with research agent
     - Hook knowledge search into research agent
     - Use trust scores for source selection
     - _Requirements: 17.45, 17.46_
   
-  - [ ] 40.3 Integrate with simulation
+  - [x] 40.3 Integrate with simulation
     - Learn from simulation outcomes
     - Store simulation insights
     - _Requirements: 17.46_
   
-  - [ ] 40.4 Integrate with prompt management
+  - [x] 40.4 Integrate with prompt management
     - Hook prompt versions into prompt loading
     - Track prompt performance
     - _Requirements: 17.47_
@@ -820,7 +820,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Test scheduler respects rate limits
     - _Requirements: 17.6, 17.7, 17.40, 17.41, 17.42_
 
-- [ ] 42. Final checkpoint - Learning layer verification
+- [x] 42. Final checkpoint - Learning layer verification
   - Ensure learning subsystem runs without stressing laptop
   - Verify knowledge cache stays under 200MB
   - Verify scheduler respects battery and CPU constraints

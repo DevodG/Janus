@@ -471,3 +471,88 @@ This document specifies requirements for MiroOrg v1.1, a general intelligence op
 60. THE System SHALL provide GET /prompts/versions/{name} endpoint for prompt version history
 61. THE System SHALL provide POST /prompts/optimize/{name} endpoint for prompt optimization
 62. THE System SHALL provide POST /prompts/promote/{name}/{version} endpoint for promoting prompt versions
+
+
+### Requirement 18: Sentinel Layer (Adaptive Maintenance)
+
+**User Story:** As a user, I want the system to monitor its own health and propose safe corrections when issues are detected, so that the system can self-heal minor problems without breaking anything or requiring constant manual intervention.
+
+#### Acceptance Criteria
+
+1. THE System SHALL implement a Sentinel Layer as Layer 6 in the architecture
+2. THE System SHALL observe system health metrics: provider success rates, agent output quality, error frequencies, response times, storage usage
+3. THE System SHALL diagnose common issues: provider failures, degraded prompts, stale knowledge, configuration drift
+4. THE System SHALL propose limited safe corrections: prompt adjustments, configuration tweaks, knowledge refresh
+5. THE System SHALL NEVER autonomously edit Python or TypeScript code
+6. THE System SHALL NEVER make risky changes without explicit human approval
+7. THE System SHALL maintain a conservative safety-first approach
+
+#### Health Monitoring
+
+8. THE System SHALL track provider health: success rate, average latency, error types, fallback frequency
+9. THE System SHALL track agent performance: output quality, confidence scores, execution time, error rates
+10. THE System SHALL track storage health: disk usage, cache hit rates, eviction frequency
+11. THE System SHALL track external API health: rate limit status, error rates, response times
+12. THE System SHALL detect anomalies: sudden quality drops, repeated errors, resource exhaustion
+
+#### Diagnostic Capabilities
+
+13. THE System SHALL diagnose provider issues: API key expiration, rate limiting, service outages
+14. THE System SHALL diagnose prompt degradation: low confidence scores, repeated failures, user corrections
+15. THE System SHALL diagnose knowledge staleness: outdated information, expired cache entries
+16. THE System SHALL diagnose configuration drift: missing environment variables, invalid settings
+17. THE System SHALL provide clear diagnostic reports with evidence and severity levels
+
+#### Safe Correction Proposals
+
+18. THE System SHALL propose prompt improvements when quality degrades
+19. THE System SHALL propose knowledge refresh when staleness is detected
+20. THE System SHALL propose configuration updates when drift is detected
+21. THE System SHALL propose provider fallback adjustments when reliability changes
+22. EACH proposal SHALL include: issue description, proposed fix, risk level, rollback plan
+23. THE System SHALL require human approval for MEDIUM and HIGH risk changes
+24. THE System SHALL auto-apply only LOW risk changes with full audit logging
+
+#### Safety Constraints
+
+25. THE System SHALL NEVER modify source code files (.py, .ts, .tsx, .js)
+26. THE System SHALL NEVER delete data directories or user content
+27. THE System SHALL NEVER change API keys or credentials
+28. THE System SHALL NEVER disable critical system components
+29. THE System SHALL maintain full audit logs of all proposed and applied changes
+30. THE System SHALL provide rollback capability for all applied changes
+
+#### Capability Trend Tracking
+
+31. THE System SHALL track capability trends over time: answer quality, user satisfaction proxies, system reliability
+32. THE System SHALL detect capability regressions: quality drops, increased errors, slower responses
+33. THE System SHALL correlate regressions with recent changes: prompt updates, configuration changes, knowledge updates
+34. THE System SHALL alert when capabilities degrade beyond acceptable thresholds
+
+#### Scheduler Integration
+
+35. THE System SHALL run health checks on a configurable schedule (default: hourly)
+36. THE System SHALL run diagnostics when anomalies are detected
+37. THE System SHALL use the same lightweight scheduler as the learning layer
+38. THE System SHALL respect system resource constraints (CPU, battery, idle time)
+39. THE System SHALL NOT interfere with user operations or learning tasks
+
+#### API Endpoints
+
+40. THE System SHALL provide GET /sentinel/status endpoint for sentinel system status
+41. THE System SHALL provide GET /sentinel/health endpoint for comprehensive health report
+42. THE System SHALL provide GET /sentinel/diagnostics endpoint for recent diagnostic results
+43. THE System SHALL provide GET /sentinel/proposals endpoint for pending correction proposals
+44. THE System SHALL provide POST /sentinel/proposals/{id}/approve endpoint for approving proposals
+45. THE System SHALL provide POST /sentinel/proposals/{id}/reject endpoint for rejecting proposals
+46. THE System SHALL provide GET /sentinel/audit endpoint for audit log of applied changes
+47. THE System SHALL provide POST /sentinel/rollback/{change_id} endpoint for rolling back changes
+
+#### Integration with Existing Layers
+
+48. THE System SHALL integrate with learning layer for quality metrics
+49. THE System SHALL integrate with provider abstraction for health monitoring
+50. THE System SHALL integrate with prompt management for prompt quality tracking
+51. THE System SHALL integrate with knowledge store for staleness detection
+52. THE System SHALL integrate with configuration system for drift detection
+

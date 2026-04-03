@@ -1,4 +1,6 @@
 import re
+import time
+import logging
 from typing import List, Dict, Any, Optional
 
 import httpx
@@ -10,6 +12,17 @@ from app.config import (
     JINA_READER_BASE,
 )
 
+logger = logging.getLogger(__name__)
+
+# Module-level connection pool
+_http_pool = httpx.Client(
+    timeout=30,
+    limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+)
+
+# Simple TTL cache for market quotes (5 min)
+_quote_cache: Dict[str, Dict[str, Any]] = {}  # {symbol: {"data": ..., "ts": ...}}
+_QUOTE_TTL = 300  # seconds
 
 URL_PATTERN = re.compile(r"https?://\S+")
 TICKER_PATTERN = re.compile(r"\$([A-Z]{1,5})\b")
@@ -50,13 +63,14 @@ def tavily_search(query: str, max_results: int = 5) -> List[Dict[str, Any]]:
             "search_depth": "basic",
             "max_results": max_results,
         }
-        with httpx.Client(timeout=30) as client:
-            response = client.post("https://api.tavily.com/search", json=payload)
+        response = _http_pool.post("https://api.tavily.com/search", json=payload)
         if response.status_code >= 400:
+            logger.warning(f"Tavily search returned {response.status_code}")
             return []
         data = response.json()
         return data.get("results", [])
-    except Exception:
+    except Exception as e:
+        logger.error(f"Tavily search error: {e}")
         return []
 
 
@@ -72,13 +86,14 @@ def news_search(query: str, page_size: int = 5) -> List[Dict[str, Any]]:
             "sortBy": "publishedAt",
             "apiKey": NEWSAPI_KEY,
         }
-        with httpx.Client(timeout=30) as client:
-            response = client.get("https://newsapi.org/v2/everything", params=params)
+        response = _http_pool.get("https://newsapi.org/v2/everything", params=params)
         if response.status_code >= 400:
+            logger.warning(f"NewsAPI returned {response.status_code}")
             return []
         data = response.json()
         return data.get("articles", [])
-    except Exception:
+    except Exception as e:
+        logger.error(f"NewsAPI error: {e}")
         return []
 
 
@@ -86,19 +101,31 @@ def market_quote(symbol: str) -> Dict[str, Any]:
     if not ALPHAVANTAGE_API_KEY or not symbol:
         return {}
 
+    # Check cache first
+    cached = _quote_cache.get(symbol)
+    if cached and (time.time() - cached["ts"]) < _QUOTE_TTL:
+        logger.debug(f"Market quote cache hit: {symbol}")
+        return cached["data"]
+
     try:
         params = {
             "function": "GLOBAL_QUOTE",
             "symbol": symbol,
             "apikey": ALPHAVANTAGE_API_KEY,
         }
-        with httpx.Client(timeout=30) as client:
-            response = client.get("https://www.alphavantage.co/query", params=params)
+        response = _http_pool.get("https://www.alphavantage.co/query", params=params)
         if response.status_code >= 400:
+            logger.warning(f"Alpha Vantage returned {response.status_code}")
             return {}
         data = response.json()
-        return data.get("Global Quote", {})
-    except Exception:
+        quote = data.get("Global Quote", {})
+
+        # Cache the result
+        _quote_cache[symbol] = {"data": quote, "ts": time.time()}
+
+        return quote
+    except Exception as e:
+        logger.error(f"Alpha Vantage error: {e}")
         return {}
 
 

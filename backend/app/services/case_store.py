@@ -34,6 +34,8 @@ def list_cases(limit: Optional[int] = None) -> List[Dict[str, Any]]:
                     "user_input": data.get("user_input", ""),
                     "saved_at": data.get("saved_at"),
                     "final_answer_preview": str(data.get("final_answer", ""))[:200],
+                    "simulation_id": data.get("simulation_id"),  # Include simulation link
+                    "route": data.get("route"),  # Include route for dashboard display
                 }
             )
         except Exception:
@@ -58,6 +60,20 @@ def delete_case(case_id: str) -> bool:
 
     path.unlink()
     return True
+
+
+def get_cases_by_simulation(simulation_id: str) -> List[Dict[str, Any]]:
+    """Get all cases linked to a specific simulation."""
+    all_cases = []
+    for path in _memory_dir().glob("*.json"):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("simulation_id") == simulation_id:
+                all_cases.append(data)
+        except Exception:
+            continue
+    return all_cases
 
 
 def memory_stats() -> Dict[str, Any]:

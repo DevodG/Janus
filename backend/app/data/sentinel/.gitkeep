@@ -1,0 +1,8 @@
+# Sentinel data directory
+# This directory stores sentinel runtime data including:
+# - alert_history.json
+# - patch_history.json
+# - cycle_history.json
+# - capability_history.json
+# - sentinel_config.json
+# - pending_patches/

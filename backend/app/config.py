@@ -45,11 +45,6 @@ JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
 MIROFISH_ENABLED = os.getenv("MIROFISH_ENABLED", "false").lower() == "true"
 MIROFISH_API_BASE = os.getenv("MIROFISH_API_BASE", "http://127.0.0.1:5001")
 MIROFISH_TIMEOUT_SECONDS = int(os.getenv("MIROFISH_TIMEOUT_SECONDS", "120"))
-MIROFISH_HEALTH_PATH = os.getenv("MIROFISH_HEALTH_PATH", "/health")
-MIROFISH_RUN_PATH = os.getenv("MIROFISH_RUN_PATH", "/simulation/run")
-MIROFISH_STATUS_PATH = os.getenv("MIROFISH_STATUS_PATH", "/simulation/{id}")
-MIROFISH_REPORT_PATH = os.getenv("MIROFISH_REPORT_PATH", "/simulation/{id}/report")
-MIROFISH_CHAT_PATH = os.getenv("MIROFISH_CHAT_PATH", "/simulation/{id}/chat")
 
 SIMULATION_TRIGGER_KEYWORDS = [
     item.strip().lower()
@@ -143,3 +138,61 @@ def validate_config():
 
 # Run validation on import (startup)
 validate_config()
+
+
+# Learning layer configuration
+LEARNING_ENABLED = os.getenv("LEARNING_ENABLED", "true").lower() == "true"
+KNOWLEDGE_MAX_SIZE_MB = int(os.getenv("KNOWLEDGE_MAX_SIZE_MB", "200"))
+LEARNING_SCHEDULE_INTERVAL = int(os.getenv("LEARNING_SCHEDULE_INTERVAL", "6"))  # hours
+LEARNING_BATCH_SIZE = int(os.getenv("LEARNING_BATCH_SIZE", "10"))
+LEARNING_TOPICS = [
+    item.strip()
+    for item in os.getenv(
+        "LEARNING_TOPICS",
+        "finance,markets,technology,policy",
+    ).split(",")
+    if item.strip()
+]
+
+
+def get_config():
+    """Get configuration object for dependency injection."""
+    class Config:
+        app_version = APP_VERSION
+        primary_provider = PRIMARY_PROVIDER
+        fallback_provider = FALLBACK_PROVIDER
+        
+        openrouter_api_key = OPENROUTER_API_KEY
+        openrouter_base_url = OPENROUTER_BASE_URL
+        openrouter_chat_model = OPENROUTER_CHAT_MODEL
+        openrouter_reasoner_model = OPENROUTER_REASONER_MODEL
+        
+        ollama_enabled = OLLAMA_ENABLED
+        ollama_base_url = OLLAMA_BASE_URL
+        ollama_chat_model = OLLAMA_CHAT_MODEL
+        ollama_reasoner_model = OLLAMA_REASONER_MODEL
+        
+        openai_api_key = OPENAI_API_KEY
+        openai_base_url = OPENAI_BASE_URL
+        openai_chat_model = OPENAI_CHAT_MODEL
+        openai_reasoner_model = OPENAI_REASONER_MODEL
+        
+        tavily_api_key = TAVILY_API_KEY
+        newsapi_key = NEWSAPI_KEY
+        alphavantage_api_key = ALPHAVANTAGE_API_KEY
+        
+        mirofish_enabled = MIROFISH_ENABLED
+        mirofish_api_base = MIROFISH_API_BASE
+        
+        data_dir = str(DATA_DIR)
+        memory_dir = str(MEMORY_DIR)
+        simulation_dir = str(SIMULATION_DIR)
+        prompts_dir = str(PROMPTS_DIR)
+        
+        learning_enabled = LEARNING_ENABLED
+        knowledge_max_size_mb = KNOWLEDGE_MAX_SIZE_MB
+        learning_schedule_interval = LEARNING_SCHEDULE_INTERVAL
+        learning_batch_size = LEARNING_BATCH_SIZE
+        learning_topics = LEARNING_TOPICS
+    
+    return Config()

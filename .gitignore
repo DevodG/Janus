@@ -1,10 +1,31 @@
+# ── Python ────────────────────────────────────────────────────
 backend/.venv/
-backend/.env
-frontend/node_modules/
-frontend/.next/
-.DS_Store
+.venv/
 **/__pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ── Environment / Secrets ─────────────────────────────────────
+backend/.env
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ── Frontend ──────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+frontend/out/
+
+# ── Runtime data (never commit) ───────────────────────────────
 backend/app/data/memory/*.json
 backend/app/data/simulations/*.json
 backend/app/data/logs/*
@@ -12,5 +33,26 @@ backend/app/data/knowledge/*.json
 backend/app/data/skills/*.json
 backend/app/data/prompt_versions/*.json
 backend/app/data/learning/*.json
-.venv/
+
+# Sentinel runtime data
+backend/app/data/sentinel/*.json
+backend/app/data/sentinel/pending_patches/*.json
+!backend/app/data/sentinel/.gitkeep
+!backend/app/data/sentinel/pending_patches/.gitkeep
+
+# ── OS / Editor ───────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+.vscode/settings.json
+.vscode/launch.json
 *.log
+
+# ── Misc ──────────────────────────────────────────────────────
+*.bak
+*.tmp
+*_new.tsx
+*_old.tsx
+
+# Stray nested directory
+backend/backend/

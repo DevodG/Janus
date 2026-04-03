@@ -1,7 +1,11 @@
+import asyncio
+import time
 import logging
+import os
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.schemas import UserTask, AgentRunRequest, PromptUpdateRequest
 from app.graph import run_case
@@ -18,21 +22,34 @@ from app.config import (
     MIROFISH_ENABLED,
     MEMORY_DIR,
     PROMPTS_DIR,
+    get_config,
 )
 from app.services.case_store import list_cases, get_case, delete_case, memory_stats
 from app.services.prompt_store import list_prompts, get_prompt, update_prompt
 from app.services.health_service import deep_health
 from app.services.agent_registry import list_agents, get_agent, run_single_agent
 from app.routers.simulation import router as simulation_router
+from app.routers.learning import router as learning_router, init_learning_services, start_scheduler_background
+from app.routers.sentinel import router as sentinel_router
+from app.routers.finance import router as finance_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="MiroOrg Basic", version=APP_VERSION)
+app = FastAPI(title="MiroOrg v1.1", version=APP_VERSION)
 
-# Initialize domain packs on startup
+# Initialize domain packs
 from app.domain_packs.init_packs import init_domain_packs
 init_domain_packs()
+
+# Initialize learning layer
+config = get_config()
+if config.learning_enabled:
+    try:
+        init_learning_services(config)
+        logger.info("Learning layer initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize learning layer: {e}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +60,63 @@ app.add_middleware(
 )
 
 app.include_router(simulation_router)
+app.include_router(learning_router)
+app.include_router(sentinel_router)
+app.include_router(finance_router)
 
+
+# ── Request Timing Middleware ─────────────────────────────────────────────────
+
+@app.middleware("http")
+async def timing_middleware(request: Request, call_next):
+    """Add X-Process-Time header and log slow requests."""
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    response.headers["X-Process-Time"] = f"{elapsed:.3f}"
+
+    if elapsed > 10.0:
+        logger.warning(f"Slow request: {request.method} {request.url.path} took {elapsed:.1f}s")
+
+    return response
+
+
+# ── Error Handler ─────────────────────────────────────────────────────────────
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Sanitize error responses — don't leak internal stack traces."""
+    logger.exception(f"Unhandled error on {request.method} {request.url.path}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred. Please try again."},
+    )
+
+
+# ── Startup Event ─────────────────────────────────────────────────────────────
+
+@app.on_event("startup")
+async def on_startup():
+    """Start background tasks on app startup."""
+    if config.learning_enabled:
+        try:
+            start_scheduler_background()
+            logger.info("Background learning scheduler started")
+        except Exception as e:
+            logger.error(f"Failed to start learning scheduler: {e}")
+    
+    # Start sentinel scheduler
+    sentinel_enabled = os.getenv("SENTINEL_ENABLED", "true").lower() == "true"
+    if sentinel_enabled:
+        try:
+            from app.services.sentinel.scheduler import start_sentinel_scheduler
+            start_sentinel_scheduler()
+            logger.info("Sentinel scheduler started")
+        except Exception as e:
+            logger.error(f"Failed to start sentinel scheduler: {e}")
+
+
+# ── Health ────────────────────────────────────────────────────────────────────
 
 @app.get("/health")
 def health():
@@ -72,6 +145,8 @@ def config_status():
     }
 
 
+# ── Agents ────────────────────────────────────────────────────────────────────
+
 @app.get("/agents")
 def agents():
     return list_agents()
@@ -85,12 +160,23 @@ def agent_detail(agent_name: str):
     return agent
 
 
+# ── Case Execution ────────────────────────────────────────────────────────────
+
+def _fire_and_forget_learning(payload: dict):
+    """Fire-and-forget learning from a completed case."""
+    from app.routers.learning import learning_engine as _le
+    if _le:
+        try:
+            _le.learn_from_case(payload)
+        except Exception as e:
+            logger.error(f"Learning from case failed (non-blocking): {e}")
+
+
 @app.post("/run")
 def run_org(task: UserTask):
     try:
         logger.info("Processing /run: %s", task.user_input[:100])
         result = run_case(task.user_input)
-
         payload = {
             "case_id": result["case_id"],
             "user_input": result["user_input"],
@@ -103,24 +189,29 @@ def run_org(task: UserTask):
             ],
             "final_answer": result["final"]["summary"],
         }
-
         save_case(result["case_id"], payload)
+
+        # Fire-and-forget: learn from this case
+        _fire_and_forget_learning(payload)
+
         return payload
     except Exception as e:
         logger.exception("Error in /run")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process request. Please try again.")
 
 
 @app.post("/run/debug")
 def run_org_debug(task: UserTask):
     try:
-        logger.info("Processing /run/debug: %s", task.user_input[:100])
         result = run_case(task.user_input)
         save_case(result["case_id"], result)
+
+        _fire_and_forget_learning(result)
+
         return result
     except Exception as e:
         logger.exception("Error in /run/debug")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process request. Please try again.")
 
 
 @app.post("/run/agent")
@@ -137,8 +228,10 @@ def run_one_agent(request: AgentRunRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.exception("Error in /run/agent")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to run agent. Please try again.")
 
+
+# ── Cases ─────────────────────────────────────────────────────────────────────
 
 @app.get("/cases")
 def cases(limit: int | None = Query(default=None, ge=1, le=200)):
@@ -174,6 +267,8 @@ def memory_stats_endpoint():
     return memory_stats()
 
 
+# ── Prompts ───────────────────────────────────────────────────────────────────
+
 @app.get("/prompts")
 def prompts():
     return list_prompts()
@@ -185,7 +280,6 @@ def prompt_detail(name: str):
         prompt = get_prompt(name)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
     if not prompt:
         raise HTTPException(status_code=404, detail="Prompt not found")
     return prompt
