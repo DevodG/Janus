@@ -10,27 +10,27 @@ from app.agents.synthesizer import run_synthesizer
 
 AGENTS = {
     "switchboard": {
-        "purpose": "Route and classify the incoming user request.",
+        "purpose": "Route and classify incoming work into normal or simulation flows.",
         "prompt_name": None,
         "inputs_required": ["user_input"],
     },
     "research": {
-        "purpose": "Extract facts, assumptions, and open questions.",
+        "purpose": "Use prompts plus external APIs to gather facts and assumptions.",
         "prompt_name": "research",
         "inputs_required": ["user_input"],
     },
     "planner": {
-        "purpose": "Create a practical plan from the research packet.",
+        "purpose": "Build the working plan from the research packet.",
         "prompt_name": "planner",
         "inputs_required": ["user_input", "research_output"],
     },
     "verifier": {
-        "purpose": "Critique the planner output and find weak spots.",
+        "purpose": "Challenge the plan and look for weak reasoning or gaps.",
         "prompt_name": "verifier",
         "inputs_required": ["user_input", "research_output", "planner_output"],
     },
     "synthesizer": {
-        "purpose": "Combine all previous outputs into one final answer.",
+        "purpose": "Merge outputs into one final answer.",
         "prompt_name": "synthesizer",
         "inputs_required": ["user_input", "research_output", "planner_output", "verifier_output"],
     },
@@ -58,7 +58,6 @@ def get_agent(name: str) -> Dict[str, Any] | None:
     meta = AGENTS.get(name)
     if not meta:
         return None
-
     return {
         "name": name,
         "purpose": meta["purpose"],
@@ -94,21 +93,16 @@ def run_single_agent(
     if agent == "verifier":
         if not research_output or not planner_output:
             raise ValueError("verifier requires research_output and planner_output")
-        return run_verifier(
-            user_input,
-            research_output,
-            planner_output,
-            _load_prompt("verifier"),
-        )
+        return run_verifier(user_input, research_output, planner_output, _load_prompt("verifier"))
 
     if agent == "synthesizer":
-        if not research_output or not planner_output or not verifier_output:
-            raise ValueError("synthesizer requires research_output, planner_output, and verifier_output")
+        if not research_output or not planner_output:
+            raise ValueError("synthesizer requires at least research_output and planner_output")
         return run_synthesizer(
             user_input,
             research_output,
             planner_output,
-            verifier_output,
+            verifier_output or "",
             _load_prompt("synthesizer"),
         )
 

@@ -17,12 +17,13 @@ def list_prompts() -> List[Dict[str, str]]:
     results = []
     for name in sorted(ALLOWED_PROMPTS):
         path = _prompt_path(name)
-        results.append(
-            {
-                "name": name,
-                "path": str(path),
-            }
-        )
+        if path.exists():
+            results.append(
+                {
+                    "name": name,
+                    "content": path.read_text(encoding="utf-8"),
+                }
+            )
     return results
 
 

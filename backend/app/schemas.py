@@ -52,6 +52,54 @@ class MemoryStatsResponse(BaseModel):
 
 
 class ConfigStatusResponse(BaseModel):
+    app_version: str
+    primary_provider: str
+    fallback_provider: str
+    openrouter_key_present: bool
+    ollama_enabled: bool
+    mirofish_enabled: bool
+    tavily_enabled: bool
+    newsapi_enabled: bool
+    alphavantage_enabled: bool
+    memory_dir: str
+    prompts_dir: str
+
+
+class AgentInfo(BaseModel):
+    name: str
+    purpose: str
+    prompt_name: Optional[str] = None
+    inputs_required: List[str] = Field(default_factory=list)
+
+
+class DeepHealthResponse(BaseModel):
+    status: str
+    version: str
+    checks: Dict[str, Any]
+
+
+class SimulationRunRequest(BaseModel):
+    title: str
+    seed_text: str
+    prediction_goal: str
+    mode: str = "standard"
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SimulationChatRequest(BaseModel):
+    message: str
+
+
+class SimulationStoredRecord(BaseModel):
+    simulation_id: str
+    status: str
+    title: Optional[str] = None
+    prediction_goal: Optional[str] = None
+    remote_payload: Dict[str, Any] = Field(default_factory=dict)
+    disk_bytes: int
+
+
+class ConfigStatusResponse(BaseModel):
     model_name: str
     memory_dir: str
     prompts_dir: str

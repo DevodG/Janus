@@ -15,7 +15,7 @@ def run_verifier(user_input: str, research_output: str, planner_output: str, pro
             "agent": "verifier",
             "summary": text,
             "details": {"model_mode": "reasoner"},
-            "confidence": 0.78,
+            "confidence": 0.79,
         }
     except LLMProviderError as e:
         return {

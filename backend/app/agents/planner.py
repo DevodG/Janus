@@ -14,7 +14,7 @@ def run_planner(user_input: str, research_output: str, prompt_template: str) -> 
             "agent": "planner",
             "summary": text,
             "details": {"model_mode": "chat"},
-            "confidence": 0.72,
+            "confidence": 0.75,
         }
     except LLMProviderError as e:
         return {

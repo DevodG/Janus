@@ -1,4 +1,5 @@
 import logging
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,22 +7,28 @@ from app.schemas import UserTask, AgentRunRequest, PromptUpdateRequest
 from app.graph import run_case
 from app.memory import save_case
 from app.config import (
-    LLM_PROVIDER,
+    APP_VERSION,
+    PRIMARY_PROVIDER,
+    FALLBACK_PROVIDER,
+    OPENROUTER_API_KEY,
+    OLLAMA_ENABLED,
+    TAVILY_API_KEY,
+    NEWSAPI_KEY,
+    ALPHAVANTAGE_API_KEY,
+    MIROFISH_ENABLED,
     MEMORY_DIR,
     PROMPTS_DIR,
-    DEEPSEEK_API_KEY,
-    DEEPSEEK_CHAT_MODEL,
-    DEEPSEEK_REASONER_MODEL,
 )
 from app.services.case_store import list_cases, get_case, delete_case, memory_stats
 from app.services.prompt_store import list_prompts, get_prompt, update_prompt
 from app.services.health_service import deep_health
 from app.services.agent_registry import list_agents, get_agent, run_single_agent
+from app.routers.simulation import router as simulation_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="MiroOrg Basic v2", version="0.2.0")
+app = FastAPI(title="MiroOrg Basic", version=APP_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,10 +38,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(simulation_router)
+
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": APP_VERSION}
 
 
 @app.get("/health/deep")
@@ -45,12 +54,17 @@ def health_deep():
 @app.get("/config/status")
 def config_status():
     return {
-        "llm_provider": LLM_PROVIDER,
+        "app_version": APP_VERSION,
+        "primary_provider": PRIMARY_PROVIDER,
+        "fallback_provider": FALLBACK_PROVIDER,
+        "openrouter_key_present": bool(OPENROUTER_API_KEY),
+        "ollama_enabled": OLLAMA_ENABLED,
+        "mirofish_enabled": MIROFISH_ENABLED,
+        "tavily_enabled": bool(TAVILY_API_KEY),
+        "newsapi_enabled": bool(NEWSAPI_KEY),
+        "alphavantage_enabled": bool(ALPHAVANTAGE_API_KEY),
         "memory_dir": str(MEMORY_DIR),
         "prompts_dir": str(PROMPTS_DIR),
-        "deepseek_key_present": bool(DEEPSEEK_API_KEY),
-        "deepseek_chat_model": DEEPSEEK_CHAT_MODEL,
-        "deepseek_reasoner_model": DEEPSEEK_REASONER_MODEL,
     }
 
 
@@ -70,12 +84,13 @@ def agent_detail(agent_name: str):
 @app.post("/run")
 def run_org(task: UserTask):
     try:
-        logger.info(f"Processing user input: {task.user_input[:80]}")
+        logger.info("Processing /run: %s", task.user_input[:100])
         result = run_case(task.user_input)
 
         payload = {
             "case_id": result["case_id"],
             "user_input": result["user_input"],
+            "route": result["route"],
             "outputs": [
                 result["research"],
                 result["planner"],
@@ -87,51 +102,37 @@ def run_org(task: UserTask):
 
         save_case(result["case_id"], payload)
         return payload
-
     except Exception as e:
-        logger.exception("Error processing /run")
+        logger.exception("Error in /run")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/run/debug")
 def run_org_debug(task: UserTask):
     try:
-        logger.info(f"Processing debug input: {task.user_input[:80]}")
+        logger.info("Processing /run/debug: %s", task.user_input[:100])
         result = run_case(task.user_input)
-
-        payload = {
-            "case_id": result["case_id"],
-            "user_input": result["user_input"],
-            "route": result["route"],
-            "research": result["research"],
-            "planner": result["planner"],
-            "verifier": result["verifier"],
-            "final": result["final"],
-        }
-
-        save_case(result["case_id"], payload)
-        return payload
-
+        save_case(result["case_id"], result)
+        return result
     except Exception as e:
-        logger.exception("Error processing /run/debug")
+        logger.exception("Error in /run/debug")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/run/agent")
 def run_one_agent(request: AgentRunRequest):
     try:
-        result = run_single_agent(
+        return run_single_agent(
             agent=request.agent,
             user_input=request.user_input,
             research_output=request.research_output,
             planner_output=request.planner_output,
             verifier_output=request.verifier_output,
         )
-        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.exception("Error processing /run/agent")
+        logger.exception("Error in /run/agent")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

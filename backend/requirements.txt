@@ -4,4 +4,4 @@ python-dotenv
 pydantic
 python-multipart
 langgraph
-openai
+httpx
