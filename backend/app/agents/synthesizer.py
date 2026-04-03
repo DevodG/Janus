@@ -1,4 +1,4 @@
-from app.agents._model import call_model
+from app.agents._model import call_model, LLMProviderError
 
 
 def run_synthesizer(
@@ -16,11 +16,18 @@ def run_synthesizer(
         f"Verifier Output:\n{verifier_output}"
     )
 
-    text = call_model(prompt)
-
-    return {
-        "agent": "synthesizer",
-        "summary": text,
-        "details": {},
-        "confidence": 0.80,
-    }
+    try:
+        text = call_model(prompt, mode="chat")
+        return {
+            "agent": "synthesizer",
+            "summary": text,
+            "details": {"model_mode": "chat"},
+            "confidence": 0.82,
+        }
+    except LLMProviderError as e:
+        return {
+            "agent": "synthesizer",
+            "summary": f"Error: {str(e)}",
+            "details": {"error_type": "provider_error"},
+            "confidence": 0.0,
+        }

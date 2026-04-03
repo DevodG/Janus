@@ -1,4 +1,4 @@
-from app.agents._model import call_model
+from app.agents._model import call_model, LLMProviderError
 
 
 def run_planner(user_input: str, research_output: str, prompt_template: str) -> dict:
@@ -8,11 +8,18 @@ def run_planner(user_input: str, research_output: str, prompt_template: str) -> 
         f"Research Packet:\n{research_output}"
     )
 
-    text = call_model(prompt)
-
-    return {
-        "agent": "planner",
-        "summary": text,
-        "details": {},
-        "confidence": 0.72,
-    }
+    try:
+        text = call_model(prompt, mode="chat")
+        return {
+            "agent": "planner",
+            "summary": text,
+            "details": {"model_mode": "chat"},
+            "confidence": 0.72,
+        }
+    except LLMProviderError as e:
+        return {
+            "agent": "planner",
+            "summary": f"Error: {str(e)}",
+            "details": {"error_type": "provider_error"},
+            "confidence": 0.0,
+        }

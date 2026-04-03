@@ -1,25 +1,73 @@
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
+from openai import OpenAI
 
-from app.config import GEMINI_API_KEY, MODEL_NAME
+from app.config import (
+    LLM_PROVIDER,
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_BASE_URL,
+    DEEPSEEK_CHAT_MODEL,
+    DEEPSEEK_REASONER_MODEL,
+)
 
-if genai and GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+
+class LLMProviderError(Exception):
+    pass
 
 
-def call_model(prompt: str) -> str:
-    if not GEMINI_API_KEY:
-        return "GEMINI_API_KEY is missing. Please add it in backend/.env."
+def _get_client() -> OpenAI:
+    if LLM_PROVIDER != "deepseek":
+        raise LLMProviderError(f"Unsupported LLM_PROVIDER: {LLM_PROVIDER}")
 
-    if not genai:
-        return "google.generativeai is not installed; unable to call Gemini."
+    if not DEEPSEEK_API_KEY:
+        raise LLMProviderError("DEEPSEEK_API_KEY is missing. Please add it in backend/.env.")
 
-    model = genai.GenerativeModel(MODEL_NAME)
-    response = model.generate_content(prompt)
+    return OpenAI(
+        api_key=DEEPSEEK_API_KEY,
+        base_url=DEEPSEEK_BASE_URL,
+    )
 
-    if hasattr(response, "text") and response.text:
-        return response.text.strip()
 
-    return "No response generated."
+def _pick_model(mode: str) -> str:
+    if mode == "reasoner":
+        return DEEPSEEK_REASONER_MODEL
+    return DEEPSEEK_CHAT_MODEL
+
+
+def call_model(
+    prompt: str,
+    mode: str = "chat",
+    system_prompt: str | None = None,
+    max_tokens: int = 1200,
+) -> str:
+    client = _get_client()
+    model = _pick_model(mode)
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+        )
+    except Exception as e:
+        raise LLMProviderError(str(e))
+
+    if not getattr(response, "choices", None):
+        return "No response generated."
+
+    message = response.choices[0].message
+    content = getattr(message, "content", "") or ""
+
+    if isinstance(content, list):
+        try:
+            return "\n".join(
+                item.get("text", "") if isinstance(item, dict) else str(item)
+                for item in content
+            ).strip()
+        except Exception:
+            return str(content).strip()
+
+    return str(content).strip()

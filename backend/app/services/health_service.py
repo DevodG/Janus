@@ -2,8 +2,14 @@ from pathlib import Path
 from importlib.util import find_spec
 from typing import Dict, Any
 
-from app.config import MEMORY_DIR, PROMPTS_DIR, MODEL_NAME, GEMINI_API_KEY
-
+from app.config import (
+    MEMORY_DIR,
+    PROMPTS_DIR,
+    LLM_PROVIDER,
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_CHAT_MODEL,
+    DEEPSEEK_REASONER_MODEL,
+)
 
 REQUIRED_PROMPTS = ["research.txt", "planner.txt", "verifier.txt", "synthesizer.txt"]
 
@@ -31,17 +37,19 @@ def deep_health() -> Dict[str, Any]:
         "memory_dir_writable": _memory_dir_writable(),
         "prompts_loaded": all_prompts_present,
         "prompt_files": prompt_checks,
-        "gemini_key_present": bool(GEMINI_API_KEY),
-        "model_name": MODEL_NAME,
+        "llm_provider": LLM_PROVIDER,
+        "deepseek_key_present": bool(DEEPSEEK_API_KEY),
+        "deepseek_chat_model": DEEPSEEK_CHAT_MODEL,
+        "deepseek_reasoner_model": DEEPSEEK_REASONER_MODEL,
         "langgraph_available": find_spec("langgraph") is not None,
         "dotenv_available": find_spec("dotenv") is not None,
-        "google_generativeai_available": find_spec("google.generativeai") is not None,
+        "openai_sdk_available": find_spec("openai") is not None,
     }
 
     overall = "ok" if checks["memory_dir_writable"] and all_prompts_present else "degraded"
 
     return {
         "status": overall,
-        "version": "0.2.0",
+        "version": "0.3.0-deepseek",
         "checks": checks,
     }

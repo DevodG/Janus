@@ -5,7 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import UserTask, AgentRunRequest, PromptUpdateRequest
 from app.graph import run_case
 from app.memory import save_case
-from app.config import MODEL_NAME, MEMORY_DIR, PROMPTS_DIR, GEMINI_API_KEY
+from app.config import (
+    LLM_PROVIDER,
+    MEMORY_DIR,
+    PROMPTS_DIR,
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_CHAT_MODEL,
+    DEEPSEEK_REASONER_MODEL,
+)
 from app.services.case_store import list_cases, get_case, delete_case, memory_stats
 from app.services.prompt_store import list_prompts, get_prompt, update_prompt
 from app.services.health_service import deep_health
@@ -38,10 +45,12 @@ def health_deep():
 @app.get("/config/status")
 def config_status():
     return {
-        "model_name": MODEL_NAME,
+        "llm_provider": LLM_PROVIDER,
         "memory_dir": str(MEMORY_DIR),
         "prompts_dir": str(PROMPTS_DIR),
-        "gemini_key_present": bool(GEMINI_API_KEY),
+        "deepseek_key_present": bool(DEEPSEEK_API_KEY),
+        "deepseek_chat_model": DEEPSEEK_CHAT_MODEL,
+        "deepseek_reasoner_model": DEEPSEEK_REASONER_MODEL,
     }
 
 
