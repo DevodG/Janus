@@ -32,6 +32,11 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/api")
 OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:3b-instruct")
 OLLAMA_REASONER_MODEL = os.getenv("OLLAMA_REASONER_MODEL", "qwen2.5:3b-instruct")
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+OPENAI_REASONER_MODEL = os.getenv("OPENAI_REASONER_MODEL", "gpt-4o")
+
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "")
@@ -54,3 +59,87 @@ SIMULATION_TRIGGER_KEYWORDS = [
     ).split(",")
     if item.strip()
 ]
+
+# Domain pack configuration
+FINANCE_DOMAIN_PACK_ENABLED = os.getenv("FINANCE_DOMAIN_PACK_ENABLED", "true").lower() == "true"
+
+
+# Configuration validation
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
+
+
+def validate_config():
+    """Validate configuration on startup and log warnings/errors."""
+    errors = []
+    warnings = []
+    
+    # Validate primary provider configuration
+    primary = PRIMARY_PROVIDER.lower()
+    if primary not in ["openrouter", "ollama", "openai"]:
+        errors.append(f"PRIMARY_PROVIDER '{PRIMARY_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai")
+    
+    if primary == "openrouter" and not OPENROUTER_API_KEY:
+        errors.append("PRIMARY_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing")
+    
+    if primary == "openai" and not OPENAI_API_KEY:
+        errors.append("PRIMARY_PROVIDER is 'openai' but OPENAI_API_KEY is missing")
+    
+    if primary == "ollama" and not OLLAMA_ENABLED:
+        errors.append("PRIMARY_PROVIDER is 'ollama' but OLLAMA_ENABLED is false")
+    
+    # Validate fallback provider configuration
+    fallback = FALLBACK_PROVIDER.lower()
+    if fallback not in ["openrouter", "ollama", "openai"]:
+        errors.append(f"FALLBACK_PROVIDER '{FALLBACK_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai")
+    
+    if fallback == "openrouter" and not OPENROUTER_API_KEY:
+        warnings.append("FALLBACK_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing - fallback will fail")
+    
+    if fallback == "openai" and not OPENAI_API_KEY:
+        warnings.append("FALLBACK_PROVIDER is 'openai' but OPENAI_API_KEY is missing - fallback will fail")
+    
+    if fallback == "ollama" and not OLLAMA_ENABLED:
+        warnings.append("FALLBACK_PROVIDER is 'ollama' but OLLAMA_ENABLED is false - fallback will fail")
+    
+    # Validate optional API keys
+    if not TAVILY_API_KEY:
+        warnings.append("TAVILY_API_KEY is missing - web search functionality will be limited")
+    
+    if not NEWSAPI_KEY:
+        warnings.append("NEWSAPI_KEY is missing - news research functionality will be limited")
+    
+    if not ALPHAVANTAGE_API_KEY:
+        warnings.append("ALPHAVANTAGE_API_KEY is missing - financial data functionality will be limited")
+    
+    # Validate MiroFish configuration
+    if MIROFISH_ENABLED and not MIROFISH_API_BASE:
+        warnings.append("MIROFISH_ENABLED is true but MIROFISH_API_BASE is missing")
+    
+    # Validate data directories
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+        SIMULATION_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        errors.append(f"Failed to create data directories: {e}")
+    
+    # Log results
+    if errors:
+        logger.error("Configuration validation failed with errors:")
+        for error in errors:
+            logger.error(f"  - {error}")
+        sys.exit(1)
+    
+    if warnings:
+        logger.warning("Configuration validation completed with warnings:")
+        for warning in warnings:
+            logger.warning(f"  - {warning}")
+    else:
+        logger.info("Configuration validation passed")
+
+
+# Run validation on import (startup)
+validate_config()

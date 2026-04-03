@@ -30,6 +30,10 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MiroOrg Basic", version=APP_VERSION)
 
+# Initialize domain packs on startup
+from app.domain_packs.init_packs import init_domain_packs
+init_domain_packs()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],

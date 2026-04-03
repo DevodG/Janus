@@ -2,6 +2,15 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
 
+class RouteDecision(BaseModel):
+    """Routing decision from Switchboard agent."""
+    task_family: str = Field(..., description="Task family: 'normal' or 'simulation'")
+    domain_pack: str = Field(..., description="Domain pack: 'finance', 'general', 'policy', 'custom'")
+    complexity: str = Field(..., description="Complexity: 'simple', 'medium', 'complex'")
+    execution_mode: str = Field(..., description="Execution mode: 'solo', 'standard', 'deep'")
+    risk_level: str = Field(default="low", description="Risk level: 'low', 'medium', 'high'")
+
+
 class UserTask(BaseModel):
     user_input: str
 
