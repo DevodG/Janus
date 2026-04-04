@@ -1,7 +1,7 @@
-import asyncio
 import time
 import logging
 import os
+import json
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,17 +12,9 @@ from app.graph import run_case
 from app.memory import save_case
 from app.config import (
     APP_VERSION,
-    PRIMARY_PROVIDER,
-    FALLBACK_PROVIDER,
-    OPENROUTER_API_KEY,
-    OLLAMA_ENABLED,
-    TAVILY_API_KEY,
-    NEWSAPI_KEY,
-    ALPHAVANTAGE_API_KEY,
-    MIROFISH_ENABLED,
     MEMORY_DIR,
     PROMPTS_DIR,
-    get_config,
+    load_prompt,
 )
 from app.services.case_store import list_cases, get_case, delete_case, memory_stats
 from app.services.prompt_store import list_prompts, get_prompt, update_prompt
@@ -32,11 +24,12 @@ from app.routers.simulation import router as simulation_router
 from app.routers.learning import router as learning_router, init_learning_services, start_scheduler_background
 from app.routers.sentinel import router as sentinel_router
 from app.routers.finance import router as finance_router
+from app.config import get_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="MiroOrg v1.1", version=APP_VERSION)
+app = FastAPI(title="MiroOrg v2", version=APP_VERSION)
 
 # Initialize domain packs
 from app.domain_packs.init_packs import init_domain_packs
@@ -104,7 +97,7 @@ async def on_startup():
             logger.info("Background learning scheduler started")
         except Exception as e:
             logger.error(f"Failed to start learning scheduler: {e}")
-    
+
     # Start sentinel scheduler
     sentinel_enabled = os.getenv("SENTINEL_ENABLED", "true").lower() == "true"
     if sentinel_enabled:
@@ -132,14 +125,14 @@ def health_deep():
 def config_status():
     return {
         "app_version": APP_VERSION,
-        "primary_provider": PRIMARY_PROVIDER,
-        "fallback_provider": FALLBACK_PROVIDER,
-        "openrouter_key_present": bool(OPENROUTER_API_KEY),
-        "ollama_enabled": OLLAMA_ENABLED,
-        "mirofish_enabled": MIROFISH_ENABLED,
-        "tavily_enabled": bool(TAVILY_API_KEY),
-        "newsapi_enabled": bool(NEWSAPI_KEY),
-        "alphavantage_enabled": bool(ALPHAVANTAGE_API_KEY),
+        "openrouter_key_present": bool(os.getenv("OPENROUTER_API_KEY")),
+        "ollama_base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "llama3.2"),
+        "tavily_enabled": bool(os.getenv("TAVILY_API_KEY")),
+        "newsapi_enabled": bool(os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY"))),
+        "alphavantage_enabled": bool(os.getenv("ALPHA_VANTAGE_API_KEY", os.getenv("ALPHAVANTAGE_API_KEY"))),
+        "mirofish_base_url": os.getenv("MIROFISH_BASE_URL", "http://localhost:8001"),
+        "api_discovery_endpoint": os.getenv("API_DISCOVERY_ENDPOINT", "http://localhost:8002"),
         "memory_dir": str(MEMORY_DIR),
         "prompts_dir": str(PROMPTS_DIR),
     }
@@ -162,6 +155,17 @@ def agent_detail(agent_name: str):
 
 # ── Case Execution ────────────────────────────────────────────────────────────
 
+def _log_agent_errors(result: dict):
+    """Log any agent errors from the pipeline result."""
+    for agent_key in ["route", "research", "planner", "verifier", "simulation", "finance", "final"]:
+        agent_output = result.get(agent_key, {})
+        if isinstance(agent_output, dict):
+            if agent_output.get("status") == "error":
+                logger.warning(f"[AGENT ERROR] {agent_key}: {agent_output.get('reason', 'unknown')}")
+            elif agent_output.get("error"):
+                logger.warning(f"[AGENT ERROR] {agent_key}: {agent_output.get('error')}")
+
+
 def _fire_and_forget_learning(payload: dict):
     """Fire-and-forget learning from a completed case."""
     from app.routers.learning import learning_engine as _le
@@ -177,19 +181,31 @@ def run_org(task: UserTask):
     try:
         logger.info("Processing /run: %s", task.user_input[:100])
         result = run_case(task.user_input)
+
+        # Log any agent errors
+        _log_agent_errors(result)
+
+        # Build response payload
+        final = result.get("final", {})
         payload = {
-            "case_id": result["case_id"],
-            "user_input": result["user_input"],
-            "route": result["route"],
+            "case_id": result.get("case_id", ""),
+            "user_input": result.get("user_input", ""),
+            "route": result.get("route", {}),
+            "research": result.get("research", {}),
+            "planner": result.get("planner", {}),
+            "verifier": result.get("verifier", {}),
+            "simulation": result.get("simulation"),
+            "finance": result.get("finance"),
+            "final": final,
+            "final_answer": final.get("response", final.get("summary", "")),
             "outputs": [
-                result["research"],
-                result["planner"],
-                result["verifier"],
-                result["final"],
+                result.get("research", {}),
+                result.get("planner", {}),
+                result.get("verifier", {}),
+                final,
             ],
-            "final_answer": result["final"]["summary"],
         }
-        save_case(result["case_id"], payload)
+        save_case(result.get("case_id", ""), payload)
 
         # Fire-and-forget: learn from this case
         _fire_and_forget_learning(payload)
@@ -204,10 +220,9 @@ def run_org(task: UserTask):
 def run_org_debug(task: UserTask):
     try:
         result = run_case(task.user_input)
-        save_case(result["case_id"], result)
-
+        _log_agent_errors(result)
+        save_case(result.get("case_id", ""), result)
         _fire_and_forget_learning(result)
-
         return result
     except Exception as e:
         logger.exception("Error in /run/debug")
@@ -229,6 +244,21 @@ def run_one_agent(request: AgentRunRequest):
     except Exception as e:
         logger.exception("Error in /run/agent")
         raise HTTPException(status_code=500, detail="Failed to run agent. Please try again.")
+
+
+# ── Debug State Endpoint ──────────────────────────────────────────────────────
+
+@app.get("/debug/state/{case_id}")
+def debug_state(case_id: str):
+    """Return the full saved state for a case — useful for debugging."""
+    case_path = MEMORY_DIR / f"{case_id}.json"
+    if not case_path.exists():
+        raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
+    try:
+        with open(case_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read case: {e}")
 
 
 # ── Cases ─────────────────────────────────────────────────────────────────────

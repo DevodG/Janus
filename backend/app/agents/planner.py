@@ -1,68 +1,68 @@
-import re
-from app.agents._model import call_model, LLMProviderError
-from app.config import SIMULATION_TRIGGER_KEYWORDS
+"""
+Planner agent — MiroOrg v2.
+Accepts Switchboard route + Research output + (optionally) Simulation and Finance outputs.
+Produces a structured plan with steps, dependencies, and risk assessment.
+"""
 import logging
+from app.agents._model import call_model, safe_parse
+from app.config import load_prompt
 
 logger = logging.getLogger(__name__)
 
-_CONFIDENCE_PATTERN = re.compile(r'Confidence:\s*([\d.]+)', re.IGNORECASE)
 
+def run(state: dict) -> dict:
+    route = state.get("route", {})
+    research = state.get("research", {})
+    simulation = state.get("simulation", {})
+    finance = state.get("finance", {})
+    replan_count = state.get("replan_count", 0)
+    verifier = state.get("verifier", {})
 
-def _extract_confidence(text: str, default: float = 0.5) -> float:
-    """Extract confidence score from structured LLM output."""
-    match = _CONFIDENCE_PATTERN.search(text)
-    if match:
-        try:
-            score = float(match.group(1))
-            return max(0.0, min(1.0, score))
-        except ValueError:
-            pass
-    return default
+    prompt = load_prompt("planner")
 
+    # Build context with all available upstream data
+    context_parts = [
+        f"Route: {route}",
+        f"Research findings: {research}",
+    ]
+    if simulation:
+        context_parts.append(f"Simulation results: {simulation}")
+    if finance:
+        context_parts.append(f"Finance data: {finance}")
+    if replan_count > 0 and verifier:
+        context_parts.append(f"REPLAN #{replan_count} — Verifier feedback: {verifier}")
 
-def run_planner(user_input: str, research_output: str, prompt_template: str) -> dict:
-    # Detect if simulation mode would be appropriate
-    user_lower = user_input.lower()
-    simulation_suggested = any(keyword in user_lower for keyword in SIMULATION_TRIGGER_KEYWORDS)
-    
-    # Check for scenario/prediction patterns in research
-    research_lower = research_output.lower()
-    scenario_patterns = ["scenario", "what if", "predict", "forecast", "impact", "reaction",
-                         "what would", "how would", "could affect", "might happen"]
-    has_scenario_context = any(pattern in research_lower for pattern in scenario_patterns)
-    
-    # Also check user input for scenario patterns
-    user_scenario_patterns = ["what would", "what if", "how would", "what happens",
-                              "what could", "imagine", "suppose", "hypothetical"]
-    has_user_scenario = any(pattern in user_lower for pattern in user_scenario_patterns)
-    
-    if (has_scenario_context or has_user_scenario) and not simulation_suggested:
-        simulation_suggested = True
-        logger.info("Planner detected scenario analysis opportunity - suggesting simulation mode")
-    
-    prompt = (
-        f"{prompt_template}\n\n"
-        f"User Request:\n{user_input}\n\n"
-        f"Research Packet:\n{research_output}"
-    )
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": (
+            f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
+            + "\n\n".join(context_parts)
+            + "\n\nProduce structured JSON output:\n"
+            "{\n"
+            "  \"plan_steps\": [\"<step 1>\", \"<step 2>\"],\n"
+            "  \"resources_needed\": [\"<resource 1>\"],\n"
+            "  \"dependencies\": [\"<dependency 1>\"],\n"
+            "  \"risk_level\": \"low | medium | high\",\n"
+            "  \"estimated_output\": \"<brief description of expected output>\""
+            + (",\n  \"replan_reason\": \"<why replanning>\"" if replan_count > 0 else "")
+            + "\n}\n"
+        )},
+    ]
 
     try:
-        text = call_model(prompt, mode="chat")
-        confidence = _extract_confidence(text, default=0.70)
-        
-        return {
-            "agent": "planner",
-            "summary": text,
-            "details": {
-                "model_mode": "chat",
-                "simulation_suggested": simulation_suggested
-            },
-            "confidence": confidence,
+        result = safe_parse(call_model(messages))
+    except RuntimeError as e:
+        logger.error(f"[AGENT ERROR] planner: {e}")
+        result = {"status": "error", "reason": str(e)}
+
+    if "error" in result:
+        logger.warning(f"[AGENT ERROR] planner: {result.get('error')}")
+        result = {
+            "plan_steps": ["Unable to generate plan due to error"],
+            "resources_needed": [],
+            "dependencies": [],
+            "risk_level": "high",
+            "estimated_output": "Error in planning phase",
         }
-    except LLMProviderError as e:
-        return {
-            "agent": "planner",
-            "summary": f"Error: {str(e)}",
-            "details": {"error_type": "provider_error"},
-            "confidence": 0.0,
-        }
+
+    return {**state, "planner": result}

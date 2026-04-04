@@ -369,14 +369,7 @@ function MarketsTab() {
     }, 400);
   };
 
-  const toTVSym = (sym: string, region: string) => {
-    const s = sym.toUpperCase();
-    if (s.endsWith('.BSE') || s.endsWith('.BO')) return 'BSE:' + s.replace('.BSE','').replace('.BO','');
-    if (s.endsWith('.NS') || s.endsWith('.NSE')) return 'NSE:' + s.replace('.NS','').replace('.NSE','');
-    if (region && (region.toLowerCase().includes('india') || region.toLowerCase().includes('bombay'))) return 'BSE:' + s;
-    if (region && region.toLowerCase().includes('national stock exchange')) return 'NSE:' + s;
-    return s;
-  };
+
 
   const loadTicker = useCallback(async (symbol: string, region = '') => {
     setLoading(true); setIntel(null); setNews([]); setActiveSymbol(symbol);
@@ -413,7 +406,7 @@ function MarketsTab() {
   const change = intel?.quote?.['09. change'];
   const changePct = intel?.quote?.['10. change percent'];
   const isPositive = change && parseFloat(change) >= 0;
-  const tvSym = intel ? toTVSym(intel.symbol, selectedRegion) : '';
+
 
   return (
     <div className="h-full flex flex-col gap-4 overflow-hidden">
@@ -553,20 +546,6 @@ function MarketsTab() {
               <div className="text-xs font-mono"><span className="text-gray-500">Volatility: </span><span className="text-gray-300">{intel.event_impact.volatility_level || 'unknown'}</span></div>
               <div className="text-xs font-mono"><span className="text-gray-500">Events: </span><span className="text-gray-300">{intel.event_impact.event_count || 0} detected</span></div>
             </div>
-          </div>
-
-          {/* TradingView chart */}
-          <div className="glass rounded-2xl overflow-hidden border border-white/[0.04]">
-            <div className="px-4 py-2.5 border-b border-white/5 flex items-center justify-between">
-              <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">Price Chart · {tvSym}</span>
-              <a href={`https://www.tradingview.com/chart/?symbol=${tvSym}`} target="_blank" rel="noreferrer"
-                className="text-[9px] font-mono text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
-                <ExternalLink size={9} /> TradingView
-              </a>
-            </div>
-            <iframe key={tvSym} title={`${intel.symbol} chart`}
-              src={`https://s.tradingview.com/widgetembed/?frameElementId=tv_chart&symbol=${encodeURIComponent(tvSym)}&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=131722&studies=%5B%5D&theme=dark&style=1&timezone=Asia%2FKolkata&withdateranges=1&showpopupbutton=0&locale=en&utm_source=localhost&utm_medium=widget_new&utm_campaign=chart`}
-              className="w-full border-none" style={{ height: 300 }} allow="clipboard-write" />
           </div>
 
           {/* News */}

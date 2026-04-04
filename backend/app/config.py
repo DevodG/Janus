@@ -15,6 +15,15 @@ DATA_DIR = BASE_DIR / "data"
 MEMORY_DIR = DATA_DIR / "memory"
 SIMULATION_DIR = DATA_DIR / "simulations"
 
+# Prompt loader
+def load_prompt(name: str) -> str:
+    """Load a prompt file by name (without .txt extension)."""
+    path = PROMPTS_DIR / f"{name}.txt"
+    if not path.exists():
+        return f"You are the {name} agent in MiroOrg v2. Be helpful and precise."
+    return path.read_text(encoding="utf-8").strip()
+
+
 APP_VERSION = os.getenv("APP_VERSION", "0.3.0")
 
 PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "openrouter").lower()

@@ -3,12 +3,29 @@ from pydantic import BaseModel, Field
 
 
 class RouteDecision(BaseModel):
-    """Routing decision from Switchboard agent."""
-    task_family: str = Field(..., description="Task family: 'normal' or 'simulation'")
-    domain_pack: str = Field(..., description="Domain pack: 'finance', 'general', 'policy', 'custom'")
-    complexity: str = Field(..., description="Complexity: 'simple', 'medium', 'complex'")
-    execution_mode: str = Field(..., description="Execution mode: 'solo', 'standard', 'deep'")
-    risk_level: str = Field(default="low", description="Risk level: 'low', 'medium', 'high'")
+    """Routing decision from Switchboard agent — v2."""
+    domain: str = Field(default="general", description="Domain: 'finance', 'general', 'research', 'simulation', 'mixed'")
+    complexity: str = Field(default="medium", description="Complexity: 'low', 'medium', 'high', 'very_high'")
+    intent: str = Field(default="", description="Short plain-English summary of user intent")
+    sub_tasks: List[str] = Field(default_factory=list, description="Decomposed sub-tasks")
+    requires_simulation: bool = Field(default=False)
+    requires_finance_data: bool = Field(default=False)
+    requires_news: bool = Field(default=False)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+class RunResponse(BaseModel):
+    """Response from the /run endpoint — v2."""
+    case_id: str
+    user_input: str
+    route: Dict[str, Any]
+    research: Dict[str, Any] = Field(default_factory=dict)
+    planner: Dict[str, Any] = Field(default_factory=dict)
+    verifier: Dict[str, Any] = Field(default_factory=dict)
+    simulation: Optional[Dict[str, Any]] = None
+    finance: Optional[Dict[str, Any]] = None
+    final: Dict[str, Any] = Field(default_factory=dict)
+    final_answer: str = ""
 
 
 class UserTask(BaseModel):

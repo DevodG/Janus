@@ -1,100 +1,70 @@
-import re
-from app.agents._model import call_model, LLMProviderError
+"""
+Synthesizer agent — MiroOrg v2.
+Final voice in the pipeline. Accepts all upstream outputs and produces
+the definitive response the user sees.
+"""
 import logging
+from app.agents._model import call_model, safe_parse
+from app.config import load_prompt
 
 logger = logging.getLogger(__name__)
 
-_CONFIDENCE_PATTERN = re.compile(r'Confidence:\s*([\d.]+)', re.IGNORECASE)
-_UNCERTAINTY_PATTERN = re.compile(r'Uncertainty\s*Level:\s*(HIGH|MEDIUM|LOW)', re.IGNORECASE)
 
+def run(state: dict) -> dict:
+    route = state.get("route", {})
+    research = state.get("research", {})
+    planner = state.get("planner", {})
+    verifier = state.get("verifier", {})
+    simulation = state.get("simulation", {})
+    finance = state.get("finance", {})
+    replan_count = state.get("replan_count", 0)
 
-def _extract_confidence(text: str, default: float = 0.5) -> float:
-    """Extract confidence score from structured LLM output."""
-    match = _CONFIDENCE_PATTERN.search(text)
-    if match:
-        try:
-            score = float(match.group(1))
-            return max(0.0, min(1.0, score))
-        except ValueError:
-            pass
-    return default
+    prompt = load_prompt("synthesizer")
 
+    # Build comprehensive context
+    context_parts = [
+        f"Route: {route}",
+        f"Research: {research}",
+        f"Planner: {planner}",
+        f"Verifier: {verifier}",
+    ]
+    if simulation:
+        context_parts.append(f"Simulation: {simulation}")
+    if finance:
+        context_parts.append(f"Finance: {finance}")
+    if not verifier.get("passed", True) and replan_count >= 2:
+        context_parts.append("NOTE: Verifier did not fully pass and replan limit was reached. Acknowledge limitations.")
 
-def _extract_uncertainty(text: str) -> str:
-    """Extract uncertainty level from structured LLM output."""
-    match = _UNCERTAINTY_PATTERN.search(text)
-    if match:
-        return match.group(1).upper()
-    
-    # Fallback heuristic
-    text_lower = text.lower()
-    uncertainty_indicators = ["uncertain", "unclear", "missing", "unverified",
-                              "assumption", "unknown", "speculative", "conflicting",
-                              "limited evidence", "cannot confirm"]
-    count = sum(1 for indicator in uncertainty_indicators if indicator in text_lower)
-    
-    if count >= 4:
-        return "HIGH"
-    elif count >= 2:
-        return "MEDIUM"
-    return "LOW"
-
-
-def run_synthesizer(
-    user_input: str,
-    research_output: str,
-    planner_output: str,
-    verifier_output: str,
-    prompt_template: str
-) -> dict:
-    # Extract uncertainty level from verifier output (or synthesizer will self-assess)
-    uncertainty_level = _extract_uncertainty(verifier_output)
-    
-    # Check if simulation was recommended by planner or verifier
-    planner_lower = planner_output.lower()
-    simulation_recommended = (
-        ("simulation recommended: yes" in planner_lower) or
-        ("simulation" in planner_lower and "recommend" in planner_lower)
-    )
-    
-    logger.info(f"Synthesizer: uncertainty_level={uncertainty_level}, simulation_recommended={simulation_recommended}")
-    
-    prompt = (
-        f"{prompt_template}\n\n"
-        f"User Request:\n{user_input}\n\n"
-        f"Research Packet:\n{research_output}\n\n"
-        f"Planner Output:\n{planner_output}\n\n"
-        f"Verifier Output:\n{verifier_output}"
-    )
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": (
+            f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
+            + "\n\n".join(context_parts)
+            + "\n\nProduce the final structured JSON output:\n"
+            "{\n"
+            "  \"response\": \"<comprehensive, direct final answer>\",\n"
+            "  \"confidence\": 0.0-1.0,\n"
+            "  \"data_sources\": [\"<source 1>\", \"<source 2>\"],\n"
+            "  \"caveats\": [\"<caveat 1>\"],\n"
+            "  \"next_steps\": [\"<action 1>\", \"<action 2>\"]\n"
+            "}\n"
+        )},
+    ]
 
     try:
-        text = call_model(prompt, mode="chat")
-        confidence = _extract_confidence(text, default=0.60)
-        
-        # Also try to extract uncertainty from synthesizer's own output
-        synth_uncertainty = _extract_uncertainty(text)
-        # Use the higher uncertainty between verifier and synthesizer
-        if synth_uncertainty == "HIGH" or uncertainty_level == "HIGH":
-            final_uncertainty = "HIGH"
-        elif synth_uncertainty == "MEDIUM" or uncertainty_level == "MEDIUM":
-            final_uncertainty = "MEDIUM"
-        else:
-            final_uncertainty = "LOW"
-        
-        return {
-            "agent": "synthesizer",
-            "summary": text,
-            "details": {
-                "model_mode": "chat",
-                "uncertainty_level": final_uncertainty,
-                "simulation_recommended": simulation_recommended
-            },
-            "confidence": confidence,
-        }
-    except LLMProviderError as e:
-        return {
-            "agent": "synthesizer",
-            "summary": f"Error: {str(e)}",
-            "details": {"error_type": "provider_error"},
+        result = safe_parse(call_model(messages))
+    except RuntimeError as e:
+        logger.error(f"[AGENT ERROR] synthesizer: {e}")
+        result = {"status": "error", "reason": str(e)}
+
+    if "error" in result:
+        logger.warning(f"[AGENT ERROR] synthesizer: {result.get('error')}")
+        result = {
+            "response": "I encountered an error while synthesizing the analysis. Please try again.",
             "confidence": 0.0,
+            "data_sources": [],
+            "caveats": ["synthesis failed"],
+            "next_steps": ["retry the query"],
         }
+
+    return {**state, "final": result}

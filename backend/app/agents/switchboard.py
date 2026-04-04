@@ -1,82 +1,55 @@
-from app.config import SIMULATION_TRIGGER_KEYWORDS
-from app.domain_packs.registry import get_registry
+"""
+Switchboard — intelligence router for MiroOrg v2.
+Classifies user input and produces structured routing decisions using LLM.
+"""
+import logging
+from app.agents._model import call_model, safe_parse
+from app.config import load_prompt
+
+logger = logging.getLogger(__name__)
 
 
-def decide_route(user_input: str) -> dict:
+def run(state: dict) -> dict:
     """
-    Classify task and determine execution path.
-    
-    Classification dimensions:
-    1. task_family: "normal" or "simulation"
-    2. domain_pack: "finance", "general", "policy", "custom"
-    3. complexity: "simple" (≤5 words), "medium" (≤25 words), "complex" (>25 words)
-    4. execution_mode: "solo", "standard", "deep"
-    
-    Args:
-        user_input: The user's query
-        
-    Returns:
-        Dictionary with routing decision including all four dimensions
+    Analyse the user's input and produce a routing structure.
+    Uses LLM for intent classification with structured JSON output.
     """
-    text = user_input.strip()
-    lower = text.lower()
-    words = len(text.split())
+    user_input = state.get("user_input", "")
+    prompt = load_prompt("switchboard")
 
-    # Dimension 1: Task family (simulation detection)
-    # Check configured keywords
-    task_family = "simulation" if any(k in lower for k in SIMULATION_TRIGGER_KEYWORDS) else "normal"
-
-    # Additional scenario patterns that should also trigger deep analysis
-    scenario_patterns = [
-        "what would", "what if", "how would", "what happens if",
-        "what could", "imagine if", "suppose", "hypothetical",
-        "could affect", "might impact", "would react",
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": user_input},
     ]
-    is_speculative = any(p in lower for p in scenario_patterns)
 
-    # Dimension 2: Domain pack detection
-    registry = get_registry()
-    detected_domain = registry.detect_domain(user_input)
-    domain_pack = detected_domain if detected_domain else "general"
+    try:
+        result = safe_parse(call_model(messages))
+    except RuntimeError as e:
+        logger.error(f"[AGENT ERROR] switchboard: {e}")
+        result = {"status": "error", "reason": str(e)}
 
-    # Dimension 3: Complexity based on word count and nature
-    if task_family == "simulation":
-        complexity = "complex"
-    elif is_speculative:
-        # Speculative questions always get at least medium complexity
-        complexity = "complex" if words > 15 else "medium"
-    elif words <= 5:
-        complexity = "simple"
-    elif words <= 25:
-        complexity = "medium"
+    # Ensure all required fields exist with defaults
+    if "error" in result:
+        logger.warning(f"[AGENT ERROR] switchboard: {result.get('error')}")
+        result = {
+            "domain": "general",
+            "complexity": "medium",
+            "intent": user_input[:200],
+            "sub_tasks": [user_input[:200]],
+            "requires_simulation": False,
+            "requires_finance_data": False,
+            "requires_news": False,
+            "confidence": 0.3,
+        }
     else:
-        complexity = "complex"
+        # Fill in any missing fields with safe defaults
+        result.setdefault("domain", "general")
+        result.setdefault("complexity", "medium")
+        result.setdefault("intent", user_input[:200])
+        result.setdefault("sub_tasks", [user_input[:200]])
+        result.setdefault("requires_simulation", False)
+        result.setdefault("requires_finance_data", False)
+        result.setdefault("requires_news", False)
+        result.setdefault("confidence", 0.5)
 
-    # Dimension 4: Execution mode based on complexity and nature
-    if task_family == "simulation":
-        execution_mode = "deep"
-    elif is_speculative:
-        # Speculative questions always get deep mode (verifier should check uncertainty)
-        execution_mode = "deep"
-    elif complexity == "simple":
-        execution_mode = "solo"
-    elif complexity == "medium":
-        execution_mode = "standard"
-    else:
-        execution_mode = "deep"
-
-    # Risk level
-    if execution_mode == "deep":
-        risk_level = "medium"
-    elif is_speculative:
-        risk_level = "medium"
-    else:
-        risk_level = "low"
-
-    return {
-        "task_family": task_family,
-        "domain_pack": domain_pack,
-        "complexity": complexity,
-        "execution_mode": execution_mode,
-        "risk_level": risk_level,
-    }
+    return {**state, "route": result}

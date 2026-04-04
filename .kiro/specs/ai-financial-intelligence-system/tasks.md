@@ -353,7 +353,7 @@ The implementation follows 9 phases, each building on the previous while maintai
 
 ### Phase 7: Testing and Documentation
 
-- [~] 25. Write unit tests for core functionality
+- [ ] 25. Write unit tests for core functionality
   - [ ]* 25.1 Write provider abstraction tests
     - Test OpenRouter, Ollama, OpenAI provider calls
     - Test provider fallback behavior
@@ -388,7 +388,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Test error handling for disabled MiroFish
     - _Requirements: 8.1, 8.11, 8.12_
 
-- [~] 26. Write property-based tests
+- [ ] 26. Write property-based tests
   - [ ]* 26.1 Write Property 1: Configuration Environment Isolation
     - **Property 1: Configuration Environment Isolation**
     - **Validates: Requirements 1.8, 6.7**
@@ -479,7 +479,7 @@ The implementation follows 9 phases, each building on the previous while maintai
     - Test that new domain packs don't require agent changes
     - Create mock domain pack and verify integration
 
-- [~] 27. Write integration tests
+- [ ] 27. Write integration tests
   - [ ]* 27.1 Write end-to-end case execution test
     - Test complete workflow from user input to final answer
     - Verify all agents execute correctly

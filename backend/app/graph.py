@@ -1,185 +1,192 @@
+"""
+MiroOrg v2 — LangGraph pipeline with conditional routing and verifier feedback loop.
+
+Graph topology:
+  [switchboard]
+       │
+       ├─ requires_simulation=true → [mirofish] → [research]
+       ├─ requires_finance_data=true → [finance] → [research]
+       └─ (default) → [research]
+                            │
+                       [planner] ←──────┐
+                            │            │
+                       [verifier]        │
+                            │            │
+              passed=true ──┤            │
+              passed=false AND           │
+              replan_count < 2 ──────────┘
+                            │
+                       [synthesizer]
+                            │
+                          [END]
+"""
+
 import uuid
 import time
 import logging
-from typing import TypedDict, Dict, Any
+from typing import TypedDict, Dict, Any, Optional
 
 from langgraph.graph import StateGraph, START, END
 
-from app.config import PROMPTS_DIR
-from app.agents.switchboard import decide_route
-from app.agents.research import run_research
-from app.agents.planner import run_planner
-from app.agents.verifier import run_verifier
-from app.agents.synthesizer import run_synthesizer
+from app.agents import switchboard, research, planner, verifier, synthesizer
+from app.agents import mirofish_node, finance_node
 
 logger = logging.getLogger(__name__)
 
 
-# ── Prompt Loading with Production Version Support ────────────────────────────
+# ── State Type ────────────────────────────────────────────────────────────────
 
-_prompt_cache: Dict[str, str] = {}
-
-
-def load_prompt(filename: str) -> str:
-    """Load prompt from file, with caching."""
-    if filename not in _prompt_cache:
-        path = PROMPTS_DIR / filename
-        _prompt_cache[filename] = path.read_text(encoding="utf-8")
-    return _prompt_cache[filename]
-
-
-def get_active_prompt(prompt_name: str, filename: str) -> str:
-    """
-    Get the active prompt, preferring a promoted production version.
-    Falls back to the file-based prompt if none is promoted.
-    """
-    try:
-        from app.routers.learning import learning_engine
-        if learning_engine:
-            production = learning_engine.get_active_prompt(prompt_name)
-            if production:
-                logger.debug(f"Using production prompt version for {prompt_name}")
-                return production
-    except Exception:
-        pass
-
-    return load_prompt(filename)
-
-
-RESEARCH_PROMPT = load_prompt("research.txt")
-PLANNER_PROMPT = load_prompt("planner.txt")
-VERIFIER_PROMPT = load_prompt("verifier.txt")
-SYNTHESIZER_PROMPT = load_prompt("synthesizer.txt")
-
-
-class OrgState(TypedDict):
-    case_id: str
+class AgentState(TypedDict, total=False):
+    # Input
     user_input: str
-    route: Dict[str, Any]
-    research: Dict[str, Any]
-    planner: Dict[str, Any]
-    verifier: Dict[str, Any]
-    final: Dict[str, Any]
+    case_id: str
+
+    # Pipeline state
+    route: dict          # switchboard output
+    simulation: dict     # mirofish output (optional)
+    finance: dict        # finance_node output (optional)
+    research: dict       # research output
+    planner: dict        # planner output
+    verifier: dict       # verifier output
+    final: dict          # synthesizer output
+
+    # Control
+    replan_count: int
+    errors: list
 
 
-def empty_output(agent_name: str) -> Dict[str, Any]:
-    return {
-        "agent": agent_name,
-        "summary": "",
-        "details": {},
-        "confidence": 0.0,
-    }
+# ── Node wrappers with timing ────────────────────────────────────────────────
 
-
-# ── Node Functions with Timing ───────────────────────────────────────────────
-
-def switchboard_node(state: OrgState):
+def switchboard_node(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    result = {"route": decide_route(state["user_input"])}
+    result = switchboard.run(state)
     elapsed = time.perf_counter() - t0
-    logger.info(f"[{state['case_id'][:8]}] switchboard: {elapsed:.2f}s — mode={result['route'].get('execution_mode')}")
+    logger.info(f"[{state.get('case_id', '?')[:8]}] switchboard: {elapsed:.2f}s — domain={result.get('route', {}).get('domain')}")
     return result
 
 
-def research_node(state: OrgState):
-    if state["route"].get("execution_mode") == "solo":
-        return {"research": empty_output("research")}
-
+def mirofish_node_fn(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    prompt = get_active_prompt("research", "research.txt")
-    result = {"research": run_research(state["user_input"], prompt)}
+    result = mirofish_node.run(state)
     elapsed = time.perf_counter() - t0
-    logger.info(f"[{state['case_id'][:8]}] research: {elapsed:.2f}s")
+    logger.info(f"[{state.get('case_id', '?')[:8]}] mirofish: {elapsed:.2f}s")
     return result
 
 
-def planner_node(state: OrgState):
-    if state["route"].get("execution_mode") == "solo":
-        return {"planner": empty_output("planner")}
-
+def finance_node_fn(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    prompt = get_active_prompt("planner", "planner.txt")
-    result = {
-        "planner": run_planner(
-            state["user_input"],
-            state["research"]["summary"],
-            prompt,
-        )
-    }
+    result = finance_node.run(state)
     elapsed = time.perf_counter() - t0
-    logger.info(f"[{state['case_id'][:8]}] planner: {elapsed:.2f}s")
+    logger.info(f"[{state.get('case_id', '?')[:8]}] finance: {elapsed:.2f}s")
     return result
 
 
-def verifier_node(state: OrgState):
-    if state["route"].get("execution_mode") != "deep":
-        return {"verifier": empty_output("verifier")}
-
+def research_node(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    prompt = get_active_prompt("verifier", "verifier.txt")
-    result = {
-        "verifier": run_verifier(
-            state["user_input"],
-            state["research"]["summary"],
-            state["planner"]["summary"],
-            prompt,
-        )
-    }
+    result = research.run(state)
     elapsed = time.perf_counter() - t0
-    logger.info(f"[{state['case_id'][:8]}] verifier: {elapsed:.2f}s")
+    logger.info(f"[{state.get('case_id', '?')[:8]}] research: {elapsed:.2f}s")
     return result
 
 
-def synthesizer_node(state: OrgState):
+def planner_node(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    prompt = get_active_prompt("synthesizer", "synthesizer.txt")
-    result = {
-        "final": run_synthesizer(
-            state["user_input"],
-            state["research"]["summary"],
-            state["planner"]["summary"],
-            state["verifier"]["summary"],
-            prompt,
-        )
-    }
+    result = planner.run(state)
     elapsed = time.perf_counter() - t0
-    logger.info(f"[{state['case_id'][:8]}] synthesizer: {elapsed:.2f}s")
+    logger.info(f"[{state.get('case_id', '?')[:8]}] planner: {elapsed:.2f}s")
     return result
 
 
-graph = StateGraph(OrgState)
-graph.add_node("switchboard", switchboard_node)
-graph.add_node("research", research_node)
-graph.add_node("planner", planner_node)
-graph.add_node("verifier", verifier_node)
-graph.add_node("synthesizer", synthesizer_node)
-
-graph.add_edge(START, "switchboard")
-graph.add_edge("switchboard", "research")
-graph.add_edge("research", "planner")
-graph.add_edge("planner", "verifier")
-graph.add_edge("verifier", "synthesizer")
-graph.add_edge("synthesizer", END)
-
-compiled_graph = graph.compile()
+def verifier_node(state: AgentState) -> dict:
+    t0 = time.perf_counter()
+    result = verifier.run(state)
+    elapsed = time.perf_counter() - t0
+    logger.info(f"[{state.get('case_id', '?')[:8]}] verifier: {elapsed:.2f}s")
+    return result
 
 
-def run_case(user_input: str):
+def synthesizer_node(state: AgentState) -> dict:
+    t0 = time.perf_counter()
+    result = synthesizer.run(state)
+    elapsed = time.perf_counter() - t0
+    logger.info(f"[{state.get('case_id', '?')[:8]}] synthesizer: {elapsed:.2f}s")
+    return result
+
+
+# ── Routing functions ─────────────────────────────────────────────────────────
+
+def after_switchboard(state: AgentState) -> str:
+    """Route based on switchboard flags."""
+    route = state.get("route", {})
+    if route.get("requires_simulation"):
+        return "mirofish"
+    if route.get("requires_finance_data"):
+        return "finance"
+    return "research"
+
+
+def after_verifier(state: AgentState) -> str:
+    """Verifier feedback loop: replan if failed and under limit."""
+    v = state.get("verifier", {})
+    replan_count = state.get("replan_count", 0)
+    if not v.get("passed", True) and replan_count < 2:
+        return "planner"
+    return "synthesizer"
+
+
+# ── Build graph ───────────────────────────────────────────────────────────────
+
+def build_graph():
+    g = StateGraph(AgentState)
+
+    g.add_node("switchboard", switchboard_node)
+    g.add_node("research", research_node)
+    g.add_node("mirofish", mirofish_node_fn)
+    g.add_node("finance", finance_node_fn)
+    g.add_node("planner", planner_node)
+    g.add_node("verifier", verifier_node)
+    g.add_node("synthesizer", synthesizer_node)
+
+    g.set_entry_point("switchboard")
+
+    # After switchboard: fork based on flags
+    g.add_conditional_edges("switchboard", after_switchboard,
+        {"mirofish": "mirofish", "finance": "finance", "research": "research"})
+
+    # mirofish and finance both merge into research
+    g.add_edge("mirofish", "research")
+    g.add_edge("finance", "research")
+    g.add_edge("research", "planner")
+
+    # Verifier feedback loop
+    g.add_edge("planner", "verifier")
+    g.add_conditional_edges("verifier", after_verifier,
+        {"planner": "planner", "synthesizer": "synthesizer"})
+
+    g.add_edge("synthesizer", END)
+    return g.compile()
+
+
+compiled_graph = build_graph()
+
+
+def run_case(user_input: str) -> dict:
+    """Run the full agent pipeline on user input."""
     case_id = str(uuid.uuid4())
     t0 = time.perf_counter()
     logger.info("Starting case %s", case_id)
 
-    result = compiled_graph.invoke(
-        {
-            "case_id": case_id,
-            "user_input": user_input,
-            "route": {},
-            "research": {},
-            "planner": {},
-            "verifier": {},
-            "final": {},
-        }
-    )
+    result = compiled_graph.invoke({
+        "case_id": case_id,
+        "user_input": user_input,
+        "route": {},
+        "research": {},
+        "planner": {},
+        "verifier": {},
+        "final": {},
+        "replan_count": 0,
+        "errors": [],
+    })
 
     elapsed = time.perf_counter() - t0
     logger.info("Case %s completed in %.2fs", case_id, elapsed)

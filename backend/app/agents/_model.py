@@ -1,176 +1,98 @@
-from typing import Optional, List, Dict, Any
-import logging
+"""
+Unified model client for MiroOrg v2.
+Priority: OpenRouter free → Ollama fallback → raise with diagnostics.
+All tiers use the OpenAI-compatible messages format.
+"""
 
+import os, json, re, logging
 import httpx
-
-from app.config import (
-    PRIMARY_PROVIDER,
-    FALLBACK_PROVIDER,
-    OPENROUTER_API_KEY,
-    OPENROUTER_BASE_URL,
-    OPENROUTER_CHAT_MODEL,
-    OPENROUTER_REASONER_MODEL,
-    OPENROUTER_SITE_URL,
-    OPENROUTER_APP_NAME,
-    OLLAMA_ENABLED,
-    OLLAMA_BASE_URL,
-    OLLAMA_CHAT_MODEL,
-    OLLAMA_REASONER_MODEL,
-    OPENAI_API_KEY,
-    OPENAI_BASE_URL,
-    OPENAI_CHAT_MODEL,
-    OPENAI_REASONER_MODEL,
-)
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
+OPENROUTER_BASE   = "https://openrouter.ai/api/v1"
+OPENROUTER_KEY    = os.getenv("OPENROUTER_API_KEY", "")
 
-class LLMProviderError(Exception):
-    pass
+# Pinned free models in preference order (all have :free suffix = zero cost)
+FREE_MODEL_LADDER = [
+    "nvidia/llama-3.1-nemotron-ultra-253b:free",   # best reasoning, large context
+    "meta-llama/llama-3.3-70b-instruct:free",       # reliable, GPT-4 class
+    "deepseek/deepseek-r1:free",                    # strong chain-of-thought
+    "openrouter/free",                              # random free as last resort
+]
 
-
-def _pick_openrouter_model(mode: str) -> str:
-    return OPENROUTER_REASONER_MODEL if mode == "reasoner" else OPENROUTER_CHAT_MODEL
-
-
-def _pick_ollama_model(mode: str) -> str:
-    return OLLAMA_REASONER_MODEL if mode == "reasoner" else OLLAMA_CHAT_MODEL
-
-
-def _pick_openai_model(mode: str) -> str:
-    return OPENAI_REASONER_MODEL if mode == "reasoner" else OPENAI_CHAT_MODEL
-
-
-def _build_messages(prompt: str, system_prompt: Optional[str] = None) -> List[Dict[str, str]]:
-    messages: List[Dict[str, str]] = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-    return messages
+OLLAMA_BASE       = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL      = os.getenv("OLLAMA_MODEL", "llama3.2")   # user configures
+TIMEOUT           = 120
 
 
-def _call_openrouter(prompt: str, mode: str = "chat", system_prompt: Optional[str] = None) -> str:
-    if not OPENROUTER_API_KEY:
-        raise LLMProviderError("OPENROUTER_API_KEY is missing.")
-
+def _openrouter_call(messages: list[dict], model: str, **kwargs) -> str:
+    """Single call to OpenRouter. Raises on non-200."""
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {OPENROUTER_KEY}",
+        "HTTP-Referer": "https://miroorg.local",
+        "X-Title": "MiroOrg v2",
         "Content-Type": "application/json",
     }
-    if OPENROUTER_SITE_URL:
-        headers["HTTP-Referer"] = OPENROUTER_SITE_URL
-    if OPENROUTER_APP_NAME:
-        headers["X-Title"] = OPENROUTER_APP_NAME
-
-    payload = {
-        "model": _pick_openrouter_model(mode),
-        "messages": _build_messages(prompt, system_prompt=system_prompt),
-    }
-
-    with httpx.Client(timeout=90) as client:
-        response = client.post(f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload)
-
-    if response.status_code >= 400:
-        raise LLMProviderError(f"OpenRouter error {response.status_code}: {response.text}")
-
-    data = response.json()
-    return data["choices"][0]["message"]["content"].strip()
+    body = {"model": model, "messages": messages, "max_tokens": 2048, **kwargs}
+    r = httpx.post(f"{OPENROUTER_BASE}/chat/completions",
+                   headers=headers, json=body, timeout=TIMEOUT)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
 
 
-def _call_ollama(prompt: str, mode: str = "chat", system_prompt: Optional[str] = None) -> str:
-    if not OLLAMA_ENABLED:
-        raise LLMProviderError("Ollama fallback is disabled.")
-
-    payload = {
-        "model": _pick_ollama_model(mode),
-        "messages": _build_messages(prompt, system_prompt=system_prompt),
-        "stream": False,
-    }
-
-    with httpx.Client(timeout=120) as client:
-        response = client.post(f"{OLLAMA_BASE_URL}/chat", json=payload)
-
-    if response.status_code >= 400:
-        raise LLMProviderError(f"Ollama error {response.status_code}: {response.text}")
-
-    data = response.json()
-    message = data.get("message", {})
-    return str(message.get("content", "")).strip()
+def _ollama_call(messages: list[dict], **kwargs) -> str:
+    """Fallback: Ollama local via OpenAI-compatible endpoint."""
+    body = {"model": OLLAMA_MODEL, "messages": messages, "stream": False}
+    r = httpx.post(f"{OLLAMA_BASE}/v1/chat/completions",
+                   json=body, timeout=TIMEOUT)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
 
 
-def _call_openai(prompt: str, mode: str = "chat", system_prompt: Optional[str] = None) -> str:
-    if not OPENAI_API_KEY:
-        raise LLMProviderError("OPENAI_API_KEY is missing.")
-
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    payload = {
-        "model": _pick_openai_model(mode),
-        "messages": _build_messages(prompt, system_prompt=system_prompt),
-    }
-
-    with httpx.Client(timeout=90) as client:
-        response = client.post(f"{OPENAI_BASE_URL}/chat/completions", headers=headers, json=payload)
-
-    if response.status_code >= 400:
-        raise LLMProviderError(f"OpenAI error {response.status_code}: {response.text}")
-
-    data = response.json()
-    return data["choices"][0]["message"]["content"].strip()
-
-
-def call_model(
-    prompt: str,
-    mode: str = "chat",
-    system_prompt: Optional[str] = None,
-    provider_override: Optional[str] = None,
-) -> str:
-    provider = (provider_override or PRIMARY_PROVIDER).lower()
-    logger.info(f"Calling model with provider={provider}, mode={mode}")
-
-    try:
-        if provider == "openrouter":
-            result = _call_openrouter(prompt, mode=mode, system_prompt=system_prompt)
-            logger.info(f"Provider {provider} succeeded")
-            return result
-        if provider == "ollama":
-            result = _call_ollama(prompt, mode=mode, system_prompt=system_prompt)
-            logger.info(f"Provider {provider} succeeded")
-            return result
-        if provider == "openai":
-            result = _call_openai(prompt, mode=mode, system_prompt=system_prompt)
-            logger.info(f"Provider {provider} succeeded")
-            return result
-        raise LLMProviderError(f"Unsupported provider: {provider}")
-    except Exception as primary_error:
-        logger.warning(f"Primary provider {provider} failed: {primary_error}")
-        fallback = FALLBACK_PROVIDER.lower()
-        if fallback == provider:
-            logger.error(f"No fallback available, primary provider {provider} failed")
-            raise LLMProviderError(str(primary_error))
-
-        logger.info(f"Attempting fallback to provider={fallback}")
+def call_model(messages: list[dict], **kwargs) -> str:
+    """
+    Try OpenRouter free models in ladder order, then Ollama.
+    Returns raw text. Never returns None — raises RuntimeError with full diagnostics
+    so the caller can write a structured error dict instead of silently propagating None.
+    """
+    errors = []
+    for model in FREE_MODEL_LADDER:
         try:
-            if fallback == "ollama":
-                result = _call_ollama(prompt, mode=mode, system_prompt=system_prompt)
-                logger.info(f"Fallback provider {fallback} succeeded")
-                return result
-            if fallback == "openrouter":
-                result = _call_openrouter(prompt, mode=mode, system_prompt=system_prompt)
-                logger.info(f"Fallback provider {fallback} succeeded")
-                return result
-            if fallback == "openai":
-                result = _call_openai(prompt, mode=mode, system_prompt=system_prompt)
-                logger.info(f"Fallback provider {fallback} succeeded")
-                return result
-        except Exception as fallback_error:
-            logger.error(f"Fallback provider {fallback} also failed: {fallback_error}")
-            raise LLMProviderError(
-                f"Primary provider failed: {primary_error} | Fallback failed: {fallback_error}"
-            )
+            result = _openrouter_call(messages, model, **kwargs)
+            logger.info(f"Model call succeeded: {model}")
+            return result
+        except Exception as e:
+            errors.append(f"OpenRouter [{model}]: {e}")
+            logger.warning(f"OpenRouter [{model}] failed: {e}")
 
-        logger.error(f"Primary provider {provider} failed with no valid fallback")
-        raise LLMProviderError(str(primary_error))
+    # Ollama fallback
+    try:
+        result = _ollama_call(messages, **kwargs)
+        logger.info(f"Ollama fallback succeeded: {OLLAMA_MODEL}")
+        return result
+    except Exception as e:
+        errors.append(f"Ollama [{OLLAMA_MODEL}]: {e}")
+        logger.error(f"Ollama fallback failed: {e}")
+
+    raise RuntimeError("All model tiers failed:\n" + "\n".join(errors))
+
+
+def safe_parse(text: str) -> dict:
+    """
+    Strip markdown fences, attempt JSON parse.
+    On failure returns a structured error dict — NEVER returns None.
+    Callers must check for 'error' key in the result.
+    """
+    cleaned = re.sub(r"```(?:json)?|```", "", text).strip()
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        # Try extracting the first JSON-like block
+        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+    return {"error": "parse_failed", "raw": text[:800]}
