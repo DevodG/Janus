@@ -24,7 +24,8 @@ export default function ConfigPage() {
       if (statusRes) setDaemonStatus(statusRes);
       if (curiosityRes) setCuriosity(curiosityRes);
       if (memoryRes) setMemoryStats(memoryRes);
-    } catch (console.error) {
+    } catch {
+      // silent
     } finally {
       setLoading(false);
     }
