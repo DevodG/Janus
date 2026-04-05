@@ -1,6 +1,6 @@
 """
 Janus Daemon — Background intelligence engine.
-Runs 24/7 with circadian rhythms, watches markets, fetches news, detects events.
+Runs 24/7 with circadian rhythms, watches markets, fetches news, detects events, explores autonomously.
 """
 
 import time
@@ -12,6 +12,7 @@ from app.services.event_detector import EventDetector
 from app.services.signal_queue import SignalQueue
 from app.services.circadian_rhythm import CircadianRhythm
 from app.services.dream_processor import DreamCycleProcessor
+from app.services.curiosity_engine import CuriosityEngine
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,11 @@ class JanusDaemon:
         self.signal_queue = SignalQueue()
         self.circadian = CircadianRhythm()
         self.dream_processor = DreamCycleProcessor()
+        self.curiosity = CuriosityEngine()
         self.cycle_count = 0
         self.last_run = None
         self.last_dream = None
+        self.last_curiosity_cycle = None
 
     def run(self):
         """Main daemon loop — runs forever with circadian awareness."""
@@ -72,6 +75,13 @@ class JanusDaemon:
                         f"[DAEMON] Dream cycle: {len(dream_report.get('insights', []))} insights, {len(dream_report.get('hypotheses', []))} hypotheses"
                     )
 
+                    # Curiosity cycle during night (exploration time)
+                    curiosity_report = self.curiosity.run_curiosity_cycle()
+                    self.last_curiosity_cycle = curiosity_report
+                    logger.info(
+                        f"[DAEMON] Curiosity cycle: {curiosity_report.get('total_discoveries', 0)} discoveries, {curiosity_report.get('total_interests', 0)} interests"
+                    )
+
                 # 5. Log summary
                 elapsed = time.time() - cycle_start
                 stats = self.signal_queue.get_stats()
@@ -112,5 +122,7 @@ class JanusDaemon:
             "topics": self.news_pulse.topics,
             "signal_queue": self.signal_queue.get_stats(),
             "dream_processor": self.dream_processor.get_status(),
+            "curiosity_engine": self.curiosity.get_status(),
             "last_dream": self.last_dream,
+            "last_curiosity_cycle": self.last_curiosity_cycle,
         }

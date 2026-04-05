@@ -644,6 +644,40 @@ def trigger_dream_cycle():
     return {"error": "Daemon not running"}
 
 
+@app.get("/daemon/curiosity")
+def daemon_curiosity():
+    """Get curiosity engine status."""
+    if janus_daemon:
+        return janus_daemon.curiosity.get_status()
+    return {"running": False}
+
+
+@app.get("/daemon/curiosity/discoveries")
+def curiosity_discoveries(limit: int = 10):
+    """Get curiosity discoveries."""
+    if janus_daemon:
+        return janus_daemon.curiosity.get_discoveries(limit=limit)
+    return []
+
+
+@app.get("/daemon/curiosity/interests")
+def curiosity_interests():
+    """Get curiosity interests."""
+    if janus_daemon:
+        return janus_daemon.curiosity.get_interests()
+    return {}
+
+
+@app.post("/daemon/curiosity/now")
+def trigger_curiosity_cycle():
+    """Manually trigger a curiosity cycle."""
+    if janus_daemon:
+        report = janus_daemon.curiosity.run_curiosity_cycle()
+        janus_daemon.last_curiosity_cycle = report
+        return report
+    return {"error": "Daemon not running"}
+
+
 @app.get("/memory/stats")
 def memory_graph_stats():
     """Get memory graph statistics."""

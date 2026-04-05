@@ -915,11 +915,12 @@ export default function JanusApp() {
   const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
 
   const fetchSystemData = useCallback(async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     try {
       const [statusRes, alertsRes, memoryRes] = await Promise.all([
-        fetch('http://localhost:8000/daemon/status').then(r => r.ok ? r.json() : null),
-        fetch('http://localhost:8000/daemon/alerts?limit=20').then(r => r.ok ? r.json() : []),
-        fetch('http://localhost:8000/memory/stats').then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/daemon/status`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/daemon/alerts?limit=20`).then(r => r.ok ? r.json() : []),
+        fetch(`${baseUrl}/memory/stats`).then(r => r.ok ? r.json() : null),
       ]);
       if (statusRes) setDaemonStatus(statusRes);
       if (alertsRes) setAlerts(Array.isArray(alertsRes) ? alertsRes : []);

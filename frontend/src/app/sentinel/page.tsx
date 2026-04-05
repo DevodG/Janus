@@ -218,13 +218,14 @@ export default function SentinelPage() {
   };
 
   const fetchData = useCallback(async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     try {
       const [statusRes, alertsRes, capRes, intelRes, cacheRes] = await Promise.all([
         apiClient.getSentinelStatus(),
         apiClient.getSentinelAlerts(20),
         apiClient.getSentinelCapability(),
-        fetch('http://localhost:8000/intelligence/report').then(r => r.ok ? r.json() : null),
-        fetch('http://localhost:8000/cache/stats').then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/intelligence/report`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/cache/stats`).then(r => r.ok ? r.json() : null),
       ]);
       if (statusRes) setStatus(statusRes);
       if (alertsRes) setAlerts(Array.isArray(alertsRes) ? alertsRes : []);
@@ -246,8 +247,9 @@ export default function SentinelPage() {
 
   const runCycleNow = async () => {
     setRunningCycle(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     try {
-      await fetch('http://localhost:8000/sentinel/run-now', { method: 'POST' });
+      await fetch(`${baseUrl}/sentinel/run-now`, { method: 'POST' });
       await fetchData();
     } finally {
       setRunningCycle(false);
