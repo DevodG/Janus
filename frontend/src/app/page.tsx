@@ -9,7 +9,7 @@ import {
   Clock, Target, AlertCircle, Layers, Brain, Cpu, ArrowRight,
   FileText, MessageSquare, ChevronDown, Terminal, Radio, GitBranch,
   Bell, Moon, Sun, Sunrise, Sunset, Activity as PulseIcon, Database, Network,
-  ChevronUp, Star, Hash, Eye as EyeIcon, Info
+  ChevronUp, Star, Hash, Eye as EyeIcon, Info, Plus
 } from 'lucide-react';
 import { apiClient, financeClient } from '@/lib/api';
 import type { CaseRecord } from '@/lib/types';
@@ -904,6 +904,206 @@ function PulseTab({ daemonStatus, alerts, memoryStats }: { daemonStatus: DaemonS
   );
 }
 
+// ─── Workspace Tab ─────────────────────────────────────────────
+function WorkspaceTab() {
+  const [curiosity, setCuriosity] = useState<any>(null);
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [triggering, setTriggering] = useState(false);
+  const [activeWf, setActiveWf] = useState<any>(null);
+  const [wfLoading, setWfLoading] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const [curRes, wfRes, sessRes] = await Promise.all([
+        fetch(`${baseUrl}/daemon/curiosity`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/workflows?limit=10`).then(r => r.ok ? r.json() : []),
+        fetch(`${baseUrl}/sessions?limit=10`).then(r => r.ok ? r.json() : []),
+      ]);
+      if (curRes) setCuriosity(curRes);
+      if (wfRes) setWorkflows(Array.isArray(wfRes) ? wfRes : []);
+      if (sessRes) setSessions(Array.isArray(sessRes) ? sessRes : []);
+    } catch { /* silent */ } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const triggerCuriosity = async () => {
+    setTriggering(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const res = await fetch(`${baseUrl}/daemon/curiosity/now`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setCuriosity(prev => prev ? { ...prev, discoveries: [...(prev.discoveries || []), ...(data.discoveries || [])], total_discoveries: (prev.total_discoveries || 0) + (data.discoveries || []).length } : data);
+      }
+    } catch { /* silent */ } finally { setTriggering(false); }
+  };
+
+  const runWorkflow = async (wf: any) => {
+    setActiveWf(wf);
+    setWfLoading(true);
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const res = await fetch(`${baseUrl}/workflows/${wf.id}/run`, { method: 'POST' });
+      if (res.ok) {
+        const updated = await res.json();
+        setActiveWf(updated);
+        setWorkflows(prev => prev.map(w => w.id === wf.id ? updated : w));
+      }
+    } catch { /* silent */ } finally { setWfLoading(false); }
+  };
+
+  const createResearchWf = async () => {
+    const query = prompt('Enter research query:');
+    if (!query) return;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const res = await fetch(`${baseUrl}/workflows/research`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      if (res.ok) {
+        const wf = await res.json();
+        setWorkflows(prev => [wf, ...prev]);
+      }
+    } catch { /* silent */ }
+  };
+
+  const statusColors: Record<string, string> = {
+    pending: 'text-gray-400',
+    running: 'text-indigo-400',
+    completed: 'text-emerald-400',
+    failed: 'text-red-400',
+    cancelled: 'text-gray-500',
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-full gap-4">
+      <JanusOrb size={48} thinking />
+      <p className="text-xs font-mono text-indigo-400 animate-pulse">Loading workspace...</p>
+    </div>
+  );
+
+  return (
+    <div className="h-full flex gap-5 overflow-hidden">
+      {/* Left: Discoveries + Sessions */}
+      <div className="flex flex-col gap-4 overflow-y-auto pr-1" style={{ width: '45%' }}>
+        {/* Curiosity Discoveries */}
+        <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-xs font-mono text-violet-400 uppercase tracking-wider">
+              <Brain size={12} /> Discoveries ({curiosity?.total_discoveries || 0})
+            </div>
+            <button onClick={triggerCuriosity} disabled={triggering}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/30 text-[10px] font-mono text-violet-300 transition-all disabled:opacity-40">
+              <Sparkles size={10} className={triggering ? 'animate-pulse' : ''} />
+              {triggering ? 'Exploring...' : 'Explore'}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {(curiosity?.discoveries || []).slice(-5).reverse().map((d: any, i: number) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                className="glass rounded-xl p-3 border border-white/[0.04]">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[9px] font-mono text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded">{d.topic}</span>
+                  <span className="text-[9px] font-mono text-gray-600">{new Date(d.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p className="text-xs text-gray-300 leading-relaxed">{d.insight}</p>
+              </motion.div>
+            ))}
+            {(!curiosity?.discoveries || curiosity.discoveries.length === 0) && (
+              <p className="text-xs font-mono text-gray-600 text-center py-4">No discoveries yet. Click "Explore" to start.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Sessions */}
+        <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+          <div className="flex items-center gap-2 mb-4 text-xs font-mono text-indigo-400 uppercase tracking-wider">
+            <MessageSquare size={12} /> Sessions ({sessions.length})
+          </div>
+          <div className="space-y-2">
+            {sessions.slice(0, 5).map((s: any, i: number) => (
+              <div key={s.id} className="flex items-center justify-between text-xs font-mono py-2 px-3 glass rounded-lg border border-white/[0.04]">
+                <span className="text-gray-400 truncate">{s.id}</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-gray-600">{s.message_count || 0} msgs</span>
+                  <span className="text-gray-700">{new Date(s.updated_at).toLocaleTimeString()}</span>
+                </div>
+              </div>
+            ))}
+            {sessions.length === 0 && <p className="text-xs font-mono text-gray-600 text-center py-4">No sessions yet. Start a conversation.</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Workflows */}
+      <div className="flex flex-col gap-3 overflow-hidden flex-1">
+        <div className="flex items-center justify-between shrink-0">
+          <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+            Workflows ({workflows.length})
+          </div>
+          <div className="flex gap-2">
+            <button onClick={createResearchWf}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-[10px] font-mono text-indigo-300 transition-all">
+              <Plus size={10} /> Research
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {workflows.map((wf: any, i: number) => (
+            <motion.div key={wf.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+              className="glass rounded-xl border border-white/[0.04] hover:border-white/10 transition-colors p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${statusColors[wf.status] || 'text-gray-400'} bg-white/5`}>{wf.status}</span>
+                    <span className="text-[9px] font-mono text-gray-600">{wf.type}</span>
+                  </div>
+                  <p className="text-xs text-gray-300">{wf.query || wf.scenario || 'Untitled'}</p>
+                </div>
+                {wf.status === 'pending' && (
+                  <button onClick={() => runWorkflow(wf)} disabled={wfLoading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-[10px] font-mono text-emerald-300 transition-all disabled:opacity-40">
+                    <Play size={10} /> Run
+                  </button>
+                )}
+              </div>
+              {/* Steps */}
+              <div className="space-y-1.5">
+                {wf.steps?.map((step: any, si: number) => (
+                  <div key={step.id} className="flex items-center gap-2 text-[10px] font-mono">
+                    <div className={`w-2 h-2 rounded-full ${step.status === 'completed' ? 'bg-emerald-400' : step.status === 'running' ? 'bg-indigo-400 animate-pulse' : step.status === 'failed' ? 'bg-red-400' : 'bg-gray-600'}`} />
+                    <span className={step.status === 'completed' ? 'text-emerald-400' : step.status === 'running' ? 'text-indigo-400' : 'text-gray-500'}>{step.name}</span>
+                  </div>
+                ))}
+              </div>
+              {wf.metadata && (
+                <div className="flex items-center gap-3 mt-3 pt-2 border-t border-white/5 text-[9px] font-mono text-gray-600">
+                  <span>{wf.metadata.completed_steps}/{wf.metadata.total_steps} steps</span>
+                  {wf.metadata.failed_steps > 0 && <span className="text-red-400">{wf.metadata.failed_steps} failed</span>}
+                </div>
+              )}
+            </motion.div>
+          ))}
+          {workflows.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <GitBranch size={28} className="text-gray-700 mb-3" />
+              <p className="text-sm font-mono text-gray-500">No workflows yet.</p>
+              <p className="text-xs font-mono text-gray-700 mt-1">Create a research or simulation workflow.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════
 //  MAIN APP
 // ═══════════════════════════════════════════════════════════
@@ -938,6 +1138,7 @@ export default function JanusApp() {
     { id: 'command' as const, label: 'Command', icon: Sparkles },
     { id: 'intel' as const, label: 'Intel Stream', icon: Globe },
     { id: 'markets' as const, label: 'Markets', icon: BarChart3 },
+    { id: 'workspace' as const, label: 'Workspace', icon: Layers },
     { id: 'pulse' as const, label: 'Pulse', icon: PulseIcon },
   ];
 
@@ -1000,6 +1201,11 @@ export default function JanusApp() {
             {activeTab === 'markets' && (
               <motion.div key="markets" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
                 <MarketsTab />
+              </motion.div>
+            )}
+            {activeTab === 'workspace' && (
+              <motion.div key="workspace" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
+                <WorkspaceTab />
               </motion.div>
             )}
             {activeTab === 'pulse' && (

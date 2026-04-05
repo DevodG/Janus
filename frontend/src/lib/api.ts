@@ -169,6 +169,88 @@ export class MiroOrgClient {
     }
     return response.json();
   }
+
+  // Session endpoints
+  async createSession(): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/sessions`, { method: 'POST' });
+    if (!r.ok) throw new Error('Failed to create session');
+    return r.json();
+  }
+
+  async getSession(sessionId: string): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/sessions/${sessionId}`);
+    if (!r.ok) throw new Error('Failed to fetch session');
+    return r.json();
+  }
+
+  async listSessions(limit: number = 20): Promise<any[]> {
+    const r = await fetch(`${this.baseUrl}/sessions?limit=${limit}`);
+    if (!r.ok) return [];
+    return r.json();
+  }
+
+  async addMessage(sessionId: string, role: string, content: string): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/sessions/${sessionId}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, content }),
+    });
+    if (!r.ok) throw new Error('Failed to add message');
+    return r.json();
+  }
+
+  // Workflow endpoints
+  async createResearchWorkflow(query: string, depth: string = 'standard'): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/workflows/research`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, depth }),
+    });
+    if (!r.ok) throw new Error('Failed to create research workflow');
+    return r.json();
+  }
+
+  async createSimulationWorkflow(scenario: string): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/workflows/simulation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario }),
+    });
+    if (!r.ok) throw new Error('Failed to create simulation workflow');
+    return r.json();
+  }
+
+  async listWorkflows(limit: number = 20, type?: string): Promise<any[]> {
+    const url = type ? `${this.baseUrl}/workflows?limit=${limit}&type=${type}` : `${this.baseUrl}/workflows?limit=${limit}`;
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    return r.json();
+  }
+
+  async getWorkflow(wfId: string): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/workflows/${wfId}`);
+    if (!r.ok) throw new Error('Workflow not found');
+    return r.json();
+  }
+
+  async runWorkflow(wfId: string): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/workflows/${wfId}/run`, { method: 'POST' });
+    if (!r.ok) throw new Error('Failed to run workflow');
+    return r.json();
+  }
+
+  // Curiosity endpoints
+  async getCuriosity(): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/daemon/curiosity`);
+    if (!r.ok) return { total_discoveries: 0, total_interests: 0, discoveries: [] };
+    return r.json();
+  }
+
+  async triggerCuriosity(): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/daemon/curiosity/now`, { method: 'POST' });
+    if (!r.ok) throw new Error('Failed to trigger curiosity');
+    return r.json();
+  }
 }
 
 // Export singleton instance
