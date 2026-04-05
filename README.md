@@ -1,348 +1,240 @@
-# MiroOrg v1.1 - AI Financial Intelligence System
+# Janus
 
-A general intelligence operating system that orchestrates multiple specialist agents, runs simulations, and supports pluggable domain packs with autonomous knowledge evolution.
+**Cognitive Intelligence Interface** — A multi-agent AI system that researches, simulates scenarios, and produces expert-level analysis.
 
-## Overview
+Built for your Mac. Runs on free models. Gets smarter with every query.
 
-MiroOrg v1.1 is a 5-layer AI system that processes user requests through specialized agents, integrates domain-specific intelligence, runs simulations, and continuously improves itself over time:
+## What It Does
 
-- **Layer 1: Core Platform** - Multi-provider LLM abstraction (OpenRouter, Ollama, OpenAI) with automatic fallback
-- **Layer 2: Domain Intelligence** - Pluggable domain packs (starting with Finance) that enhance agent capabilities
-- **Layer 3: Agent Orchestration** - Five specialized agents working in concert
-- **Layer 4: Simulation Lab** - Integration with MiroFish for scenario modeling
-- **Layer 5: Autonomous Learning** - Self-improvement through knowledge ingestion, prompt evolution, and skill distillation
+Janus takes any question — financial, strategic, technical — and runs it through an orchestrated pipeline of specialist agents that gather data, analyze from multiple perspectives, and produce deep, non-generic answers.
+
+- **Command** — Ask anything. The system routes, researches, and synthesizes.
+- **Intel Stream** — Live news feed with deep research on any article.
+- **Markets** — Embedded candlestick charts, ticker intelligence, AI signals, and event analysis — all in-app.
+- **Simulation Lab** — Native scenario engine: decomposes "what if" questions → runs 4 perspectives (optimist/pessimist/realist/contrarian) → synthesizes outcomes with probabilities, early warning signals, and decision frameworks.
+- **Sentinel** — System health, domain expertise tracking, cache performance, and cross-case pattern recognition.
 
 ## Architecture
 
-### Five Specialized Agents
+### Agent Pipeline (2-3 model calls, optimized)
 
-1. **Switchboard** - Routes requests using 4-dimensional classification:
-   - Task family (normal/simulation)
-   - Domain pack (finance/general/policy/custom)
-   - Complexity (simple/medium/complex)
-   - Execution mode (solo/standard/deep)
+```
+User Query
+    │
+    ▼
+┌─────────────┐
+│ Switchboard │  ← Classifies query type, domain, complexity
+└──────┬──────┘
+       │
+  ┌────┴────┐
+  │ Finance │  ← Alpha Vantage data (if market query)
+  └────┬────┘
+       │
+  ┌────┴────┐
+  │Research │  ← Tavily web search, News API, knowledge base
+  └────┬────┘
+       │
+┌──────┴───────┐
+│ Synthesizer  │  ← Deep analysis with all context
+└──────┬───────┘
+       │
+       ▼
+   Final Answer
+```
 
-2. **Research** - Gathers information with domain-enhanced capabilities:
-   - Web search via Tavily
-   - News via NewsAPI
-   - Financial data via Alpha Vantage
-   - Entity and ticker extraction for finance domain
+### Native Simulation Engine
 
-3. **Verifier** - Validates information with credibility scoring:
-   - Source reliability checking
-   - Rumor and scam detection
-   - Uncertainty quantification
+Replaces external dependencies. When a query triggers simulation:
 
-4. **Planner** - Creates actionable plans with simulation awareness:
-   - Detects opportunities for scenario modeling
-   - Suggests simulation mode when appropriate
+1. **Decompose** — Identifies variables, actors, forces, constraints
+2. **4 Perspectives** — Optimist, Pessimist, Realist, Contrarian each analyze independently
+3. **Synthesize** — Combines into scenarios with probability distributions, impact levels, timelines, and early warning signals
 
-5. **Synthesizer** - Produces final answers with confidence metrics:
-   - Uncertainty quantification
-   - Simulation recommendations
-   - Structured output with metadata
+### Intelligent Caching
 
-### Domain Pack System
+- **Generic queries** (definitions, simple facts) → cached for 30 days, instant response
+- **Specific queries** (analysis, reasoning) → cached for 7 days, learned from
+- **Hybrid queries** → cached for 14 days, conditionally learned from
 
-Domain packs are pluggable modules that enhance agent capabilities for specific domains:
+### Adaptive Intelligence
 
-- **Finance Domain Pack** (included):
-  - Market data integration
-  - News analysis
-  - Entity/ticker resolution
-  - Credibility scoring
-  - Stance detection
-  - Event analysis
-  - Prediction capabilities
-
-- **Custom Domain Packs** (extensible):
-  - Implement `DomainPack` base class
-  - Register in domain registry
-  - Agents automatically detect and use capabilities
-
-### Autonomous Learning Layer
-
-The system improves itself over time without local model training:
-
-- **Knowledge Ingestion**: Automatically ingests knowledge from web search, news, and URLs
-- **Experience Learning**: Learns from case execution patterns
-- **Prompt Evolution**: A/B tests and evolves agent prompts
-- **Skill Distillation**: Extracts reusable skills from repeated patterns
-- **Trust Management**: Tracks source reliability over time
-- **Freshness Management**: Manages knowledge expiration with domain-specific rules
-- **Scheduler**: Runs learning tasks with CPU/battery safeguards for laptop deployment
-
-Storage limits: 200MB max for knowledge cache, 2-4KB per summary.
+The system builds institutional knowledge over time:
+- **Domain Expertise** — Tracks key entities, trusted sources, success rates per domain
+- **Cross-Case Patterns** — Finds patterns across all queries that no single query reveals
+- **System Personality** — Adapts analytical depth and skepticism based on accumulated experience
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.10+
-- Node.js 18+ (for frontend)
-- At least one LLM provider:
-  - OpenRouter API key (recommended), or
-  - Ollama running locally, or
-  - OpenAI API key
+- Node.js 18+
+- At least one LLM provider (OpenRouter recommended for free tier)
 
-### Backend Setup
+### Backend
 
-1. Clone and navigate to backend:
 ```bash
 cd backend
 python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
-```
 
-2. Configure environment:
-```bash
 cp .env.example .env
-# Edit .env and add your API keys
-```
+# Edit .env — add your API keys
 
-3. Run backend:
-```bash
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend available at `http://localhost:8000`
+Backend: `http://localhost:8000`
 
-### Frontend Setup
+### Frontend
 
-1. Navigate to frontend:
 ```bash
 cd frontend
 npm install
-```
-
-2. Configure environment:
-```bash
-cp .env.local.example .env.local
-# Edit if needed (defaults to localhost:8000)
-```
-
-3. Run frontend:
-```bash
 npm run dev
 ```
 
-Frontend available at `http://localhost:3000`
+Frontend: `http://localhost:3000`
 
 ## Environment Variables
 
-### Required
+### Required (pick one LLM provider)
 
 ```env
-# Primary LLM Provider (choose one)
-PRIMARY_PROVIDER=openrouter  # or ollama, openai
-OPENROUTER_API_KEY=your_key_here
-# OR
+# OpenRouter (recommended — free tier available)
+PRIMARY_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-v1-YOUR_KEY
+
+# Or Ollama (local)
+PRIMARY_PROVIDER=ollama
 OLLAMA_ENABLED=true
-# OR
-OPENAI_API_KEY=your_key_here
+
+# Or OpenAI
+PRIMARY_PROVIDER=openai
+OPENAI_API_KEY=sk-proj-YOUR_KEY
 ```
 
-### Optional Services
+### Optional (enhance capabilities)
 
 ```env
-# Web Search
-TAVILY_API_KEY=your_key_here
+# Web search (research quality)
+TAVILY_API_KEY=tvly-dev-YOUR_KEY
 
-# News
-NEWSAPI_KEY=your_key_here
+# News (event intelligence)
+NEWSAPI_KEY=YOUR_KEY
 
-# Financial Data
-ALPHAVANTAGE_API_KEY=your_key_here
-
-# Simulation Lab
-MIROFISH_ENABLED=true
-MIROFISH_API_BASE=http://127.0.0.1:5001
-
-# Learning Layer
-LEARNING_ENABLED=true
-KNOWLEDGE_MAX_SIZE_MB=200
-LEARNING_TOPICS=finance,markets,technology,policy
+# Market data (charts, ticker intelligence)
+ALPHAVANTAGE_API_KEY=YOUR_KEY
 ```
-
-See `.env.example` for complete configuration options.
 
 ## API Endpoints
 
-### Core Endpoints
+### Core
 
-- `GET /health` - Health check
-- `GET /health/deep` - Detailed health with provider status
-- `GET /config/status` - System configuration
-- `POST /run` - Process user request through agent pipeline
-- `GET /cases` - List case history
-- `GET /cases/{id}` - Get case details
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/health/deep` | Detailed health with provider status |
+| `GET` | `/config/status` | System configuration |
+| `POST` | `/run` | Process query through agent pipeline |
+| `GET` | `/cases` | List case history |
+| `GET` | `/cases/{id}` | Get case details |
 
-### Agent Endpoints
+### Intelligence
 
-- `GET /agents` - List all agents
-- `GET /agents/{name}` - Get agent details
-- `POST /run/agent` - Run single agent
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/intelligence/report` | Full adaptive intelligence report |
+| `GET` | `/intelligence/domain/{domain}` | Domain-specific expertise |
+| `GET` | `/cache/stats` | Cache statistics |
+| `POST` | `/cache/cleanup` | Clean expired cache entries |
 
-### Prompt Management
+### Simulation
 
-- `GET /prompts` - List all prompts
-- `GET /prompts/{name}` - Get prompt content
-- `PUT /prompts/{name}` - Update prompt
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/simulation/run` | Run native simulation |
+| `GET` | `/simulation/list` | List all simulations |
+| `GET` | `/simulation/{id}` | Simulation details |
+| `GET` | `/simulation/{id}/report` | Simulation report |
+| `POST` | `/simulation/{id}/chat` | Chat with simulation |
 
-### Simulation Endpoints
+### Markets
 
-- `POST /simulation/run` - Submit simulation request
-- `GET /simulation/{id}` - Get simulation status
-- `GET /simulation/{id}/report` - Get simulation report
-- `POST /simulation/{id}/chat` - Chat with simulation
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/finance/headlines` | Top business headlines |
+| `POST` | `/finance/news/analyze` | Analyze news for a query |
+| `GET` | `/finance/ticker/{symbol}` | Full ticker intelligence |
+| `GET` | `/finance/search/{query}` | Search tickers |
 
-### Learning Endpoints
+### Agents & Prompts
 
-- `GET /learning/status` - Learning engine status
-- `POST /learning/run-once` - Manually trigger learning task
-- `GET /learning/insights` - Learning insights
-- `GET /learning/knowledge` - List knowledge items
-- `GET /learning/knowledge/search` - Search knowledge
-- `POST /learning/knowledge/ingest` - Ingest knowledge
-- `GET /learning/skills` - List distilled skills
-- `POST /learning/skills/distill` - Distill new skills
-- `GET /learning/sources/trust` - Get trusted sources
-- `GET /learning/sources/freshness` - Get stale items
-- `GET /learning/prompts/versions/{name}` - Get prompt versions
-- `POST /learning/prompts/optimize/{name}` - Optimize prompt
-- `POST /learning/prompts/promote/{name}/{version}` - Promote prompt
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/agents` | List all agents |
+| `GET` | `/agents/{name}` | Agent details |
+| `GET` | `/prompts` | List all prompts |
+| `GET` | `/prompts/{name}` | Get prompt |
+| `PUT` | `/prompts/{name}` | Update prompt |
+
+### Sentinel
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/sentinel/status` | System health status |
+| `GET` | `/sentinel/alerts` | Recent alerts |
+| `GET` | `/sentinel/capability/current` | Capability snapshot |
 
 ## Project Structure
 
 ```
 backend/
 ├── app/
-│   ├── agents/              # Five specialized agents
-│   │   ├── _model.py        # Multi-provider LLM abstraction
-│   │   ├── switchboard.py   # 4D routing
-│   │   ├── research.py      # Domain-enhanced research
-│   │   ├── verifier.py      # Credibility scoring
-│   │   ├── planner.py       # Simulation-aware planning
-│   │   └── synthesizer.py   # Final answer generation
-│   ├── domain_packs/        # Pluggable domain intelligence
-│   │   ├── base.py          # DomainPack base class
-│   │   ├── registry.py      # Domain pack registry
-│   │   └── finance/         # Finance domain pack
+│   ├── agents/              # Specialist agents
+│   │   ├── _model.py        # Multi-provider LLM (OpenRouter → Ollama fallback)
+│   │   ├── switchboard.py   # Query routing & classification
+│   │   ├── research.py      # Web search, news, knowledge gathering
+│   │   ├── synthesizer.py   # Final answer generation
+│   │   ├── mirofish_node.py # Native simulation trigger
+│   │   └── finance_node.py  # Market data integration
 │   ├── services/            # Core services
-│   │   ├── learning/        # Autonomous learning layer
-│   │   │   ├── knowledge_ingestor.py
-│   │   │   ├── knowledge_store.py
-│   │   │   ├── learning_engine.py
-│   │   │   ├── prompt_optimizer.py
-│   │   │   ├── skill_distiller.py
-│   │   │   ├── trust_manager.py
-│   │   │   └── scheduler.py
-│   │   ├── api_discovery/   # API discovery subsystem
-│   │   ├── case_store.py    # Case persistence
-│   │   ├── simulation_store.py
-│   │   └── external_sources.py
+│   │   ├── simulation_engine.py    # Native scenario simulation
+│   │   ├── adaptive_intelligence.py # Domain expertise & pattern recognition
+│   │   ├── cache_manager.py        # Intelligent query caching
+│   │   ├── query_classifier.py     # GENERIC/SPECIFIC/HYBRID classification
+│   │   └── learning_filter.py      # Decides what to learn from
 │   ├── routers/             # API routers
-│   │   ├── simulation.py
-│   │   └── learning.py
-│   ├── prompts/             # Agent prompts
-│   ├── data/                # Data storage
-│   │   ├── memory/          # Case records
-│   │   ├── simulations/     # Simulation records
-│   │   ├── knowledge/       # Knowledge cache
-│   │   ├── skills/          # Distilled skills
-│   │   ├── prompt_versions/ # Prompt versions
-│   │   └── learning/        # Learning metadata
-│   ├── config.py            # Configuration
-│   ├── main.py              # FastAPI app
-│   ├── schemas.py           # Pydantic models
-│   └── graph.py             # Agent orchestration
-
+│   │   ├── simulation.py    # Native simulation endpoints
+│   │   ├── learning.py      # Learning layer
+│   │   ├── sentinel.py      # System monitoring
+│   │   └── finance.py       # Market intelligence
+│   ├── prompts/             # Agent system prompts
+│   ├── graph.py             # LangGraph pipeline
+│   ├── main.py              # FastAPI application
+│   └── config.py            # Configuration
+│
 frontend/
 ├── src/
-│   ├── app/                 # Next.js pages
-│   │   ├── page.tsx         # Dashboard
-│   │   ├── analyze/         # Analysis interface
-│   │   ├── cases/           # Case history
-│   │   ├── simulation/      # Simulation interface
-│   │   ├── prompts/         # Prompt lab
-│   │   └── config/          # System config
-│   ├── components/          # React components
-│   │   ├── layout/
-│   │   ├── common/
-│   │   ├── analyze/
-│   │   ├── cases/
-│   │   ├── simulation/
-│   │   └── prompts/
-│   └── lib/
-│       ├── api.ts           # API client
-│       └── types.ts         # TypeScript types
+│   ├── app/
+│   │   ├── page.tsx         # Main app (Command / Intel / Markets)
+│   │   ├── simulation/      # Simulation lab
+│   │   ├── sentinel/        # System health & intelligence
+│   │   └── cases/           # Case history
+│   ├── lib/
+│   │   ├── api.ts           # API clients
+│   │   └── types.ts         # TypeScript types
+│   └── components/          # Shared UI components
 ```
 
-## Development
+## Design
 
-### Adding a New Domain Pack
-
-1. Create domain pack directory: `backend/app/domain_packs/your_domain/`
-2. Implement `DomainPack` base class in `pack.py`
-3. Add domain-specific modules (data sources, analyzers, etc.)
-4. Register in `backend/app/domain_packs/init_packs.py`
-5. Agents will automatically detect and use capabilities
-
-### Customizing Agent Prompts
-
-1. Navigate to `backend/app/prompts/`
-2. Edit prompt files (research.txt, planner.txt, etc.)
-3. Changes take effect immediately (no restart needed)
-4. Use Prompt Lab UI for live editing
-
-### Running with Different Providers
-
-**OpenRouter (recommended for production):**
-```env
-PRIMARY_PROVIDER=openrouter
-OPENROUTER_API_KEY=your_key
-```
-
-**Ollama (local, privacy-focused):**
-```env
-PRIMARY_PROVIDER=ollama
-OLLAMA_ENABLED=true
-OLLAMA_BASE_URL=http://127.0.0.1:11434/api
-```
-
-**OpenAI (high quality):**
-```env
-PRIMARY_PROVIDER=openai
-OPENAI_API_KEY=your_key
-```
-
-## Deployment
-
-### Single-User Local Deployment (Recommended)
-
-This system is optimized for single-user local deployment on laptops (tested on 8GB/256GB M2 Air):
-
-- Learning scheduler respects CPU usage (<50%) and battery level (>30%)
-- Knowledge cache limited to 200MB with LRU eviction
-- All data stored locally in `backend/app/data/`
-- No cloud dependencies required
-
-### Production Deployment
-
-For multi-user production deployment:
-
-1. Add authentication and authorization
-2. Use PostgreSQL instead of JSON storage
-3. Add rate limiting and request queuing
-4. Deploy with Docker/Kubernetes
-5. Use managed LLM services
-6. Add monitoring and alerting
+- **Dark premium interface** — Glass cards, strong hierarchy, clean typography
+- **Embedded charts** — TradingView Lightweight Charts v5, no external redirections
+- **Responsive** — Works on any screen size
+- **Smooth motion** — Framer Motion for meaningful transitions
 
 ## License
 
-[Add your license here]
-
-## Contributing
-
-[Add contribution guidelines here]
+MIT
