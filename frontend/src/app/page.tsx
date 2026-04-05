@@ -250,7 +250,7 @@ function StatusBar({ daemonStatus, memoryStats, alertCount }: { daemonStatus: Da
       {daemonStatus && (
         <div className="flex items-center gap-1.5">
           <Radio size={10} className="text-gray-600" />
-          <span>{daemonStatus.signal_queue.total_signals} signals</span>
+          <span>{daemonStatus.signal_queue?.total_signals || daemonStatus.signals || 0} signals</span>
         </div>
       )}
       {alertCount > 0 && (
@@ -807,26 +807,26 @@ function PulseTab({ daemonStatus, alerts, memoryStats }: { daemonStatus: DaemonS
           </div>
         )}
 
-        {daemonStatus?.signal_queue && (
+        {daemonStatus && (
           <div className="glass rounded-2xl p-5 border border-white/[0.06]">
             <div className="flex items-center gap-2 mb-4 text-xs font-mono text-indigo-400 uppercase tracking-wider">
               <Radio size={12} /> Signal Queue
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center">
-                <div className="text-xl font-light text-white">{daemonStatus.signal_queue.total_signals}</div>
+                <div className="text-xl font-light text-white">{daemonStatus.signal_queue?.total_signals || daemonStatus.signals || 0}</div>
                 <div className="text-[9px] font-mono text-gray-600 uppercase">Total Signals</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-light text-red-400">{daemonStatus.signal_queue.severity_counts.high || 0}</div>
+                <div className="text-xl font-light text-red-400">{daemonStatus.signal_queue?.severity_counts?.high || 0}</div>
                 <div className="text-[9px] font-mono text-gray-600 uppercase">High Severity</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-light text-amber-400">{daemonStatus.signal_queue.severity_counts.medium || 0}</div>
+                <div className="text-xl font-light text-amber-400">{daemonStatus.signal_queue?.severity_counts?.medium || 0}</div>
                 <div className="text-[9px] font-mono text-gray-600 uppercase">Medium</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-light text-gray-400">{daemonStatus.signal_queue.severity_counts.low || 0}</div>
+                <div className="text-xl font-light text-gray-400">{daemonStatus.signal_queue?.severity_counts?.low || 0}</div>
                 <div className="text-[9px] font-mono text-gray-600 uppercase">Low</div>
               </div>
             </div>

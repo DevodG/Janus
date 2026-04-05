@@ -1,34 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Cpu, HardDrive, Network, Link as LinkIcon, Server, Shield, Activity, Database, Hexagon } from 'lucide-react';
-import { apiClient } from '@/lib/api';
-import type { ConfigStatusResponse, DeepHealthResponse, CaseRecord, SimulationRecord } from '@/lib/types';
+import { Activity, Radio, Database, Brain, Zap, Clock, Shield, Server, Globe, Hexagon, HardDrive, Cpu, Network, Link as LinkIcon, Settings } from 'lucide-react';
 
 export default function ConfigPage() {
-  const [config, setConfig] = useState<ConfigStatusResponse | null>(null);
-  const [health, setHealth] = useState<DeepHealthResponse | null>(null);
-  const [cases, setCases] = useState<CaseRecord[]>([]);
-  const [simulations, setSimulations] = useState<SimulationRecord[]>([]);
+  const [daemonStatus, setDaemonStatus] = useState<any>(null);
+  const [curiosity, setCuriosity] = useState<any>(null);
+  const [memoryStats, setMemoryStats] = useState<any>(null);
+  const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([
-      apiClient.getConfigStatus(),
-      apiClient.getDeepHealth(),
-      apiClient.getCases(),
-      apiClient.getSimulations(),
-    ])
-    .then(([configData, healthData, casesData, simulationsData]) => {
-      setConfig(configData);
-      setHealth(healthData);
-      setCases(casesData);
-      setSimulations(simulationsData);
-    })
-    .catch(console.error)
-    .finally(() => setLoading(false));
+  const fetchData = useCallback(async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const [healthRes, statusRes, curiosityRes, memoryRes] = await Promise.all([
+        fetch(`${baseUrl}/health`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/daemon/status`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/daemon/curiosity`).then(r => r.ok ? r.json() : null),
+        fetch(`${baseUrl}/memory/stats`).then(r => r.ok ? r.json() : null),
+      ]);
+      if (healthRes) setHealth(healthRes);
+      if (statusRes) setDaemonStatus(statusRes);
+      if (curiosityRes) setCuriosity(curiosityRes);
+      if (memoryRes) setMemoryStats(memoryRes);
+    } catch (console.error) {
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -41,7 +45,7 @@ export default function ConfigPage() {
     );
   }
 
-  const overallOk = health?.status === 'ok';
+  const overallOk = health?.status === 'ok' && daemonStatus?.running;
 
   return (
     <div className="max-w-[1480px] mx-auto px-10 py-12">
@@ -53,10 +57,10 @@ export default function ConfigPage() {
           </div>
           <div>
             <h1 className="text-3xl font-light tracking-[0.15em] text-gradient-subtle uppercase">
-              System Configuration
+              System Status
             </h1>
             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">
-              Hardware telemetry & agent capability matrix
+              Cloud backend health, daemon telemetry, and intelligence metrics
             </p>
           </div>
         </div>
@@ -79,18 +83,18 @@ export default function ConfigPage() {
           </div>
           <div className="space-y-4 relative z-10 text-sm font-mono">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <span className="text-gray-500">Kernel Version</span>
+              <span className="text-gray-500">Backend Version</span>
               <span className="text-gray-300">v{health?.version || 'Unknown'}</span>
             </div>
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <span className="text-gray-500">MiroFish Driver</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded ${config?.mirofish_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'} uppercase tracking-wider`}>
-                 {config?.mirofish_enabled ? 'Active' : 'Offline'}
+              <span className="text-gray-500">Daemon Status</span>
+              <span className={`text-[10px] px-2 py-0.5 rounded ${daemonStatus?.running ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'} uppercase tracking-wider`}>
+                 {daemonStatus?.running ? 'Active' : 'Offline'}
               </span>
             </div>
             <div className="flex items-center justify-between pb-2">
-              <span className="text-gray-500">Local Vector Map</span>
-              <span className="text-gray-300">{health?.checks?.memory_dir_writable ? 'Write OK' : 'Read Only'}</span>
+              <span className="text-gray-500">Daemon Cycles</span>
+              <span className="text-gray-300">{daemonStatus?.cycle_count || 0}</span>
             </div>
           </div>
         </motion.div>
@@ -99,28 +103,20 @@ export default function ConfigPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-3xl p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5"><Server size={100} /></div>
           <div className="flex items-center gap-2 text-xs font-mono text-violet-400 uppercase tracking-wider mb-6 relative z-10">
-            <Network size={14} /> Neural Endpoints
+            <Network size={14} /> Intelligence Engine
           </div>
           <div className="space-y-4 relative z-10 text-sm font-mono">
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <span className="text-gray-500">Primary Core</span>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-300">{health?.checks?.primary_provider || 'N/A'}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${health?.checks?.primary_provider_health?.reachable ? 'bg-emerald-400' : 'bg-red-400'}`} />
-              </div>
+              <span className="text-gray-500">Circadian Phase</span>
+              <span className="text-gray-300 capitalize">{daemonStatus?.circadian?.current_phase || 'N/A'}</span>
             </div>
             <div className="flex items-center justify-between border-b border-white/5 pb-2">
-              <span className="text-gray-500">Fallback Core</span>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-300">{health?.checks?.fallback_provider || 'N/A'}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${health?.checks?.fallback_provider_health?.reachable ? 'bg-emerald-400' : 'bg-red-400'}`} />
-              </div>
+              <span className="text-gray-500">Phase Priority</span>
+              <span className="text-gray-300 capitalize">{daemonStatus?.circadian?.priority || 'N/A'}</span>
             </div>
             <div className="flex items-center justify-between pb-2">
-              <span className="text-gray-500">Local Tensor (Ollama)</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded ${config?.ollama_enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800 text-gray-500'} uppercase tracking-wider`}>
-                 {config?.ollama_enabled ? 'Ready' : 'Disabled'}
-              </span>
+              <span className="text-gray-500">Active Tasks</span>
+              <span className="text-gray-300">{daemonStatus?.circadian?.current_tasks?.length || 0}</span>
             </div>
           </div>
         </motion.div>
@@ -129,21 +125,21 @@ export default function ConfigPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-3xl p-6 relative overflow-hidden border-indigo-500/10">
           <div className="absolute top-0 right-0 p-4 opacity-5"><LinkIcon size={100} /></div>
           <div className="flex items-center gap-2 text-xs font-mono text-emerald-400 uppercase tracking-wider mb-6 relative z-10">
-            <Database size={14} /> Global Uplinks
+            <Globe size={14} /> Data Sources
           </div>
           <div className="space-y-4 relative z-10 text-sm font-mono">
-            {[
-              { name: 'Tavily Search', enabled: config?.tavily_enabled },
-              { name: 'Alpha Vantage', enabled: config?.alphavantage_enabled },
-              { name: 'News API', enabled: config?.newsapi_enabled },
-            ].map(uplink => (
-              <div key={uplink.name} className="flex items-center justify-between border-b border-white/5 last:border-0 pb-2">
-                <span className="text-gray-500">{uplink.name}</span>
-                 <span className={`text-[10px] px-2 py-0.5 rounded ${uplink.enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800 text-gray-500'} uppercase tracking-wider`}>
-                   {uplink.enabled ? 'Streaming' : 'Offline'}
-                 </span>
-              </div>
-            ))}
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <span className="text-gray-500">Market Watcher</span>
+              <span className="text-gray-300">{daemonStatus?.watchlist?.length || 0} tickers</span>
+            </div>
+            <div className="flex items-center justify-between border-b border-white/5 pb-2">
+              <span className="text-gray-500">News Pulse</span>
+              <span className="text-gray-300">{daemonStatus?.topics?.length || 0} topics</span>
+            </div>
+            <div className="flex items-center justify-between pb-2">
+              <span className="text-gray-500">Signals Collected</span>
+              <span className="text-gray-300">{daemonStatus?.signal_queue?.total_signals || daemonStatus?.signals || 0}</span>
+            </div>
           </div>
         </motion.div>
 
@@ -153,26 +149,32 @@ export default function ConfigPage() {
           
           <div className="flex flex-col items-center gap-2 relative z-10">
             <HardDrive size={24} className="text-indigo-400 mb-2" />
-            <span className="text-3xl font-light text-gray-100">{cases.length}</span>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Archived Traces</span>
+            <span className="text-3xl font-light text-gray-100">{memoryStats?.total_cases || 0}</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Cases Stored</span>
           </div>
 
           <div className="h-16 w-px bg-white/10 hidden md:block" />
 
           <div className="flex flex-col items-center gap-2 relative z-10">
-            <Hexagon size={24} className="text-amber-400 mb-2" />
-            <span className="text-3xl font-light text-gray-100">{simulations.length}</span>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Simulations Executed</span>
+            <Brain size={24} className="text-violet-400 mb-2" />
+            <span className="text-3xl font-light text-gray-100">{curiosity?.total_discoveries || 0}</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Curiosity Discoveries</span>
+          </div>
+
+          <div className="h-16 w-px bg-white/10 hidden md:block" />
+
+          <div className="flex flex-col items-center gap-2 relative z-10">
+            <Zap size={24} className="text-amber-400 mb-2" />
+            <span className="text-3xl font-light text-gray-100">{curiosity?.total_interests || 0}</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Topics of Interest</span>
           </div>
 
           <div className="h-16 w-px bg-white/10 hidden md:block" />
 
           <div className="flex flex-col items-center gap-2 relative z-10">
             <Shield size={24} className="text-emerald-400 mb-2" />
-            <span className="text-3xl font-light text-gray-100">
-               {Object.keys(health?.checks?.prompt_files || {}).length}
-            </span>
-            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Cognitive Protocols</span>
+            <span className="text-3xl font-light text-gray-100">{daemonStatus?.cycle_count || 0}</span>
+            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Daemon Cycles</span>
           </div>
 
         </motion.div>
