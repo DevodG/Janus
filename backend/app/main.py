@@ -24,6 +24,11 @@ from app.services.query_classifier import QueryClassifier, QueryType
 from app.services.cache_manager import IntelligentCacheManager
 from app.services.learning_filter import LearningFilter
 from app.services.adaptive_intelligence import adaptive_intelligence
+from app.services.memory_graph import MemoryGraph
+from app.services.daemon import JanusDaemon
+from app.services.adaptive_pipeline import adaptive_pipeline
+from app.services.circadian_rhythm import CircadianRhythm
+from app.services.dream_processor import DreamCycleProcessor
 from app.routers.simulation import router as simulation_router
 from app.routers.learning import (
     router as learning_router,
@@ -55,7 +60,12 @@ if config.learning_enabled:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://devodg-janus-backend.hf.space",
+        "https://janus-frontend.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -179,6 +189,28 @@ def agent_detail(agent_name: str):
 query_classifier = QueryClassifier()
 cache_manager = IntelligentCacheManager()
 learning_filter = LearningFilter()
+memory_graph = MemoryGraph()
+
+# ── Background Daemon ────────────────────────────────────────────────────────
+
+janus_daemon = None
+
+
+def start_janus_daemon():
+    """Start the background intelligence daemon."""
+    global janus_daemon
+    try:
+        janus_daemon = JanusDaemon()
+        import threading
+
+        thread = threading.Thread(target=janus_daemon.run, daemon=True)
+        thread.start()
+        logger.info("Janus background daemon started")
+    except Exception as e:
+        logger.error(f"Failed to start Janus daemon: {e}")
+
+
+start_janus_daemon()
 
 
 # ── Case Execution ────────────────────────────────────────────────────────────
@@ -299,6 +331,28 @@ def run_org(task: UserTask):
         )
         logger.info(f"Result cached: type={query_type.value}, domain={domain}")
 
+        # Step 5b: Store in memory graph
+        case_id = result.get("case_id", "")
+        memory_graph.add_query(
+            query_id=case_id,
+            text=user_input,
+            type=query_type.value,
+            domain=domain,
+            confidence=final.get("confidence", 0.5),
+            response_summary=final_answer[:200] if final_answer else None,
+        )
+
+        # Extract entities from response
+        research = result.get("research", {})
+        for fact in research.get("key_facts", []):
+            words = fact.split()
+            for word in words:
+                cleaned = word.strip(".,;:()\"'")
+                if cleaned and cleaned[0].isupper() and len(cleaned) > 2:
+                    entity_id = cleaned.lower().replace(" ", "_")
+                    memory_graph.add_entity(entity_id, cleaned, "entity")
+                    memory_graph.link_query_entity(case_id, entity_id, 0.5)
+
         # Step 6: Learn from this case (adaptive intelligence)
         adaptive_intelligence.learn_from_case(payload, elapsed)
         logger.info(
@@ -331,6 +385,7 @@ def run_org(task: UserTask):
             "domain_expertise_level": ai_context.get("domain_expertise", {}).get(
                 "case_count", 0
             ),
+            "memory_graph": memory_graph.get_stats(),
         }
 
         return payload
@@ -354,6 +409,25 @@ def run_org_debug(task: UserTask):
         raise HTTPException(
             status_code=500, detail="Failed to process request. Please try again."
         )
+
+
+@app.post("/run/fast")
+def run_fast(task: UserTask):
+    """Run with adaptive pipeline — automatically optimizes depth based on query complexity."""
+    try:
+        result = adaptive_pipeline.run(task.user_input)
+        return result
+    except Exception as e:
+        logger.exception("Error in /run/fast")
+        raise HTTPException(
+            status_code=500, detail="Failed to process request. Please try again."
+        )
+
+
+@app.get("/pipeline/stats")
+def pipeline_stats():
+    """Get adaptive pipeline statistics."""
+    return adaptive_pipeline.get_stats()
 
 
 @app.post("/run/agent")
@@ -500,3 +574,93 @@ def intelligence_save():
     """Force save all adaptive intelligence."""
     adaptive_intelligence.save()
     return {"saved": True, "total_cases": adaptive_intelligence.total_cases}
+
+
+# ── Living System Endpoints ──────────────────────────────────────────────────
+
+
+@app.get("/daemon/status")
+def daemon_status():
+    """Get background daemon status."""
+    if janus_daemon:
+        return janus_daemon.get_status()
+    return {"running": False, "message": "Daemon not started"}
+
+
+@app.get("/daemon/alerts")
+def daemon_alerts(limit: int = 20, min_severity: str = "low"):
+    """Get alerts from the signal queue."""
+    if janus_daemon:
+        return janus_daemon.signal_queue.get_alerts(
+            limit=limit, min_severity=min_severity
+        )
+    return []
+
+
+@app.get("/daemon/watchlist")
+def daemon_watchlist():
+    """Get current watchlist status."""
+    if janus_daemon:
+        return janus_daemon.market_watcher.get_watchlist_status()
+    return []
+
+
+@app.get("/daemon/events")
+def daemon_events(limit: int = 20, event_type: str = None):
+    """Get detected events."""
+    if janus_daemon:
+        if event_type:
+            return janus_daemon.event_detector.get_events_by_type(event_type)
+        return janus_daemon.event_detector.get_recent_events(limit=limit)
+    return []
+
+
+@app.get("/daemon/circadian")
+def daemon_circadian():
+    """Get circadian rhythm status."""
+    if janus_daemon:
+        return janus_daemon.circadian.get_status()
+    return {"running": False}
+
+
+@app.get("/daemon/dreams")
+def daemon_dreams(limit: int = 10):
+    """Get dream history."""
+    if janus_daemon:
+        return janus_daemon.dream_processor.get_dream_history(limit=limit)
+    return []
+
+
+@app.post("/daemon/dream/now")
+def trigger_dream_cycle():
+    """Manually trigger a dream cycle."""
+    if janus_daemon:
+        dream_report = janus_daemon.dream_processor.run_dream_cycle(
+            memory_graph=memory_graph,
+            adaptive_intelligence=adaptive_intelligence,
+        )
+        janus_daemon.last_dream = dream_report
+        return dream_report
+    return {"error": "Daemon not running"}
+
+
+@app.get("/memory/stats")
+def memory_graph_stats():
+    """Get memory graph statistics."""
+    return memory_graph.get_stats()
+
+
+@app.get("/memory/queries")
+def memory_queries(domain: str = None, search: str = None, limit: int = 20):
+    """Query the memory graph."""
+    if search:
+        return memory_graph.search_queries(search, limit=limit)
+    if domain:
+        return memory_graph.get_queries_by_domain(domain, limit=limit)
+    return {"message": "Use 'search' or 'domain' parameter"}
+
+
+@app.get("/memory/related/{query_id}")
+def memory_related(query_id: str, limit: int = 5):
+    """Get queries related to a given query."""
+    return memory_graph.get_related_queries(query_id, limit=limit)

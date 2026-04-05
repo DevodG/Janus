@@ -7,54 +7,53 @@ import {
   Minus, AlertTriangle, Shield, CheckCircle, Globe, BarChart3,
   RefreshCw, ExternalLink, Eye, Scan, ChevronRight, X, Play,
   Clock, Target, AlertCircle, Layers, Brain, Cpu, ArrowRight,
-  FileText, MessageSquare, ChevronDown, Terminal, Radio, GitBranch
+  FileText, MessageSquare, ChevronDown, Terminal, Radio, GitBranch,
+  Bell, Moon, Sun, Sunrise, Sunset, Activity as PulseIcon, Database, Network,
+  ChevronUp, Star, Hash, Eye as EyeIcon, Info
 } from 'lucide-react';
 import { apiClient, financeClient } from '@/lib/api';
 import type { CaseRecord } from '@/lib/types';
 import { createChart, ColorType, CrosshairMode, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
-import type { IChartApi, ISeriesApi, CandlestickData, HistogramData, SeriesType } from 'lightweight-charts';
+import type { IChartApi, CandlestickData, HistogramData } from 'lightweight-charts';
+import JanusOrb from '@/components/ui/JanusOrb';
+import Typewriter from '@/components/ui/Typewriter';
+import ConfidenceRing from '@/components/ui/ConfidenceRing';
+import { StanceChip, SignalBadge, SeverityBadge } from '@/components/ui/Badges';
 
 // ─── Types ───────────────────────────────────────────────────
-interface TextAnalysis {
-  tickers: string[];
-  entities: { text: string; type: string; confidence: number }[];
-  stance: { stance: string; confidence: number; sentiment_score: number; bullish_count: number; bearish_count: number };
-  scam_detection: { scam_score: number; risk_level: string; match_count: number };
-  rumor_detection: { rumor_score: number; assessment: string; rumor_count: number; verification_count: number };
-  event_impact: { impact_level: string; volatility_level: string; confidence: number; event_count: number };
-  source_assessment: { average_score: number; trusted_count: number; assessment: string } | null;
+interface DaemonStatus {
+  running: boolean;
+  cycle_count: number;
+  last_run: string;
+  circadian: {
+    current_phase: string;
+    phase_name: string;
+    phase_description: string;
+    priority: string;
+    current_tasks: string[];
+  };
+  signal_queue: {
+    total_signals: number;
+    severity_counts: Record<string, number>;
+    type_counts: Record<string, number>;
+  };
 }
 
-interface TickerIntel {
-  symbol: string;
-  company_name: string;
-  quote: Record<string, string>;
-  overview: { sector?: string; industry?: string; market_cap?: string; pe_ratio?: string; '52_week_high'?: string; '52_week_low'?: string; analyst_target?: string; description?: string };
-  news: { title: string; source: string; url: string; published_at: string; description: string }[];
-  stance: { stance: string; confidence: number; sentiment_score: number };
-  event_impact: { impact_level: string; volatility_level: string; event_count: number };
-  ai_signal: { signal: string; conviction: number; reasoning: string; risk: string; timeframe: string };
+interface Alert {
+  type: string;
+  title: string;
+  description: string;
+  source: string;
+  severity: string;
+  sentiment: string;
+  timestamp: string;
+  url?: string;
 }
 
-interface AnalyzedArticle {
-  title: string; source: string; url: string; published_at: string; description: string;
-  stance: string; sentiment_score: number; scam_score: number; rumor_score: number; source_credibility: number;
-}
-
-// ─── Janus Orb ───────────────────────────────────────────────
-function JanusOrb({ size = 40, thinking = false }: { size?: number; thinking?: boolean }) {
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <motion.div className="absolute inset-0 rounded-full"
-        style={{ background: 'radial-gradient(circle at 30% 30%, #818cf8, #4f46e5 50%, #312e81 100%)', boxShadow: thinking ? '0 0 30px rgba(99,102,241,0.6), 0 0 60px rgba(99,102,241,0.3)' : '0 0 15px rgba(99,102,241,0.3)' }}
-        animate={thinking ? { scale: [1, 1.1, 1] } : {}} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }} />
-      {thinking && <>
-        <div className="janus-ring-1 absolute inset-[-6px] rounded-full border border-indigo-400/30" style={{ borderTopColor: 'transparent', borderBottomColor: 'transparent' }} />
-        <div className="janus-ring-2 absolute inset-[-12px] rounded-full border border-violet-400/20" style={{ borderLeftColor: 'transparent', borderRightColor: 'transparent' }} />
-        <div className="janus-ring-3 absolute inset-[-18px] rounded-full border border-indigo-300/10" style={{ borderTopColor: 'transparent', borderRightColor: 'transparent' }} />
-      </>}
-    </div>
-  );
+interface MemoryStats {
+  queries: number;
+  entities: number;
+  insights: number;
 }
 
 // ─── Art Piece ───────────────────────────────────────────────
@@ -71,11 +70,11 @@ function ArtPiece({ onUnlock }: { onUnlock: () => void }) {
         <JanusOrb size={64} thinking />
       </motion.div>
       <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 1.5 }} className="relative z-10 text-center">
-        <h1 className="text-7xl font-extralight tracking-[0.3em] mb-4 text-gradient">JANUS</h1>
+        <h1 className="text-7xl font-extralight tracking-[0.3em] mb-4 bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">JANUS</h1>
         <motion.div initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: '100%' }} transition={{ delay: 1.5, duration: 2 }}
           className="h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent mb-6" />
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 2, duration: 1.5 }}
-          className="font-mono text-xs tracking-[0.4em] text-gray-400 uppercase">cognitive intelligence interface</motion.p>
+          className="font-mono text-xs tracking-[0.4em] text-gray-400 uppercase">living intelligence system</motion.p>
       </motion.div>
       <AnimatePresence>
         {show && (
@@ -91,20 +90,6 @@ function ArtPiece({ onUnlock }: { onUnlock: () => void }) {
   );
 }
 
-// ─── Typewriter ──────────────────────────────────────────────
-function Typewriter({ text, speed = 10 }: { text: string; speed?: number }) {
-  const [displayed, setDisplayed] = useState('');
-  const idx = useRef(0);
-  useEffect(() => {
-    idx.current = 0; setDisplayed('');
-    const iv = setInterval(() => {
-      if (idx.current < text.length) { setDisplayed(p => p + text[idx.current]); idx.current++; } else clearInterval(iv);
-    }, speed);
-    return () => clearInterval(iv);
-  }, [text, speed]);
-  return <span>{displayed}{displayed.length < text.length && <span className="inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 animate-pulse" />}</span>;
-}
-
 // ─── Thinking ────────────────────────────────────────────────
 const STAGES = ['Routing to switchboard...', 'Research agent scanning sources...', 'Cross-referencing databases...', 'Synthesizer composing analysis...'];
 function ThinkingDisplay({ stage }: { stage: string }) {
@@ -118,290 +103,6 @@ function ThinkingDisplay({ stage }: { stage: string }) {
         </div>
       </div>
     </motion.div>
-  );
-}
-
-// ─── Confidence Ring ─────────────────────────────────────────
-function ConfidenceRing({ value, label }: { value: number; label: string }) {
-  const pct = Math.round(value * 100);
-  const circ = 2 * Math.PI * 18;
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative w-12 h-12">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 40 40">
-          <circle cx="20" cy="20" r="18" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="2" />
-          <motion.circle cx="20" cy="20" r="18" fill="none" stroke={value >= 0.7 ? '#22c55e' : value >= 0.5 ? '#eab308' : '#ef4444'} strokeWidth="2" strokeLinecap="round" strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ * (1 - value) }} transition={{ duration: 1.5, ease: 'easeOut' }} />
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-xs font-mono text-gray-300">{pct}</span>
-      </div>
-      <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">{label}</span>
-    </div>
-  );
-}
-
-// ─── Stance Chip ─────────────────────────────────────────────
-function StanceChip({ stance, score }: { stance: string; score: number }) {
-  if (stance === 'bullish') return <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full"><TrendingUp size={9} />Bull {Math.round(score * 100)}%</span>;
-  if (stance === 'bearish') return <span className="flex items-center gap-1 text-[10px] font-mono text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full"><TrendingDown size={9} />Bear {Math.round((1 - score) * 100)}%</span>;
-  return <span className="flex items-center gap-1 text-[10px] font-mono text-gray-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full"><Minus size={9} />Neutral</span>;
-}
-
-// ─── Signal Badge ─────────────────────────────────────────────
-function SignalBadge({ signal, conviction }: { signal: string; conviction: number }) {
-  const map: Record<string, string> = { BUY: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', SELL: 'bg-red-500/20 text-red-300 border-red-500/40', HOLD: 'bg-amber-500/20 text-amber-300 border-amber-500/40', WATCH: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' };
-  return (
-    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border ${map[signal] || map.WATCH}`}>
-      <span className="text-sm font-mono font-bold">{signal}</span>
-      <span className="text-[10px] font-mono opacity-70">{Math.round(conviction * 100)}% conviction</span>
-    </div>
-  );
-}
-
-// ─── Candlestick Chart Component ─────────────────────────────
-function CandlestickChart({ symbol, companyName, price, change, changePct, isPositive }: {
-  symbol: string;
-  companyName: string;
-  price?: string;
-  change?: string;
-  changePct?: string;
-  isPositive?: boolean;
-}) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const volumeSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
-  const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y'>('1M');
-  const [chartData, setChartData] = useState<CandlestickData[]>([]);
-  const [volumeData, setVolumeData] = useState<HistogramData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Generate realistic OHLC data based on current price
-  const generateChartData = useCallback((basePrice: number, tf: string): CandlestickData[] => {
-    const data: CandlestickData[] = [];
-    let currentPrice = basePrice;
-    const volatility = basePrice * 0.02; // 2% daily volatility
-    const now = new Date();
-    let days: number;
-
-    switch (tf) {
-      case '1D': days = 1; break;
-      case '1W': days = 7; break;
-      case '1M': days = 30; break;
-      case '3M': days = 90; break;
-      case '1Y': days = 365; break;
-      default: days = 30;
-    }
-
-    const startDate = new Date(now);
-    startDate.setDate(startDate.getDate() - days);
-
-    for (let i = 0; i < days; i++) {
-      const date = new Date(startDate);
-      date.setDate(date.getDate() + i);
-
-      // Skip weekends
-      if (date.getDay() === 0 || date.getDay() === 6) continue;
-
-      const dayVolatility = volatility * (0.5 + Math.random());
-      const open = currentPrice;
-      const high = open + Math.random() * dayVolatility;
-      const low = open - Math.random() * dayVolatility;
-      const close = open + (Math.random() - 0.48) * dayVolatility; // Slight upward bias
-
-      const timeStr = date.toISOString().split('T')[0];
-
-      data.push({
-        time: timeStr,
-        open: parseFloat(open.toFixed(2)),
-        high: parseFloat(high.toFixed(2)),
-        low: parseFloat(low.toFixed(2)),
-        close: parseFloat(close.toFixed(2)),
-      });
-
-      currentPrice = close;
-    }
-
-    return data;
-  }, []);
-
-  const generateVolumeData = useCallback((candleData: CandlestickData[]): HistogramData[] => {
-    return candleData.map(candle => ({
-      time: candle.time,
-      value: Math.floor(Math.random() * 10000000) + 1000000,
-      color: candle.close >= candle.open ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
-    }));
-  }, []);
-
-  // Initialize chart
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    const chart = createChart(chartContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: '#9ca3af',
-        fontSize: 11,
-      },
-      grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-      },
-      rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.05)',
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0.25,
-        },
-      },
-      timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.05)',
-        timeVisible: false,
-      },
-      handleScroll: true,
-      handleScale: true,
-    });
-
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#22c55e',
-      downColor: '#ef4444',
-      borderUpColor: '#22c55e',
-      borderDownColor: '#ef4444',
-      wickUpColor: '#22c55e',
-      wickDownColor: '#ef4444',
-    });
-
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: 'volume',
-    });
-
-    chart.priceScale('volume').applyOptions({
-      scaleMargins: {
-        top: 0.8,
-        bottom: 0,
-      },
-    });
-
-    chartRef.current = chart;
-    seriesRef.current = candleSeries;
-    volumeSeriesRef.current = volumeSeries;
-
-    return () => {
-      chart.remove();
-      chartRef.current = null;
-      seriesRef.current = null;
-      volumeSeriesRef.current = null;
-    };
-  }, []);
-
-  // Update data when price or timeframe changes
-  useEffect(() => {
-    if (!price || !seriesRef.current || !volumeSeriesRef.current) return;
-
-    const basePrice = parseFloat(price);
-    if (isNaN(basePrice)) return;
-
-    setLoading(true);
-    setError(null);
-
-    const candles = generateChartData(basePrice, timeframe);
-    const volumes = generateVolumeData(candles);
-
-    setChartData(candles);
-    setVolumeData(volumes);
-
-    seriesRef.current.setData(candles);
-    volumeSeriesRef.current.setData(volumes);
-
-    if (chartRef.current) {
-      chartRef.current.timeScale().fitContent();
-    }
-
-    setLoading(false);
-  }, [price, timeframe, generateChartData, generateVolumeData]);
-
-  return (
-    <div className="glass rounded-2xl border border-white/[0.06] overflow-hidden">
-      {/* Chart Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-        <div className="flex items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-light text-white">{symbol}</span>
-              <span className="text-sm text-gray-500">{companyName}</span>
-            </div>
-            {price && (
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-2xl font-light text-white">{parseFloat(price).toFixed(2)}</span>
-                {change && changePct && (
-                  <span className={`text-sm font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {isPositive ? '+' : ''}{parseFloat(change).toFixed(2)} ({changePct})
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Timeframe Selector */}
-        <div className="flex items-center gap-1">
-          {(['1D', '1W', '1M', '3M', '1Y'] as const).map(tf => (
-            <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
-                timeframe === tf
-                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30'
-                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
-              }`}
-            >
-              {tf}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Chart Container */}
-      <div className="relative h-80">
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-950/50 z-10">
-            <div className="flex flex-col items-center gap-3">
-              <JanusOrb size={32} thinking />
-              <p className="text-xs font-mono text-indigo-400 animate-pulse">Loading chart...</p>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-950/50 z-10">
-            <div className="flex flex-col items-center gap-3">
-              <AlertTriangle size={24} className="text-amber-500/50" />
-              <p className="text-xs font-mono text-amber-400">{error}</p>
-            </div>
-          </div>
-        )}
-        <div ref={chartContainerRef} className="w-full h-full" />
-      </div>
-
-      {/* Volume Legend */}
-      <div className="flex items-center gap-4 px-5 py-2 border-t border-white/5 text-[10px] font-mono text-gray-600">
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm bg-emerald-500/50" />
-          <span>Bullish</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm bg-red-500/50" />
-          <span>Bearish</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-sm bg-indigo-500/30" />
-          <span>Volume</span>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -426,7 +127,6 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
       <div className="flex items-center gap-2 text-[10px] font-mono text-indigo-400 uppercase tracking-wider">
         <Zap size={12} /> JANUS Research Complete
       </div>
-      {/* Agent confidence rings - FIXED: use composite key */}
       {result.outputs && result.outputs.filter((o: any) => o.confidence > 0).length > 0 && (
         <div className="flex items-center gap-5">
           {result.outputs.filter((o: any) => o.confidence > 0).map((o: any, idx: number) => (
@@ -434,7 +134,6 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
           ))}
         </div>
       )}
-      {/* Route */}
       {result.route && (
         <div className="flex gap-2 flex-wrap">
           <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{result.route.domain_pack}</span>
@@ -442,7 +141,6 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
           <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-white/5 text-gray-400 border border-white/10">{result.route.complexity}</span>
         </div>
       )}
-      {/* Final synthesis */}
       {result.final_answer && (
         <div className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap font-mono">
           <Typewriter text={result.final_answer} speed={6} />
@@ -455,8 +153,7 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
 // ─── News Article Card ─────────────────
 function ArticleCard({ article, index, onResearch }: {
   article: { title: string; source: string; url: string; published_at: string; description: string; stance: string; sentiment_score: number };
-  index: number;
-  onResearch: (query: string) => void;
+  index: number; onResearch: (query: string) => void;
 }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}
@@ -488,6 +185,174 @@ function ArticleCard({ article, index, onResearch }: {
   );
 }
 
+// ─── Alert Card ──────────────────────────────────────────────
+function AlertCard({ alert, index }: { alert: Alert; index: number }) {
+  return (
+    <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
+      className="glass rounded-xl border border-white/[0.04] hover:border-white/10 transition-colors p-3">
+      <div className="flex items-start gap-3">
+        <div className="mt-1">
+          {alert.severity === 'high' || alert.severity === 'critical' ? (
+            <AlertTriangle size={14} className="text-red-400" />
+          ) : (
+            <Info size={14} className="text-amber-400" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <SeverityBadge severity={alert.severity} />
+            <span className="text-[9px] font-mono text-gray-600">{alert.type}</span>
+            {alert.source && <span className="text-[9px] font-mono text-gray-700">{alert.source}</span>}
+          </div>
+          <p className="text-xs text-gray-300 leading-snug">{alert.title}</p>
+          {alert.description && <p className="text-[10px] text-gray-600 mt-1 line-clamp-1">{alert.description}</p>}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[9px] font-mono text-gray-700">{new Date(alert.timestamp).toLocaleString()}</span>
+            {alert.url && (
+              <a href={alert.url} target="_blank" rel="noreferrer" className="text-[9px] font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5">
+                <ExternalLink size={8} /> Read
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── System Status Bar ───────────────────────────────────────
+function StatusBar({ daemonStatus, memoryStats, alertCount }: { daemonStatus: DaemonStatus | null; memoryStats: MemoryStats | null; alertCount: number }) {
+  const phaseIcons: Record<string, React.ReactNode> = {
+    morning: <Sunrise size={12} className="text-amber-400" />,
+    daytime: <Sun size={12} className="text-indigo-400" />,
+    evening: <Sunset size={12} className="text-violet-400" />,
+    night: <Moon size={12} className="text-indigo-300" />,
+  };
+
+  return (
+    <div className="flex items-center gap-4 text-[10px] font-mono text-gray-500">
+      {daemonStatus?.circadian && (
+        <div className="flex items-center gap-1.5">
+          {phaseIcons[daemonStatus.circadian.current_phase]}
+          <span className="text-gray-400">{daemonStatus.circadian.phase_name}</span>
+        </div>
+      )}
+      <div className="flex items-center gap-1.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-emerald-400/70">Daemon Active</span>
+      </div>
+      {memoryStats && (
+        <div className="flex items-center gap-1.5">
+          <Database size={10} className="text-gray-600" />
+          <span>{memoryStats.queries} queries, {memoryStats.entities} entities</span>
+        </div>
+      )}
+      {daemonStatus && (
+        <div className="flex items-center gap-1.5">
+          <Radio size={10} className="text-gray-600" />
+          <span>{daemonStatus.signal_queue.total_signals} signals</span>
+        </div>
+      )}
+      {alertCount > 0 && (
+        <div className="flex items-center gap-1.5">
+          <Bell size={10} className="text-amber-400" />
+          <span className="text-amber-400">{alertCount} alerts</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TAB COMPONENTS
+// ═══════════════════════════════════════════════════════════
+
+// ─── Command Tab ─────────────────────────────────────────────
+function CommandTab() {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [thinkingStage, setThinkingStage] = useState(0);
+  const [result, setResult] = useState<CaseRecord | null>(null);
+  const [input, setInput] = useState('');
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isAnalyzing) return;
+    const iv = setInterval(() => setThinkingStage(p => (p + 1) % STAGES.length), 3000);
+    return () => clearInterval(iv);
+  }, [isAnalyzing]);
+
+  const handleAnalyze = useCallback(async (q: string) => {
+    if (!q.trim()) return;
+    setIsAnalyzing(true); setResult(null); setThinkingStage(0);
+    try {
+      const res = await apiClient.analyze({ user_input: q });
+      setResult(res);
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+    } catch { /* silent */ } finally { setIsAnalyzing(false); }
+  }, []);
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="relative group shrink-0">
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-indigo-500/20 via-transparent to-violet-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+        <div className="relative flex items-center gap-3 px-5 py-4 rounded-2xl glass border border-white/[0.06] group-focus-within:border-indigo-500/20 transition-colors">
+          <Sparkles size={16} className="text-indigo-400/50 shrink-0" />
+          <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAnalyze(input)} disabled={isAnalyzing}
+            placeholder="Ask Janus anything — analysis, research, market intelligence..."
+            className="flex-1 bg-transparent text-gray-100 placeholder-gray-600 text-sm focus:outline-none disabled:opacity-40 font-mono" />
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleAnalyze(input)} disabled={isAnalyzing || !input.trim()}
+            className="p-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white transition-all duration-200">
+            <Send size={14} />
+          </motion.button>
+        </div>
+      </div>
+
+      <div className="flex-1 mt-5 overflow-y-auto rounded-2xl">
+        <AnimatePresence mode="wait">
+          {isAnalyzing ? (
+            <ThinkingDisplay stage={STAGES[thinkingStage]} />
+          ) : result ? (
+            <motion.div key="result" ref={resultRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-8">
+              {result.route && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{result.route.domain_pack}</span>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/5 text-gray-400 border border-white/10">{result.route.execution_mode}</span>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/5 text-gray-400 border border-white/10">{result.route.complexity}</span>
+                </div>
+              )}
+              {result.outputs && result.outputs.filter((o: any) => o.confidence > 0).length > 0 && (
+                <div className="flex items-center gap-6 py-3">
+                  {result.outputs.filter((o: any) => o.confidence > 0).map((o: any, idx: number) => (
+                    <ConfidenceRing key={`${o.agent || 'output'}-${idx}`} value={o.confidence} label={o.agent || `Agent ${idx + 1}`} />
+                  ))}
+                </div>
+              )}
+              {result.final_answer && (
+                <div className="glass rounded-2xl p-6">
+                  <div className="flex items-center gap-2 mb-4 text-xs font-mono text-indigo-400/70 uppercase tracking-wider"><Zap size={12} /><span>Synthesis Complete</span></div>
+                  <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200 whitespace-pre-wrap">
+                    <Typewriter text={result.final_answer} speed={8} />
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center py-20">
+              <JanusOrb size={48} />
+              <p className="mt-6 text-sm text-gray-500 font-mono">Awaiting directive...</p>
+              <p className="mt-2 text-xs text-gray-700 max-w-md">Multi-agent pipeline: switchboard → research → synthesizer.</p>
+              <div className="flex flex-wrap justify-center gap-2 mt-8 max-w-lg">
+                {['Analyze RBI rate hike impact on Indian markets', 'What happens to $NVDA if AI spending slows?', 'Compare Reliance vs TCS as long-term investments'].map(q => (
+                  <button key={q} onClick={() => { setInput(q); handleAnalyze(q); }} className="px-3 py-1.5 rounded-full text-xs font-mono text-gray-500 border border-white/5 hover:border-indigo-500/20 hover:text-indigo-300 transition-all text-left">{q}</button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 // ─── Intel Stream Tab ─────────────────────────────────────────
 function IntelStreamTab() {
@@ -530,7 +395,6 @@ function IntelStreamTab() {
 
   return (
     <div className="h-full flex gap-5 overflow-hidden">
-      {/* Left: news feed */}
       <div className="flex flex-col gap-3 overflow-hidden" style={{ width: researchResult || researchLoading ? '45%' : '100%', transition: 'width 0.4s ease' }}>
         <div className="flex gap-2 shrink-0">
           <div className="flex-1 flex items-center gap-3 px-4 py-3 glass rounded-2xl border border-white/[0.06] focus-within:border-indigo-500/30 transition-colors">
@@ -544,11 +408,9 @@ function IntelStreamTab() {
             {loading ? <RefreshCw size={13} className="animate-spin" /> : 'Search'}
           </button>
         </div>
-
         <div className="text-[10px] font-mono text-gray-600 uppercase tracking-wider shrink-0">
-          {searched ? `"${query}"` : 'Top Business Headlines'} — click Deep Research on any article to run full agent analysis
+          {searched ? `"${query}"` : 'Top Business Headlines'} — click Deep Research on any article
         </div>
-
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -567,8 +429,6 @@ function IntelStreamTab() {
           )}
         </div>
       </div>
-
-      {/* Right: research output */}
       <AnimatePresence>
         {(researchResult || researchLoading) && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
@@ -578,9 +438,7 @@ function IntelStreamTab() {
                 Research: {researchQuery}...
               </div>
               <button onClick={() => { setResearchResult(null); setResearchLoading(false); }}
-                className="text-[10px] font-mono text-gray-600 hover:text-gray-400 transition-colors">
-                ✕ Close
-              </button>
+                className="text-[10px] font-mono text-gray-600 hover:text-gray-400 transition-colors">✕ Close</button>
             </div>
             <div className="flex-1 overflow-y-auto">
               <ResearchPanel result={researchResult} loading={researchLoading} stage={STAGES[researchStage]} />
@@ -592,14 +450,131 @@ function IntelStreamTab() {
   );
 }
 
+// ─── Candlestick Chart Component ─────────────────────────────
+function CandlestickChart({ symbol, companyName, price, change, changePct, isPositive }: {
+  symbol: string; companyName: string; price?: string; change?: string; changePct?: string; isPositive?: boolean;
+}) {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
+  const volumeSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
+  const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y'>('1M');
+  const [loading, setLoading] = useState(false);
+
+  const generateChartData = useCallback((basePrice: number, tf: string): CandlestickData[] => {
+    const data: CandlestickData[] = [];
+    let currentPrice = basePrice;
+    const volatility = basePrice * 0.02;
+    const now = new Date();
+    let days = tf === '1D' ? 1 : tf === '1W' ? 7 : tf === '1M' ? 30 : tf === '3M' ? 90 : 365;
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days);
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      if (date.getDay() === 0 || date.getDay() === 6) continue;
+      const dayVol = volatility * (0.5 + Math.random());
+      const open = currentPrice;
+      const high = open + Math.random() * dayVol;
+      const low = open - Math.random() * dayVol;
+      const close = open + (Math.random() - 0.48) * dayVol;
+      data.push({ time: date.toISOString().split('T')[0], open: parseFloat(open.toFixed(2)), high: parseFloat(high.toFixed(2)), low: parseFloat(low.toFixed(2)), close: parseFloat(close.toFixed(2)) });
+      currentPrice = close;
+    }
+    return data;
+  }, []);
+
+  const generateVolumeData = useCallback((candleData: CandlestickData[]): HistogramData[] => {
+    return candleData.map(candle => ({
+      time: candle.time, value: Math.floor(Math.random() * 10000000) + 1000000,
+      color: candle.close >= candle.open ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+    const chart = createChart(chartContainerRef.current, {
+      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#9ca3af', fontSize: 11 },
+      grid: { vertLines: { color: 'rgba(255, 255, 255, 0.03)' }, horzLines: { color: 'rgba(255, 255, 255, 0.03)' } },
+      crosshair: { mode: CrosshairMode.Normal },
+      rightPriceScale: { borderColor: 'rgba(255, 255, 255, 0.05)', scaleMargins: { top: 0.1, bottom: 0.25 } },
+      timeScale: { borderColor: 'rgba(255, 255, 255, 0.05)', timeVisible: false },
+      handleScroll: true, handleScale: true,
+    });
+    const candleSeries = chart.addSeries(CandlestickSeries, { upColor: '#22c55e', downColor: '#ef4444', borderUpColor: '#22c55e', borderDownColor: '#ef4444', wickUpColor: '#22c55e', wickDownColor: '#ef4444' });
+    const volumeSeries = chart.addSeries(HistogramSeries, { priceFormat: { type: 'volume' }, priceScaleId: 'volume' });
+    chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
+    chartRef.current = chart; seriesRef.current = candleSeries; volumeSeriesRef.current = volumeSeries;
+    return () => { chart.remove(); chartRef.current = null; seriesRef.current = null; volumeSeriesRef.current = null; };
+  }, []);
+
+  useEffect(() => {
+    if (!price || !seriesRef.current || !volumeSeriesRef.current) return;
+    const basePrice = parseFloat(price);
+    if (isNaN(basePrice)) return;
+    setLoading(true);
+    const candles = generateChartData(basePrice, timeframe);
+    const volumes = generateVolumeData(candles);
+    seriesRef.current.setData(candles); volumeSeriesRef.current.setData(volumes);
+    if (chartRef.current) chartRef.current.timeScale().fitContent();
+    setLoading(false);
+  }, [price, timeframe, generateChartData, generateVolumeData]);
+
+  return (
+    <div className="glass rounded-2xl border border-white/[0.06] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-light text-white">{symbol}</span>
+            <span className="text-sm text-gray-500">{companyName}</span>
+          </div>
+          {price && (
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-2xl font-light text-white">{parseFloat(price).toFixed(2)}</span>
+              {change && changePct && (
+                <span className={`text-sm font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {isPositive ? '+' : ''}{parseFloat(change).toFixed(2)} ({changePct})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {(['1D', '1W', '1M', '3M', '1Y'] as const).map(tf => (
+            <button key={tf} onClick={() => setTimeframe(tf)}
+              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${timeframe === tf ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}>{tf}</button>
+          ))}
+        </div>
+      </div>
+      <div className="relative h-80">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-950/50 z-10">
+            <div className="flex flex-col items-center gap-3">
+              <JanusOrb size={32} thinking />
+              <p className="text-xs font-mono text-indigo-400 animate-pulse">Loading chart...</p>
+            </div>
+          </div>
+        )}
+        <div ref={chartContainerRef} className="w-full h-full" />
+      </div>
+      <div className="flex items-center gap-4 px-5 py-2 border-t border-white/5 text-[10px] font-mono text-gray-600">
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-emerald-500/50" />Bullish</div>
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-red-500/50" />Bearish</div>
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-sm bg-indigo-500/30" />Volume</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Markets Tab ──────────────────────────────────────────────
 function MarketsTab() {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{ symbol: string; name: string; region?: string }[]>([]);
-  const [intel, setIntel] = useState<TickerIntel | null>(null);
+  const [intel, setIntel] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [newsLoading, setNewsLoading] = useState(false);
-  const [news, setNews] = useState<{ title: string; source: string; url: string; published_at: string; description: string; stance: string; sentiment_score: number }[]>([]);
+  const [news, setNews] = useState<any[]>([]);
   const [activeSymbol, setActiveSymbol] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -618,8 +593,6 @@ function MarketsTab() {
       catch { setSearchResults([]); }
     }, 400);
   };
-
-
 
   const loadTicker = useCallback(async (symbol: string, region = '') => {
     setLoading(true); setIntel(null); setNews([]); setActiveSymbol(symbol);
@@ -657,10 +630,8 @@ function MarketsTab() {
   const changePct = intel?.quote?.['10. change percent'];
   const isPositive = change && parseFloat(change) >= 0;
 
-
   return (
     <div className="h-full flex flex-col gap-4 overflow-hidden">
-      {/* Search */}
       <div className="relative shrink-0">
         <div className="flex items-center gap-3 px-4 py-3 glass rounded-2xl border border-white/[0.06] focus-within:border-indigo-500/30 transition-colors">
           <Search size={15} className="text-gray-500 shrink-0" />
@@ -723,17 +694,7 @@ function MarketsTab() {
 
       {!loading && intel && (
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {/* Candlestick Chart - EMBEDDED, NO REDIRECTION */}
-          <CandlestickChart
-            symbol={intel.symbol}
-            companyName={intel.company_name}
-            price={price}
-            change={change}
-            changePct={changePct}
-            isPositive={!!isPositive}
-          />
-
-          {/* Header with Signal */}
+          <CandlestickChart symbol={intel.symbol} companyName={intel.company_name} price={price} change={change} changePct={changePct} isPositive={!!isPositive} />
           <div className="glass rounded-2xl p-5 border border-white/[0.06]">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
@@ -751,7 +712,6 @@ function MarketsTab() {
                 <StanceChip stance={intel.stance.stance} score={intel.stance.sentiment_score} />
               </div>
             </div>
-            {/* AI signal reasoning */}
             {intel.ai_signal?.reasoning && (
               <div className="mt-4 pt-4 border-t border-white/5">
                 <div className="flex items-center gap-2 mb-1.5 text-[10px] font-mono text-indigo-400 uppercase tracking-wider"><Zap size={10} /> AI Signal</div>
@@ -762,7 +722,6 @@ function MarketsTab() {
                 </div>
               </div>
             )}
-            {/* Deep Research button */}
             <div className="mt-4 pt-4 border-t border-white/5">
               <button onClick={runDeepResearch} disabled={researchLoading}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-xs font-mono text-indigo-300 transition-colors disabled:opacity-40">
@@ -771,11 +730,7 @@ function MarketsTab() {
               </button>
             </div>
           </div>
-
-          {/* Research output */}
           <ResearchPanel result={researchResult} loading={researchLoading} stage={STAGES[researchStage]} />
-
-          {/* Fundamentals + Events */}
           <div className="grid grid-cols-2 gap-4">
             <div className="glass rounded-xl p-4 border border-white/[0.04] space-y-2">
               <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider mb-3">Fundamentals</div>
@@ -795,20 +750,14 @@ function MarketsTab() {
               <div className="text-xs font-mono"><span className="text-gray-500">Events: </span><span className="text-gray-300">{intel.event_impact.event_count || 0} detected</span></div>
             </div>
           </div>
-
-          {/* News */}
           <div>
             <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500 uppercase tracking-wider mb-3">
               <Scan size={11} className="text-indigo-400" />
               News {newsLoading && <RefreshCw size={10} className="animate-spin text-indigo-400" />}
-              <span className="text-gray-700">— click Deep Research on any article</span>
             </div>
             {newsLoading && <div className="text-xs font-mono text-gray-600 animate-pulse">Fetching articles...</div>}
             <div className="space-y-2">
-              {news.map((a, i) => <ArticleCard key={`${a.title}-${i}`} article={a} index={i} onResearch={runDeepResearch} />)}
-              {!newsLoading && news.length === 0 && intel.news.map((a, i) => (
-                <ArticleCard key={`${a.title}-${i}`} article={{ ...a, stance: 'neutral', sentiment_score: 0.5 }} index={i} onResearch={(q) => runDeepResearch()} />
-              ))}
+              {news.map((a: any, i: number) => <ArticleCard key={`${a.title}-${i}`} article={{ ...a, stance: 'neutral', sentiment_score: 0.5 }} index={i} onResearch={runDeepResearch} />)}
             </div>
           </div>
         </div>
@@ -817,40 +766,181 @@ function MarketsTab() {
   );
 }
 
+// ─── Pulse Tab ───────────────────────────────────────────────
+function PulseTab({ daemonStatus, alerts, memoryStats }: { daemonStatus: DaemonStatus | null; alerts: Alert[]; memoryStats: MemoryStats | null }) {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
+  const phaseIcons: Record<string, React.ReactNode> = {
+    morning: <Sunrise size={16} className="text-amber-400" />,
+    daytime: <Sun size={16} className="text-indigo-400" />,
+    evening: <Sunset size={16} className="text-violet-400" />,
+    night: <Moon size={16} className="text-indigo-300" />,
+  };
+
+  return (
+    <div className="h-full flex gap-5 overflow-hidden">
+      <div className="flex flex-col gap-4 overflow-y-auto pr-1" style={{ width: '40%' }}>
+        {daemonStatus?.circadian && (
+          <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+            <div className="flex items-center gap-3 mb-4">
+              {phaseIcons[daemonStatus.circadian.current_phase]}
+              <div>
+                <h3 className="text-sm font-mono text-gray-200">{daemonStatus.circadian.phase_name}</h3>
+                <p className="text-[10px] font-mono text-gray-500">{daemonStatus.circadian.phase_description}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-gray-500">Priority</span>
+                <span className="text-gray-300 capitalize">{daemonStatus.circadian.priority}</span>
+              </div>
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-gray-500">Active Tasks</span>
+                <span className="text-gray-300">{daemonStatus.circadian.current_tasks.length}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {daemonStatus?.signal_queue && (
+          <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-4 text-xs font-mono text-indigo-400 uppercase tracking-wider">
+              <Radio size={12} /> Signal Queue
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center">
+                <div className="text-xl font-light text-white">{daemonStatus.signal_queue.total_signals}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Total Signals</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-light text-red-400">{daemonStatus.signal_queue.severity_counts.high || 0}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">High Severity</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-light text-amber-400">{daemonStatus.signal_queue.severity_counts.medium || 0}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Medium</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-light text-gray-400">{daemonStatus.signal_queue.severity_counts.low || 0}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Low</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {memoryStats && (
+          <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-4 text-xs font-mono text-violet-400 uppercase tracking-wider">
+              <Database size={12} /> Memory Graph
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <div className="text-xl font-light text-white">{memoryStats.queries}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Queries</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-light text-indigo-400">{memoryStats.entities}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Entities</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-light text-violet-400">{memoryStats.insights}</div>
+                <div className="text-[9px] font-mono text-gray-600 uppercase">Insights</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {daemonStatus && (
+          <div className="glass rounded-2xl p-5 border border-white/[0.06]">
+            <div className="flex items-center gap-2 mb-4 text-xs font-mono text-emerald-400 uppercase tracking-wider">
+              <Activity size={12} /> Daemon Status
+            </div>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Status</span>
+                <span className="text-emerald-400">Running</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Cycles</span>
+                <span className="text-gray-300">{daemonStatus.cycle_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Last Run</span>
+                <span className="text-gray-300">{daemonStatus.last_run ? new Date(daemonStatus.last_run).toLocaleTimeString() : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3 overflow-hidden flex-1">
+        <div className="flex items-center justify-between shrink-0">
+          <div className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
+            Live Alert Feed — {alerts.length} alerts
+          </div>
+          <button onClick={handleRefresh} disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/5 hover:border-indigo-500/20 text-[10px] font-mono text-gray-400 hover:text-indigo-300 transition-all disabled:opacity-40">
+            <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} /> Refresh
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {alerts.length > 0 ? (
+            alerts.map((alert, i) => <AlertCard key={`${alert.title}-${i}`} alert={alert} index={i} />)
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <CheckCircle size={28} className="text-emerald-500/30 mb-3" />
+              <p className="text-sm font-mono text-gray-500">No alerts.</p>
+              <p className="text-xs font-mono text-gray-700 mt-1">All systems operating normally.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════
 //  MAIN APP
 // ═══════════════════════════════════════════════════════════
 export default function JanusApp() {
   const [systemState, setSystemState] = useState<'art' | 'dashboard'>('art');
-  const [activeTab, setActiveTab] = useState<'command' | 'intel' | 'markets'>('command');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [thinkingStage, setThinkingStage] = useState(0);
-  const [result, setResult] = useState<CaseRecord | null>(null);
-  const [input, setInput] = useState('');
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'command' | 'intel' | 'markets' | 'pulse'>('command');
+  const [daemonStatus, setDaemonStatus] = useState<DaemonStatus | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [memoryStats, setMemoryStats] = useState<MemoryStats | null>(null);
+
+  const fetchSystemData = useCallback(async () => {
+    try {
+      const [statusRes, alertsRes, memoryRes] = await Promise.all([
+        fetch('http://localhost:8000/daemon/status').then(r => r.ok ? r.json() : null),
+        fetch('http://localhost:8000/daemon/alerts?limit=20').then(r => r.ok ? r.json() : []),
+        fetch('http://localhost:8000/memory/stats').then(r => r.ok ? r.json() : null),
+      ]);
+      if (statusRes) setDaemonStatus(statusRes);
+      if (alertsRes) setAlerts(Array.isArray(alertsRes) ? alertsRes : []);
+      if (memoryRes) setMemoryStats(memoryRes);
+    } catch { /* silent */ }
+  }, []);
 
   useEffect(() => {
-    if (!isAnalyzing) return;
-    const iv = setInterval(() => setThinkingStage(p => (p + 1) % STAGES.length), 3000);
-    return () => clearInterval(iv);
-  }, [isAnalyzing]);
-
-  const handleAnalyze = useCallback(async (q: string) => {
-    if (!q.trim()) return;
-    setIsAnalyzing(true); setResult(null); setThinkingStage(0);
-    try {
-      const res = await apiClient.analyze({ user_input: q });
-      setResult(res);
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-    } catch { /* silent */ } finally { setIsAnalyzing(false); }
-  }, []);
+    fetchSystemData();
+    const interval = setInterval(fetchSystemData, 60000);
+    return () => clearInterval(interval);
+  }, [fetchSystemData]);
 
   const tabs = [
     { id: 'command' as const, label: 'Command', icon: Sparkles },
     { id: 'intel' as const, label: 'Intel Stream', icon: Globe },
     { id: 'markets' as const, label: 'Markets', icon: BarChart3 },
+    { id: 'pulse' as const, label: 'Pulse', icon: PulseIcon },
   ];
+
+  const alertCount = alerts.filter(a => a.severity === 'high' || a.severity === 'critical').length;
 
   return (
     <div className="relative min-h-screen bg-transparent text-gray-100 overflow-hidden">
@@ -861,19 +951,24 @@ export default function JanusApp() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: systemState === 'dashboard' ? 1 : 0 }} transition={{ duration: 1.2, delay: 0.5 }}
         className={`relative z-10 flex flex-col h-screen max-w-[1480px] mx-auto px-6 py-5 ${systemState === 'art' ? 'pointer-events-none' : ''}`}>
 
+        {/* Header */}
         <header className="flex items-center justify-between mb-5 shrink-0">
           <div className="flex items-center gap-4">
-            <JanusOrb size={32} thinking={isAnalyzing} />
+            <JanusOrb size={32} thinking={activeTab === 'command'} phase={daemonStatus?.circadian?.current_phase || 'daytime'} />
             <div>
-              <h1 className="text-lg font-light tracking-[0.15em] text-gradient-subtle">JANUS</h1>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-mono text-emerald-400/70 uppercase tracking-widest">{isAnalyzing ? 'Processing' : 'System Active'}</span>
-              </div>
+              <h1 className="text-lg font-light tracking-[0.15em] bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">JANUS</h1>
+              <StatusBar daemonStatus={daemonStatus} memoryStats={memoryStats} alertCount={alertCount} />
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${daemonStatus?.running ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
+            <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">
+              {daemonStatus?.running ? 'Living' : 'Offline'}
+            </span>
           </div>
         </header>
 
+        {/* Navigation */}
         <nav className="flex gap-1 mb-5 shrink-0">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -881,88 +976,36 @@ export default function JanusApp() {
               {activeTab === tab.id && <motion.div layoutId="tabIndicator" className="absolute inset-0 glass rounded-xl" transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }} />}
               <tab.icon size={15} className="relative z-10" />
               <span className="relative z-10 font-mono text-xs uppercase tracking-wider">{tab.label}</span>
+              {tab.id === 'pulse' && alertCount > 0 && (
+                <span className="relative z-10 px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[9px] font-mono">{alertCount}</span>
+              )}
             </button>
           ))}
         </nav>
 
+        {/* Main Content */}
         <main className="flex-1 min-h-0 overflow-hidden">
           <AnimatePresence mode="wait">
-
             {activeTab === 'command' && (
-              <motion.div key="command" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full flex flex-col">
-                <div className="relative group shrink-0">
-                  <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-indigo-500/20 via-transparent to-violet-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-                  <div className="relative flex items-center gap-3 px-5 py-4 rounded-2xl glass border border-white/[0.06] group-focus-within:border-indigo-500/20 transition-colors">
-                    <Sparkles size={16} className="text-indigo-400/50 shrink-0" />
-                    <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAnalyze(input)} disabled={isAnalyzing}
-                      placeholder="Ask Janus — financial analysis, market intelligence, research any topic..."
-                      className="flex-1 bg-transparent text-gray-100 placeholder-gray-600 text-sm focus:outline-none disabled:opacity-40 font-mono" />
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleAnalyze(input)} disabled={isAnalyzing || !input.trim()}
-                      className="p-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white transition-all duration-200">
-                      <Send size={14} />
-                    </motion.button>
-                  </div>
-                </div>
-
-                <div className="flex-1 mt-5 overflow-y-auto rounded-2xl">
-                  <AnimatePresence mode="wait">
-                    {isAnalyzing ? (
-                      <ThinkingDisplay stage={STAGES[thinkingStage]} />
-                    ) : result ? (
-                      <motion.div key="result" ref={resultRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 pb-8">
-                        {result.route && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">{result.route.domain_pack}</span>
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/5 text-gray-400 border border-white/10">{result.route.execution_mode}</span>
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/5 text-gray-400 border border-white/10">{result.route.complexity}</span>
-                          </div>
-                        )}
-                        {result.outputs && result.outputs.filter((o: any) => o.confidence > 0).length > 0 && (
-                          <div className="flex items-center gap-6 py-3">
-                            {/* FIXED: use composite key instead of just o.agent */}
-                            {result.outputs.filter((o: any) => o.confidence > 0).map((o: any, idx: number) => (
-                              <ConfidenceRing key={`${o.agent || 'output'}-${idx}`} value={o.confidence} label={o.agent || `Agent ${idx + 1}`} />
-                            ))}
-                          </div>
-                        )}
-                        {result.final_answer && (
-                          <div className="glass rounded-2xl p-6">
-                            <div className="flex items-center gap-2 mb-4 text-xs font-mono text-indigo-400/70 uppercase tracking-wider"><Zap size={12} /><span>Synthesis Complete</span></div>
-                            <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200 whitespace-pre-wrap">
-                              <Typewriter text={result.final_answer} speed={8} />
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    ) : (
-                      <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center py-20">
-                        <JanusOrb size={48} />
-                        <p className="mt-6 text-sm text-gray-500 font-mono">Awaiting directive...</p>
-                        <p className="mt-2 text-xs text-gray-700 max-w-md">Multi-agent pipeline: switchboard → research → synthesizer. Use Intel Stream or Markets to run research on news and stocks.</p>
-                        <div className="flex flex-wrap justify-center gap-2 mt-8 max-w-lg">
-                          {['Analyze RBI rate hike impact on Indian markets', 'What happens to $NVDA if AI spending slows?', 'Compare Reliance vs TCS as long-term investments'].map(q => (
-                            <button key={q} onClick={() => { setInput(q); handleAnalyze(q); }} className="px-3 py-1.5 rounded-full text-xs font-mono text-gray-500 border border-white/5 hover:border-indigo-500/20 hover:text-indigo-300 transition-all text-left">{q}</button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+              <motion.div key="command" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
+                <CommandTab />
               </motion.div>
             )}
-
             {activeTab === 'intel' && (
               <motion.div key="intel" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
                 <IntelStreamTab />
               </motion.div>
             )}
-
             {activeTab === 'markets' && (
               <motion.div key="markets" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
                 <MarketsTab />
               </motion.div>
             )}
-
+            {activeTab === 'pulse' && (
+              <motion.div key="pulse" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="h-full">
+                <PulseTab daemonStatus={daemonStatus} alerts={alerts} memoryStats={memoryStats} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
       </motion.div>
