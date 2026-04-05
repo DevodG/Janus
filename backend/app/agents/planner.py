@@ -3,9 +3,30 @@ Planner agent — MiroOrg v2.
 Accepts Switchboard route + Research output + (optionally) Simulation and Finance outputs.
 Produces a structured plan with steps, dependencies, and risk assessment.
 """
+
 import logging
 from app.agents._model import call_model, safe_parse
 from app.config import load_prompt
+from pydantic import BaseModel, Field
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.exceptions import OutputParserException
+from typing import List, Optional
+
+
+class PlannerOutput(BaseModel):
+    plan_steps: List[str] = Field(
+        description="Sequential list of steps to execute the plan"
+    )
+    resources_needed: List[str] = Field(description="Necessary tools or APIs")
+    dependencies: List[str] = Field(description="Prerequisites or sequence locks")
+    risk_level: str = Field(description="Risk assessment: low, medium, or high")
+    estimated_output: str = Field(
+        description="Brief outline of the expected final result"
+    )
+    replan_reason: Optional[str] = Field(
+        None, description="Why we are replanning, if applicable"
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +40,7 @@ def run(state: dict) -> dict:
     verifier = state.get("verifier", {})
 
     prompt = load_prompt("planner")
+    parser = PydanticOutputParser(pydantic_object=PlannerOutput)
 
     # Build context with all available upstream data
     context_parts = [
@@ -34,26 +56,45 @@ def run(state: dict) -> dict:
 
     messages = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": (
-            f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
-            + "\n\n".join(context_parts)
-            + "\n\nProduce structured JSON output:\n"
-            "{\n"
-            "  \"plan_steps\": [\"<step 1>\", \"<step 2>\"],\n"
-            "  \"resources_needed\": [\"<resource 1>\"],\n"
-            "  \"dependencies\": [\"<dependency 1>\"],\n"
-            "  \"risk_level\": \"low | medium | high\",\n"
-            "  \"estimated_output\": \"<brief description of expected output>\""
-            + (",\n  \"replan_reason\": \"<why replanning>\"" if replan_count > 0 else "")
-            + "\n}\n"
-        )},
+        {
+            "role": "user",
+            "content": (
+                f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
+                + "\n\n".join(context_parts)
+                + "\n\n"
+                + parser.get_format_instructions()
+            ),
+        },
     ]
 
+    result = None
+    raw_response = None
+
     try:
-        result = safe_parse(call_model(messages))
-    except RuntimeError as e:
+        raw_response = call_model(messages)
+    except Exception as e:
         logger.error(f"[AGENT ERROR] planner: {e}")
-        result = {"status": "error", "reason": str(e)}
+        raw_response = None
+        result = {"status": "error", "reason": str(e), "error": "model_failed"}
+
+    if raw_response:
+        try:
+            parsed = parser.invoke(raw_response)
+            result = parsed.dict()
+        except OutputParserException as e:
+            logger.warning(
+                f"[AGENT PARSE FALLBACK] planner: using safe_parse due to error: {e}"
+            )
+            result = safe_parse(raw_response)
+
+    if result is None:
+        result = {
+            "plan_steps": ["Unable to generate plan due to error"],
+            "resources_needed": [],
+            "dependencies": [],
+            "risk_level": "high",
+            "estimated_output": "Error in planning phase",
+        }
 
     if "error" in result:
         logger.warning(f"[AGENT ERROR] planner: {result.get('error')}")

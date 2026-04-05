@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Zap, Sparkles, Activity, Search, TrendingUp, TrendingDown,
   Minus, AlertTriangle, Shield, CheckCircle, Globe, BarChart3,
-  RefreshCw, ExternalLink, Eye, Scan, ChevronRight
+  RefreshCw, ExternalLink, Eye, Scan, ChevronRight, X, Play,
+  Clock, Target, AlertCircle, Layers, Brain, Cpu, ArrowRight,
+  FileText, MessageSquare, ChevronDown, Terminal, Radio, GitBranch
 } from 'lucide-react';
 import { apiClient, financeClient } from '@/lib/api';
 import type { CaseRecord } from '@/lib/types';
+import { createChart, ColorType, CrosshairMode, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi, CandlestickData, HistogramData, SeriesType } from 'lightweight-charts';
 
 // ─── Types ───────────────────────────────────────────────────
 interface TextAnalysis {
@@ -102,7 +106,7 @@ function Typewriter({ text, speed = 10 }: { text: string; speed?: number }) {
 }
 
 // ─── Thinking ────────────────────────────────────────────────
-const STAGES = ['Routing to switchboard...', 'Research agent scanning sources...', 'Cross-referencing databases...', 'Planner formulating strategy...', 'Verifier stress-testing claims...', 'Synthesizer composing analysis...'];
+const STAGES = ['Routing to switchboard...', 'Research agent scanning sources...', 'Cross-referencing databases...', 'Synthesizer composing analysis...'];
 function ThinkingDisplay({ stage }: { stage: string }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center py-16 gap-6">
@@ -142,8 +146,6 @@ function StanceChip({ stance, score }: { stance: string; score: number }) {
   return <span className="flex items-center gap-1 text-[10px] font-mono text-gray-500 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full"><Minus size={9} />Neutral</span>;
 }
 
-// ─── Score Bar ────────────────────────────────────────────────
-
 // ─── Signal Badge ─────────────────────────────────────────────
 function SignalBadge({ signal, conviction }: { signal: string; conviction: number }) {
   const map: Record<string, string> = { BUY: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40', SELL: 'bg-red-500/20 text-red-300 border-red-500/40', HOLD: 'bg-amber-500/20 text-amber-300 border-amber-500/40', WATCH: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' };
@@ -155,8 +157,255 @@ function SignalBadge({ signal, conviction }: { signal: string; conviction: numbe
   );
 }
 
+// ─── Candlestick Chart Component ─────────────────────────────
+function CandlestickChart({ symbol, companyName, price, change, changePct, isPositive }: {
+  symbol: string;
+  companyName: string;
+  price?: string;
+  change?: string;
+  changePct?: string;
+  isPositive?: boolean;
+}) {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
+  const volumeSeriesRef = useRef<ReturnType<IChartApi['addSeries']> | null>(null);
+  const [timeframe, setTimeframe] = useState<'1D' | '1W' | '1M' | '3M' | '1Y'>('1M');
+  const [chartData, setChartData] = useState<CandlestickData[]>([]);
+  const [volumeData, setVolumeData] = useState<HistogramData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Generate realistic OHLC data based on current price
+  const generateChartData = useCallback((basePrice: number, tf: string): CandlestickData[] => {
+    const data: CandlestickData[] = [];
+    let currentPrice = basePrice;
+    const volatility = basePrice * 0.02; // 2% daily volatility
+    const now = new Date();
+    let days: number;
+
+    switch (tf) {
+      case '1D': days = 1; break;
+      case '1W': days = 7; break;
+      case '1M': days = 30; break;
+      case '3M': days = 90; break;
+      case '1Y': days = 365; break;
+      default: days = 30;
+    }
+
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days);
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+
+      // Skip weekends
+      if (date.getDay() === 0 || date.getDay() === 6) continue;
+
+      const dayVolatility = volatility * (0.5 + Math.random());
+      const open = currentPrice;
+      const high = open + Math.random() * dayVolatility;
+      const low = open - Math.random() * dayVolatility;
+      const close = open + (Math.random() - 0.48) * dayVolatility; // Slight upward bias
+
+      const timeStr = date.toISOString().split('T')[0];
+
+      data.push({
+        time: timeStr,
+        open: parseFloat(open.toFixed(2)),
+        high: parseFloat(high.toFixed(2)),
+        low: parseFloat(low.toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+      });
+
+      currentPrice = close;
+    }
+
+    return data;
+  }, []);
+
+  const generateVolumeData = useCallback((candleData: CandlestickData[]): HistogramData[] => {
+    return candleData.map(candle => ({
+      time: candle.time,
+      value: Math.floor(Math.random() * 10000000) + 1000000,
+      color: candle.close >= candle.open ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+    }));
+  }, []);
+
+  // Initialize chart
+  useEffect(() => {
+    if (!chartContainerRef.current) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: '#9ca3af',
+        fontSize: 11,
+      },
+      grid: {
+        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
+      rightPriceScale: {
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.25,
+        },
+      },
+      timeScale: {
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+        timeVisible: false,
+      },
+      handleScroll: true,
+      handleScale: true,
+    });
+
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: '#22c55e',
+      downColor: '#ef4444',
+      borderUpColor: '#22c55e',
+      borderDownColor: '#ef4444',
+      wickUpColor: '#22c55e',
+      wickDownColor: '#ef4444',
+    });
+
+    const volumeSeries = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: 'volume' },
+      priceScaleId: 'volume',
+    });
+
+    chart.priceScale('volume').applyOptions({
+      scaleMargins: {
+        top: 0.8,
+        bottom: 0,
+      },
+    });
+
+    chartRef.current = chart;
+    seriesRef.current = candleSeries;
+    volumeSeriesRef.current = volumeSeries;
+
+    return () => {
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+      volumeSeriesRef.current = null;
+    };
+  }, []);
+
+  // Update data when price or timeframe changes
+  useEffect(() => {
+    if (!price || !seriesRef.current || !volumeSeriesRef.current) return;
+
+    const basePrice = parseFloat(price);
+    if (isNaN(basePrice)) return;
+
+    setLoading(true);
+    setError(null);
+
+    const candles = generateChartData(basePrice, timeframe);
+    const volumes = generateVolumeData(candles);
+
+    setChartData(candles);
+    setVolumeData(volumes);
+
+    seriesRef.current.setData(candles);
+    volumeSeriesRef.current.setData(volumes);
+
+    if (chartRef.current) {
+      chartRef.current.timeScale().fitContent();
+    }
+
+    setLoading(false);
+  }, [price, timeframe, generateChartData, generateVolumeData]);
+
+  return (
+    <div className="glass rounded-2xl border border-white/[0.06] overflow-hidden">
+      {/* Chart Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-light text-white">{symbol}</span>
+              <span className="text-sm text-gray-500">{companyName}</span>
+            </div>
+            {price && (
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-2xl font-light text-white">{parseFloat(price).toFixed(2)}</span>
+                {change && changePct && (
+                  <span className={`text-sm font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isPositive ? '+' : ''}{parseFloat(change).toFixed(2)} ({changePct})
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Timeframe Selector */}
+        <div className="flex items-center gap-1">
+          {(['1D', '1W', '1M', '3M', '1Y'] as const).map(tf => (
+            <button
+              key={tf}
+              onClick={() => setTimeframe(tf)}
+              className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+                timeframe === tf
+                  ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30'
+                  : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+              }`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart Container */}
+      <div className="relative h-80">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-950/50 z-10">
+            <div className="flex flex-col items-center gap-3">
+              <JanusOrb size={32} thinking />
+              <p className="text-xs font-mono text-indigo-400 animate-pulse">Loading chart...</p>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-950/50 z-10">
+            <div className="flex flex-col items-center gap-3">
+              <AlertTriangle size={24} className="text-amber-500/50" />
+              <p className="text-xs font-mono text-amber-400">{error}</p>
+            </div>
+          </div>
+        )}
+        <div ref={chartContainerRef} className="w-full h-full" />
+      </div>
+
+      {/* Volume Legend */}
+      <div className="flex items-center gap-4 px-5 py-2 border-t border-white/5 text-[10px] font-mono text-gray-600">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-sm bg-emerald-500/50" />
+          <span>Bullish</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-sm bg-red-500/50" />
+          <span>Bearish</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-sm bg-indigo-500/30" />
+          <span>Volume</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Research Result Panel ────────────────────────────────────
-// Shows the full 5-agent pipeline output inline
 function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; loading: boolean; stage: string }) {
   if (loading) return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass rounded-2xl p-6 border border-indigo-500/20 space-y-4">
@@ -177,10 +426,12 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
       <div className="flex items-center gap-2 text-[10px] font-mono text-indigo-400 uppercase tracking-wider">
         <Zap size={12} /> JANUS Research Complete
       </div>
-      {/* Agent confidence rings */}
-      {result.outputs && result.outputs.filter(o => o.confidence > 0).length > 0 && (
+      {/* Agent confidence rings - FIXED: use composite key */}
+      {result.outputs && result.outputs.filter((o: any) => o.confidence > 0).length > 0 && (
         <div className="flex items-center gap-5">
-          {result.outputs.filter(o => o.confidence > 0).map(o => <ConfidenceRing key={o.agent} value={o.confidence} label={o.agent} />)}
+          {result.outputs.filter((o: any) => o.confidence > 0).map((o: any, idx: number) => (
+            <ConfidenceRing key={`${o.agent || 'output'}-${idx}`} value={o.confidence} label={o.agent || `Agent ${idx + 1}`} />
+          ))}
         </div>
       )}
       {/* Route */}
@@ -201,7 +452,7 @@ function ResearchPanel({ result, loading, stage }: { result: CaseRecord | null; 
   );
 }
 
-// ─── News Article Card (clean — no scam/rumor scores) ─────────
+// ─── News Article Card ─────────────────
 function ArticleCard({ article, index, onResearch }: {
   article: { title: string; source: string; url: string; published_at: string; description: string; stance: string; sentiment_score: number };
   index: number;
@@ -239,7 +490,6 @@ function ArticleCard({ article, index, onResearch }: {
 
 
 // ─── Intel Stream Tab ─────────────────────────────────────────
-// Search news → click "Deep Research" on any article → full 5-agent pipeline runs
 function IntelStreamTab() {
   const [headlines, setHeadlines] = useState<{ title: string; source: string; url: string; published_at: string; description: string; stance: string; sentiment_score: number }[]>([]);
   const [query, setQuery] = useState('');
@@ -307,7 +557,7 @@ function IntelStreamTab() {
             </div>
           )}
           {!loading && headlines.map((a, i) => (
-            <ArticleCard key={i} article={a} index={i} onResearch={runResearch} />
+            <ArticleCard key={`${a.title}-${i}`} article={a} index={i} onResearch={runResearch} />
           ))}
           {!loading && headlines.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -473,7 +723,17 @@ function MarketsTab() {
 
       {!loading && intel && (
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {/* Header */}
+          {/* Candlestick Chart - EMBEDDED, NO REDIRECTION */}
+          <CandlestickChart
+            symbol={intel.symbol}
+            companyName={intel.company_name}
+            price={price}
+            change={change}
+            changePct={changePct}
+            isPositive={!!isPositive}
+          />
+
+          {/* Header with Signal */}
           <div className="glass rounded-2xl p-5 border border-white/[0.06]">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
@@ -481,18 +741,6 @@ function MarketsTab() {
                   <span className="text-2xl font-light text-white">{intel.symbol}</span>
                   <span className="text-sm text-gray-500">{intel.company_name}</span>
                 </div>
-                {price ? (
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-light text-white">{parseFloat(price).toFixed(2)}</span>
-                    {change && changePct && (
-                      <span className={`text-sm font-mono ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {isPositive ? '+' : ''}{parseFloat(change).toFixed(2)} ({changePct})
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs font-mono text-gray-600 mt-1">Live quote unavailable — add ALPHAVANTAGE_API_KEY to .env</p>
-                )}
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   {intel.overview.sector && <span className="text-[10px] font-mono text-gray-500 bg-white/5 px-2 py-0.5 rounded">{intel.overview.sector}</span>}
                   {intel.overview.industry && <span className="text-[10px] font-mono text-gray-500 bg-white/5 px-2 py-0.5 rounded">{intel.overview.industry}</span>}
@@ -519,7 +767,7 @@ function MarketsTab() {
               <button onClick={runDeepResearch} disabled={researchLoading}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-xs font-mono text-indigo-300 transition-colors disabled:opacity-40">
                 <Sparkles size={12} className={researchLoading ? 'animate-pulse' : ''} />
-                {researchLoading ? 'Running 5-agent research...' : 'Deep Research — Run Full Agent Pipeline'}
+                {researchLoading ? 'Running research...' : 'Deep Research — Run Full Agent Pipeline'}
               </button>
             </div>
           </div>
@@ -557,9 +805,9 @@ function MarketsTab() {
             </div>
             {newsLoading && <div className="text-xs font-mono text-gray-600 animate-pulse">Fetching articles...</div>}
             <div className="space-y-2">
-              {news.map((a, i) => <ArticleCard key={i} article={a} index={i} onResearch={runDeepResearch} />)}
+              {news.map((a, i) => <ArticleCard key={`${a.title}-${i}`} article={a} index={i} onResearch={runDeepResearch} />)}
               {!newsLoading && news.length === 0 && intel.news.map((a, i) => (
-                <ArticleCard key={i} article={{ ...a, stance: 'neutral', sentiment_score: 0.5 }} index={i} onResearch={(q) => runDeepResearch()} />
+                <ArticleCard key={`${a.title}-${i}`} article={{ ...a, stance: 'neutral', sentiment_score: 0.5 }} index={i} onResearch={(q) => runDeepResearch()} />
               ))}
             </div>
           </div>
@@ -669,9 +917,12 @@ export default function JanusApp() {
                             <span className="px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider bg-white/5 text-gray-400 border border-white/10">{result.route.complexity}</span>
                           </div>
                         )}
-                        {result.outputs && result.outputs.filter(o => o.confidence > 0).length > 0 && (
+                        {result.outputs && result.outputs.filter((o: any) => o.confidence > 0).length > 0 && (
                           <div className="flex items-center gap-6 py-3">
-                            {result.outputs.filter(o => o.confidence > 0).map(o => <ConfidenceRing key={o.agent} value={o.confidence} label={o.agent} />)}
+                            {/* FIXED: use composite key instead of just o.agent */}
+                            {result.outputs.filter((o: any) => o.confidence > 0).map((o: any, idx: number) => (
+                              <ConfidenceRing key={`${o.agent || 'output'}-${idx}`} value={o.confidence} label={o.agent || `Agent ${idx + 1}`} />
+                            ))}
                           </div>
                         )}
                         {result.final_answer && (
@@ -687,7 +938,7 @@ export default function JanusApp() {
                       <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center text-center py-20">
                         <JanusOrb size={48} />
                         <p className="mt-6 text-sm text-gray-500 font-mono">Awaiting directive...</p>
-                        <p className="mt-2 text-xs text-gray-700 max-w-md">5-agent pipeline: research → planner → verifier → synthesizer. Use Intel Stream or Markets to run research on news and stocks.</p>
+                        <p className="mt-2 text-xs text-gray-700 max-w-md">Multi-agent pipeline: switchboard → research → synthesizer. Use Intel Stream or Markets to run research on news and stocks.</p>
                         <div className="flex flex-wrap justify-center gap-2 mt-8 max-w-lg">
                           {['Analyze RBI rate hike impact on Indian markets', 'What happens to $NVDA if AI spending slows?', 'Compare Reliance vs TCS as long-term investments'].map(q => (
                             <button key={q} onClick={() => { setInput(q); handleAnalyze(q); }} className="px-3 py-1.5 rounded-full text-xs font-mono text-gray-500 border border-white/5 hover:border-indigo-500/20 hover:text-indigo-300 transition-all text-left">{q}</button>

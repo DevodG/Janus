@@ -102,6 +102,48 @@ export class MiroOrgClient {
     return { report: data.report };
   }
 
+  async runNativeSimulation(userInput: string, context?: any): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/simulation/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_input: userInput, context }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Simulation failed');
+    }
+    return response.json();
+  }
+
+  async chatWithSimulation(simulationId: string, message: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/simulation/${simulationId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (!response.ok) throw new Error('Simulation chat failed');
+    return response.json();
+  }
+
+  // Sentinel endpoints
+  async getSentinelStatus(): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/sentinel/status`);
+    if (!r.ok) return null;
+    return r.json();
+  }
+
+  async getSentinelAlerts(limit = 20): Promise<any[]> {
+    const r = await fetch(`${this.baseUrl}/sentinel/alerts?limit=${limit}`);
+    if (!r.ok) return [];
+    return r.json();
+  }
+
+  async getSentinelCapability(): Promise<any> {
+    const r = await fetch(`${this.baseUrl}/sentinel/capability/current`);
+    if (!r.ok) return null;
+    return r.json();
+  }
+
   // Prompt endpoints
   async getPrompts(): Promise<PromptInfo[]> {
     const response = await fetch(`${this.baseUrl}/prompts`);

@@ -177,8 +177,8 @@ export default function CaseDetailPage() {
                 <Shield size={14} /> Agent Calibration
               </div>
               <div className="flex items-center justify-around">
-                {record.outputs.filter(o => o.confidence > 0).map((o) => (
-                  <ConfidenceRing key={o.agent} value={o.confidence} label={o.agent} />
+                {record.outputs.filter(o => o.confidence > 0).map((o, idx) => (
+                  <ConfidenceRing key={`${o.agent || 'agent'}-${idx}`} value={o.confidence} label={o.agent || `Agent ${idx + 1}`} />
                 ))}
               </div>
             </motion.div>
@@ -216,13 +216,13 @@ export default function CaseDetailPage() {
              <div className="space-y-4">
                <h3 className="text-xs font-mono text-gray-500 uppercase tracking-widest px-2 pt-4">Sub-Agent Operational Logs</h3>
                {record.outputs.map((out, i) => (
-                 <motion.div
-                   key={out.agent}
-                   initial={{ opacity: 0, y: 20 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   transition={{ delay: 0.3 + (i * 0.1) }}
-                   className="glass rounded-xl p-5 border border-white/[0.04]"
-                 >
+                  <motion.div
+                    key={`${out.agent || 'output'}-${i}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + (i * 0.1) }}
+                    className="glass rounded-xl p-5 border border-white/[0.04]"
+                  >
                    <div className="flex items-start gap-4">
                      <div className="shrink-0 mt-1">
                        <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700">

@@ -33,12 +33,27 @@ backend/app/data/knowledge/*.json
 backend/app/data/skills/*.json
 backend/app/data/prompt_versions/*.json
 backend/app/data/learning/*.json
+backend/app/data/cache/
+backend/app/data/adaptive/
 
 # Sentinel runtime data
 backend/app/data/sentinel/*.json
 backend/app/data/sentinel/pending_patches/*.json
 !backend/app/data/sentinel/.gitkeep
 !backend/app/data/sentinel/pending_patches/.gitkeep
+
+# ── Planning docs (not part of the product) ───────────────────
+ARCHITECTURE_ANALYSIS.md
+ARCHITECTURE_TRANSFORMATION.md
+CACHING_IMPLEMENTATION.md
+INTEGRATION_CHECKLIST.md
+INTELLIGENT_CACHING.md
+KAGGLE_DISTILLATION.md
+KAGGLE_IMPLEMENTATION.md
+PHASE_1_IMPLEMENTATION.md
+SPRINT_TIMELINE.md
+TODO.md
+UNIFIED_IMPLEMENTATION_PLAN.md
 
 # ── OS / Editor ───────────────────────────────────────────────
 .DS_Store

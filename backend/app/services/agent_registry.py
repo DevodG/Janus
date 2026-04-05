@@ -1,11 +1,11 @@
 from typing import Dict, Any, List
 
 from app.config import PROMPTS_DIR
-from app.agents.switchboard import decide_route
-from app.agents.research import run_research
-from app.agents.planner import run_planner
-from app.agents.verifier import run_verifier
-from app.agents.synthesizer import run_synthesizer
+from app.agents import switchboard
+from app.agents import research
+from app.agents import planner
+from app.agents import verifier
+from app.agents import synthesizer
 
 
 AGENTS = {
@@ -73,37 +73,32 @@ def run_single_agent(
     planner_output: str | None = None,
     verifier_output: str | None = None,
 ) -> Dict[str, Any]:
+    state = {
+        "user_input": user_input,
+        "research": research_output or {},
+        "planner": planner_output or {},
+        "verifier": verifier_output or {}
+    }
+
     if agent == "switchboard":
-        route = decide_route(user_input)
+        route = switchboard.run(state).get("route", {})
         return {
             "agent": "switchboard",
-            "summary": str(route),
+            "summary": "Router completed",
             "details": route,
             "confidence": 1.0,
         }
 
     if agent == "research":
-        return run_research(user_input, _load_prompt("research"))
+        return research.run(state).get("research", {})
 
     if agent == "planner":
-        if not research_output:
-            raise ValueError("planner requires research_output")
-        return run_planner(user_input, research_output, _load_prompt("planner"))
+        return planner.run(state).get("planner", {})
 
     if agent == "verifier":
-        if not research_output or not planner_output:
-            raise ValueError("verifier requires research_output and planner_output")
-        return run_verifier(user_input, research_output, planner_output, _load_prompt("verifier"))
+        return verifier.run(state).get("verifier", {})
 
     if agent == "synthesizer":
-        if not research_output or not planner_output:
-            raise ValueError("synthesizer requires at least research_output and planner_output")
-        return run_synthesizer(
-            user_input,
-            research_output,
-            planner_output,
-            verifier_output or "",
-            _load_prompt("synthesizer"),
-        )
+        return synthesizer.run(state).get("final", {})
 
     raise ValueError(f"Unknown agent: {agent}")

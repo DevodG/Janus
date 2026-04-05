@@ -1,17 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FlaskConical, Target, ListOrdered, Share2, Play, Hexagon } from 'lucide-react';
+import { FlaskConical, Target, ListOrdered, Share2, Play, Hexagon, Zap, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api';
-import type { SimulationRecord } from '@/lib/types';
+
+interface SimulationSummary {
+  simulation_id: string;
+  user_input: string;
+  status: string;
+  scenarios: number;
+  elapsed_seconds: number;
+  created_at: number;
+}
 
 export default function SimulationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [simulations, setSimulations] = useState<SimulationRecord[]>([]);
+  const [simulations, setSimulations] = useState<SimulationSummary[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [form, setForm] = useState({
     title: '',
@@ -19,11 +28,30 @@ export default function SimulationPage() {
     predictionGoal: ''
   });
 
-  useEffect(() => {
-    apiClient.getSimulations()
-      .then(setSimulations)
-      .catch(console.error);
+  const loadSimulations = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = await apiClient.getSimulations();
+      // Map SimulationRecord to SimulationSummary
+      const summaries: SimulationSummary[] = (Array.isArray(data) ? data : []).map((sim: any) => ({
+        simulation_id: sim.simulation_id,
+        user_input: sim.user_input || sim.title || '',
+        status: sim.status,
+        scenarios: sim.scenarios || 0,
+        elapsed_seconds: sim.elapsed_seconds || 0,
+        created_at: sim.created_at || 0,
+      }));
+      setSimulations(summaries);
+    } catch {
+      setSimulations([]);
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadSimulations();
+  }, [loadSimulations]);
 
   const handleSubmit = async () => {
     if (!form.title || !form.seedText || !form.predictionGoal) {
@@ -35,12 +63,21 @@ export default function SimulationPage() {
     setError(null);
 
     try {
-      const result = await apiClient.createSimulation({
+      // Run native simulation directly
+      const userInput = `${form.title}. ${form.seedText}. Goal: ${form.predictionGoal}`;
+      const result = await apiClient.runNativeSimulation(userInput, {
         title: form.title,
         seed_text: form.seedText,
         prediction_goal: form.predictionGoal,
       });
-      router.push(`/simulation/${result.simulation_id}`);
+
+      // Navigate to simulation detail
+      if (result.simulation_id) {
+        router.push(`/simulation/${result.simulation_id}`);
+      } else {
+        setError('Simulation completed but no ID was returned.');
+        setLoading(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to initialize simulation core.');
       setLoading(false);
@@ -50,22 +87,33 @@ export default function SimulationPage() {
   return (
     <div className="max-w-[1480px] mx-auto px-10 py-12">
       <header className="mb-12">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-            <FlaskConical size={20} className="text-amber-400" />
-            {loading && <div className="absolute inset-0 rounded-2xl border-2 border-amber-400/50 border-t-transparent animate-spin" />}
-          </div>
-          <div>
-            <h1 className="text-3xl font-light tracking-[0.15em] text-gradient-subtle uppercase">
-              Simulation Lab
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[10px] font-mono text-amber-400/70 uppercase tracking-widest">
-                MiroFish Simulation Engine Online
-              </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+              <FlaskConical size={20} className="text-amber-400" />
+              {loading && <div className="absolute inset-0 rounded-2xl border-2 border-amber-400/50 border-t-transparent animate-spin" />}
+            </div>
+            <div>
+              <h1 className="text-3xl font-light tracking-[0.15em] text-gradient-subtle uppercase">
+                Simulation Lab
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[10px] font-mono text-amber-400/70 uppercase tracking-widest">
+                  Native Simulation Engine Online
+                </span>
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={loadSimulations}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl glass border border-white/5 hover:border-amber-500/20 text-xs font-mono text-gray-400 hover:text-amber-300 transition-all disabled:opacity-40"
+          >
+            <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+            Refresh
+          </button>
         </div>
       </header>
 
@@ -82,7 +130,7 @@ export default function SimulationPage() {
             </h2>
 
             {error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs font-mono text-red-400 uppercase tracking-widest">
+              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-xs font-mono text-red-400">
                 {error}
               </div>
             )}
@@ -145,9 +193,9 @@ export default function SimulationPage() {
                   className="w-full group relative flex items-center justify-center gap-2 py-4 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 disabled:bg-gray-900 disabled:border-gray-800 transition-all duration-300"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-md" />
-                  <Play size={16} className={loading ? 'text-gray-600' : 'text-amber-400 group-hover:scale-110 transition-transform'} />
+                  <Zap size={16} className={loading ? 'text-gray-600' : 'text-amber-400 group-hover:scale-110 transition-transform'} />
                   <span className={`text-xs font-mono uppercase tracking-widest ${loading ? 'text-gray-500' : 'text-amber-300'}`}>
-                    {loading ? 'Initializing Core...' : 'Launch Simulation'}
+                    {loading ? 'Running Simulation...' : 'Launch Simulation'}
                   </span>
                 </button>
               </div>
@@ -192,11 +240,13 @@ export default function SimulationPage() {
                       </span>
                     </div>
                     <h4 className="text-sm font-medium text-gray-200 group-hover:text-amber-300 transition-colors line-clamp-1 mb-1">
-                      {sim.title}
+                      {sim.user_input}
                     </h4>
-                    <p className="text-xs font-mono text-gray-500 line-clamp-1">
-                      {sim.prediction_goal}
-                    </p>
+                    <div className="flex items-center gap-3 text-[10px] font-mono text-gray-600">
+                      <span>{sim.scenarios} scenarios</span>
+                      <span>·</span>
+                      <span>{sim.elapsed_seconds}s</span>
+                    </div>
                   </motion.div>
                 ))
               )}

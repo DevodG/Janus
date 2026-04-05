@@ -10,42 +10,56 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-OPENROUTER_BASE   = "https://openrouter.ai/api/v1"
-OPENROUTER_KEY    = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 
-# Pinned free models in preference order (all have :free suffix = zero cost)
+# Pinned free models in preference order — fast + reliable
 FREE_MODEL_LADDER = [
-    "nvidia/llama-3.1-nemotron-ultra-253b:free",   # best reasoning, large context
-    "meta-llama/llama-3.3-70b-instruct:free",       # reliable, GPT-4 class
-    "deepseek/deepseek-r1:free",                    # strong chain-of-thought
-    "openrouter/free",                              # random free as last resort
+    "qwen/qwen3.6-plus:free",  # Best free model, reliable, fast
+    "nvidia/nemotron-3-super-120b-a12b:free",  # Large NVIDIA model
+    "minimax/minimax-m2.5:free",  # MiniMax strong reasoning
+    "stepfun/step-3.5-flash:free",  # StepFun fast inference
+    "arcee-ai/trinity-mini:free",  # Lightweight fallback
 ]
 
-OLLAMA_BASE       = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL      = os.getenv("OLLAMA_MODEL", "llama3.2")   # user configures
-TIMEOUT           = 120
+OLLAMA_BASE = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+TIMEOUT = 90
+OLLAMA_TIMEOUT = 30  # Ollama is local, should be fast
 
 
 def _openrouter_call(messages: list[dict], model: str, **kwargs) -> str:
     """Single call to OpenRouter. Raises on non-200."""
+    api_key = os.getenv("OPENROUTER_API_KEY", "")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY is not set in .env")
+
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "HTTP-Referer": "https://miroorg.local",
         "X-Title": "MiroOrg v2",
         "Content-Type": "application/json",
     }
-    body = {"model": model, "messages": messages, "max_tokens": 2048, **kwargs}
-    r = httpx.post(f"{OPENROUTER_BASE}/chat/completions",
-                   headers=headers, json=body, timeout=TIMEOUT)
+    body = {"model": model, "messages": messages, "max_tokens": 4096, **kwargs}
+    r = httpx.post(
+        f"{OPENROUTER_BASE}/chat/completions",
+        headers=headers,
+        json=body,
+        timeout=TIMEOUT,
+    )
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
 
 def _ollama_call(messages: list[dict], **kwargs) -> str:
     """Fallback: Ollama local via OpenAI-compatible endpoint."""
-    body = {"model": OLLAMA_MODEL, "messages": messages, "stream": False}
-    r = httpx.post(f"{OLLAMA_BASE}/v1/chat/completions",
-                   json=body, timeout=TIMEOUT)
+    base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    if base.endswith("/api"):
+        base = base[:-4]
+
+    ollama_model = os.getenv(
+        "OLLAMA_CHAT_MODEL", os.getenv("OLLAMA_MODEL", "qwen2.5-coder:3b")
+    )
+    body = {"model": ollama_model, "messages": messages, "stream": False}
+    r = httpx.post(f"{base}/v1/chat/completions", json=body, timeout=OLLAMA_TIMEOUT)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
 
@@ -69,10 +83,10 @@ def call_model(messages: list[dict], **kwargs) -> str:
     # Ollama fallback
     try:
         result = _ollama_call(messages, **kwargs)
-        logger.info(f"Ollama fallback succeeded: {OLLAMA_MODEL}")
+        logger.info(f"Ollama fallback succeeded")
         return result
     except Exception as e:
-        errors.append(f"Ollama [{OLLAMA_MODEL}]: {e}")
+        errors.append(f"Ollama: {e}")
         logger.error(f"Ollama fallback failed: {e}")
 
     raise RuntimeError("All model tiers failed:\n" + "\n".join(errors))

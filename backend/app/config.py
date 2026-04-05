@@ -5,6 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 try:
     from dotenv import load_dotenv
+
     # Load .env from the backend directory
     env_path = BASE_DIR.parent / ".env"
     load_dotenv(env_path)
@@ -14,6 +15,7 @@ PROMPTS_DIR = BASE_DIR / "prompts"
 DATA_DIR = BASE_DIR / "data"
 MEMORY_DIR = DATA_DIR / "memory"
 SIMULATION_DIR = DATA_DIR / "simulations"
+
 
 # Prompt loader
 def load_prompt(name: str) -> str:
@@ -51,9 +53,9 @@ NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "")
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
 
-MIROFISH_ENABLED = os.getenv("MIROFISH_ENABLED", "false").lower() == "true"
-MIROFISH_API_BASE = os.getenv("MIROFISH_API_BASE", "http://127.0.0.1:5001")
-MIROFISH_TIMEOUT_SECONDS = int(os.getenv("MIROFISH_TIMEOUT_SECONDS", "120"))
+MIROFISH_ENABLED = False  # Deprecated — using native simulation engine
+MIROFISH_API_BASE = ""
+MIROFISH_TIMEOUT_SECONDS = 0
 
 SIMULATION_TRIGGER_KEYWORDS = [
     item.strip().lower()
@@ -65,7 +67,9 @@ SIMULATION_TRIGGER_KEYWORDS = [
 ]
 
 # Domain pack configuration
-FINANCE_DOMAIN_PACK_ENABLED = os.getenv("FINANCE_DOMAIN_PACK_ENABLED", "true").lower() == "true"
+FINANCE_DOMAIN_PACK_ENABLED = (
+    os.getenv("FINANCE_DOMAIN_PACK_ENABLED", "true").lower() == "true"
+)
 
 
 # Configuration validation
@@ -79,49 +83,71 @@ def validate_config():
     """Validate configuration on startup and log warnings/errors."""
     errors = []
     warnings = []
-    
+
     # Validate primary provider configuration
     primary = PRIMARY_PROVIDER.lower()
     if primary not in ["openrouter", "ollama", "openai"]:
-        errors.append(f"PRIMARY_PROVIDER '{PRIMARY_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai")
-    
+        errors.append(
+            f"PRIMARY_PROVIDER '{PRIMARY_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai"
+        )
+
     if primary == "openrouter" and not OPENROUTER_API_KEY:
-        errors.append("PRIMARY_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing")
-    
+        warnings.append(
+            "PRIMARY_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing - relying on fallback"
+        )
+
     if primary == "openai" and not OPENAI_API_KEY:
-        errors.append("PRIMARY_PROVIDER is 'openai' but OPENAI_API_KEY is missing")
-    
+        warnings.append(
+            "PRIMARY_PROVIDER is 'openai' but OPENAI_API_KEY is missing - relying on fallback"
+        )
+
     if primary == "ollama" and not OLLAMA_ENABLED:
-        errors.append("PRIMARY_PROVIDER is 'ollama' but OLLAMA_ENABLED is false")
-    
+        warnings.append(
+            "PRIMARY_PROVIDER is 'ollama' but OLLAMA_ENABLED is false - relying on fallback"
+        )
+
     # Validate fallback provider configuration
     fallback = FALLBACK_PROVIDER.lower()
     if fallback not in ["openrouter", "ollama", "openai"]:
-        errors.append(f"FALLBACK_PROVIDER '{FALLBACK_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai")
-    
+        errors.append(
+            f"FALLBACK_PROVIDER '{FALLBACK_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai"
+        )
+
     if fallback == "openrouter" and not OPENROUTER_API_KEY:
-        warnings.append("FALLBACK_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing - fallback will fail")
-    
+        warnings.append(
+            "FALLBACK_PROVIDER is 'openrouter' but OPENROUTER_API_KEY is missing - fallback will fail"
+        )
+
     if fallback == "openai" and not OPENAI_API_KEY:
-        warnings.append("FALLBACK_PROVIDER is 'openai' but OPENAI_API_KEY is missing - fallback will fail")
-    
+        warnings.append(
+            "FALLBACK_PROVIDER is 'openai' but OPENAI_API_KEY is missing - fallback will fail"
+        )
+
     if fallback == "ollama" and not OLLAMA_ENABLED:
-        warnings.append("FALLBACK_PROVIDER is 'ollama' but OLLAMA_ENABLED is false - fallback will fail")
-    
+        warnings.append(
+            "FALLBACK_PROVIDER is 'ollama' but OLLAMA_ENABLED is false - fallback will fail"
+        )
+
     # Validate optional API keys
     if not TAVILY_API_KEY:
-        warnings.append("TAVILY_API_KEY is missing - web search functionality will be limited")
-    
+        warnings.append(
+            "TAVILY_API_KEY is missing - web search functionality will be limited"
+        )
+
     if not NEWSAPI_KEY:
-        warnings.append("NEWSAPI_KEY is missing - news research functionality will be limited")
-    
+        warnings.append(
+            "NEWSAPI_KEY is missing - news research functionality will be limited"
+        )
+
     if not ALPHAVANTAGE_API_KEY:
-        warnings.append("ALPHAVANTAGE_API_KEY is missing - financial data functionality will be limited")
-    
+        warnings.append(
+            "ALPHAVANTAGE_API_KEY is missing - financial data functionality will be limited"
+        )
+
     # Validate MiroFish configuration
     if MIROFISH_ENABLED and not MIROFISH_API_BASE:
         warnings.append("MIROFISH_ENABLED is true but MIROFISH_API_BASE is missing")
-    
+
     # Validate data directories
     try:
         DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -129,14 +155,14 @@ def validate_config():
         SIMULATION_DIR.mkdir(parents=True, exist_ok=True)
     except Exception as e:
         errors.append(f"Failed to create data directories: {e}")
-    
+
     # Log results
     if errors:
         logger.error("Configuration validation failed with errors:")
         for error in errors:
             logger.error(f"  - {error}")
         sys.exit(1)
-    
+
     if warnings:
         logger.warning("Configuration validation completed with warnings:")
         for warning in warnings:
@@ -166,42 +192,43 @@ LEARNING_TOPICS = [
 
 def get_config():
     """Get configuration object for dependency injection."""
+
     class Config:
         app_version = APP_VERSION
         primary_provider = PRIMARY_PROVIDER
         fallback_provider = FALLBACK_PROVIDER
-        
+
         openrouter_api_key = OPENROUTER_API_KEY
         openrouter_base_url = OPENROUTER_BASE_URL
         openrouter_chat_model = OPENROUTER_CHAT_MODEL
         openrouter_reasoner_model = OPENROUTER_REASONER_MODEL
-        
+
         ollama_enabled = OLLAMA_ENABLED
         ollama_base_url = OLLAMA_BASE_URL
         ollama_chat_model = OLLAMA_CHAT_MODEL
         ollama_reasoner_model = OLLAMA_REASONER_MODEL
-        
+
         openai_api_key = OPENAI_API_KEY
         openai_base_url = OPENAI_BASE_URL
         openai_chat_model = OPENAI_CHAT_MODEL
         openai_reasoner_model = OPENAI_REASONER_MODEL
-        
+
         tavily_api_key = TAVILY_API_KEY
         newsapi_key = NEWSAPI_KEY
         alphavantage_api_key = ALPHAVANTAGE_API_KEY
-        
+
         mirofish_enabled = MIROFISH_ENABLED
         mirofish_api_base = MIROFISH_API_BASE
-        
+
         data_dir = str(DATA_DIR)
         memory_dir = str(MEMORY_DIR)
         simulation_dir = str(SIMULATION_DIR)
         prompts_dir = str(PROMPTS_DIR)
-        
+
         learning_enabled = LEARNING_ENABLED
         knowledge_max_size_mb = KNOWLEDGE_MAX_SIZE_MB
         learning_schedule_interval = LEARNING_SCHEDULE_INTERVAL
         learning_batch_size = LEARNING_BATCH_SIZE
         learning_topics = LEARNING_TOPICS
-    
+
     return Config()
