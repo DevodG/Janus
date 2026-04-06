@@ -64,8 +64,8 @@ class CircadianRhythm:
             Phase.MORNING: {
                 "name": "Market Open Prep",
                 "description": "Overnight digest, pre-market analysis, daily briefing",
-                "poll_interval": 300,  # 5 min - high frequency during market open
-                "news_interval": 600,  # 10 min
+                "poll_interval": 120,
+                "news_interval": 300,
                 "tasks": [
                     "overnight_news_digest",
                     "pre_market_analysis",
@@ -77,8 +77,8 @@ class CircadianRhythm:
             Phase.DAYTIME: {
                 "name": "Active Intelligence",
                 "description": "Real-time market watching, news monitoring, event detection",
-                "poll_interval": 900,  # 15 min
-                "news_interval": 1800,  # 30 min
+                "poll_interval": 180,
+                "news_interval": 600,
                 "tasks": [
                     "market_watch",
                     "news_pulse",
@@ -90,8 +90,8 @@ class CircadianRhythm:
             Phase.EVENING: {
                 "name": "Reflection & Synthesis",
                 "description": "Daily wrap-up, cross-query analysis, pattern recognition",
-                "poll_interval": 1800,  # 30 min
-                "news_interval": 3600,  # 60 min
+                "poll_interval": 300,
+                "news_interval": 900,
                 "tasks": [
                     "daily_wrap",
                     "pattern_analysis",
@@ -103,8 +103,8 @@ class CircadianRhythm:
             Phase.NIGHT: {
                 "name": "Dreaming Phase",
                 "description": "Deep pattern recognition, hypothesis generation, self-improvement",
-                "poll_interval": 3600,  # 60 min
-                "news_interval": 7200,  # 120 min
+                "poll_interval": 600,
+                "news_interval": 1800,
                 "tasks": [
                     "dream_cycle",
                     "hypothesis_generation",

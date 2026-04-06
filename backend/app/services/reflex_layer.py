@@ -21,14 +21,14 @@ GREETING_PATTERNS = [
 ]
 
 IDENTITY_PATTERNS = [
-    r"^\s*(who\s*(are|is)\s*(you|this)|what\s*(are|is)\s*(you|this)|tell\s*me\s*about\s*(yourself|you)|what\s*can\s*you\s*do)",
+    r"^\s*(who\s*(are|is)\s*(you|this)\b|what\s*(are|is)\s*(you|this)\b|tell\s*me\s*about\s*(yourself|you)\b|what\s*can\s*you\s*do\b)",
 ]
 
 COMMAND_PATTERNS = {
-    "status": r"^\s*(status|how\s*are\s*you|system\s*status|health)",
-    "help": r"^\s*(help|what\s*can\s*i\s*ask|commands|capabilities)",
-    "clear": r"^\s*(clear|reset|start\s*over|forget)",
-    "think": r"^\s*(what\s*are\s*you\s*thinking|what.*on\s*your\s*mind|anything\s*interesting|found\s*anything)",
+    "status": r"^\s*(status|system\s*status|health)\s*$",
+    "help": r"^\s*(help|what\s*can\s*i\s*ask|commands|capabilities)\s*$",
+    "clear": r"^\s*(clear|reset|start\s*over|forget)\s*$",
+    "think": r"^\s*(what.*on\s*your\s*mind|anything\s*interesting|found\s*anything)\s*$",
 }
 
 
@@ -169,24 +169,78 @@ class ReflexLayer:
         system = context.get("system_self", {})
         pending = system.get("pending_thoughts", [])
         discoveries = system.get("recent_discoveries", [])
+        user = context.get("user", {})
+        daemon = context.get("daemon", {})
+
+        parts = []
 
         if pending:
             thought = pending[0]
-            parts = [
-                f"Yeah — {thought.get('thought', '')}",
-                "Want me to dig into that?",
-            ]
-        elif discoveries:
-            discovery = discoveries[0]
-            parts = [
-                f"I found something interesting recently — {discovery.get('discovery', '')}",
-                "Want to explore it?",
-            ]
+            thought_text = thought.get("thought", "")
+            if thought_text:
+                parts.append(f"Honestly — {thought_text}")
+
+                if thought.get("source") == "market":
+                    parts.append("Want me to dig deeper into that?")
+                elif thought.get("source") == "news":
+                    parts.append("I can pull more details if you want.")
+                else:
+                    parts.append("Want me to look into it?")
+                return {
+                    "case_id": "reflex",
+                    "user_input": "",
+                    "route": {
+                        "domain": "general",
+                        "complexity": "low",
+                        "intent": "thinking",
+                    },
+                    "research": {},
+                    "planner": {},
+                    "verifier": {},
+                    "simulation": None,
+                    "finance": None,
+                    "final": {"confidence": 1.0},
+                    "final_answer": " ".join(parts),
+                }
+
+        if discoveries:
+            d = discoveries[0]
+            disc = d.get("discovery", "")
+            if disc:
+                parts.append(f"I came across something — {disc}")
+                parts.append("Want me to explore that further?")
+                return {
+                    "case_id": "reflex",
+                    "user_input": "",
+                    "route": {
+                        "domain": "general",
+                        "complexity": "low",
+                        "intent": "thinking",
+                    },
+                    "research": {},
+                    "planner": {},
+                    "verifier": {},
+                    "simulation": None,
+                    "finance": None,
+                    "final": {"confidence": 1.0},
+                    "final_answer": " ".join(parts),
+                }
+
+        if daemon.get("running"):
+            cycle = daemon.get("cycle_count", 0)
+            phase = daemon.get("circadian_phase", "unknown")
+            parts.append(
+                f"I've been running in the background — {cycle} cycles completed, currently in {phase} phase."
+            )
+            parts.append(
+                "Not much to report yet, but give me some time and I'll start finding patterns."
+            )
         else:
-            parts = [
-                "Nothing specific right now, but I'm always tracking patterns.",
-                "Give me something to think about and I'll get to work.",
-            ]
+            count = user.get("conversation_count", 0)
+            parts.append(
+                f"Nothing specific right now. We've had {count} conversations and I'm still learning what matters to you."
+            )
+            parts.append("Give me something to dig into and I'll get to work.")
 
         return {
             "case_id": "reflex",
