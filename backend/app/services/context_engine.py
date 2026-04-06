@@ -102,12 +102,13 @@ class ContextEngine:
                 "capabilities": self._system_state.get("capabilities", []),
                 "weaknesses": self._system_state.get("weaknesses", []),
                 "pending_thoughts": self._system_state.get("pending_thoughts", [])[:5],
-                "recent_discoveries": self._system_state.get("recent_discoveries", [])[
+                "recent_discoveries": self._system_state.get("recent_discoveries", [
                     :3
-                ],
+                ]),
                 "uptime": self._get_uptime(),
                 "total_cases_analyzed": self._user_state.get("total_interactions", 0),
             },
+            "self_reflection": self._get_self_reflection_context(),
             "user": {
                 "last_topic": self._user_state.get("last_topic"),
                 "time_away": time_away,
@@ -228,6 +229,26 @@ class ContextEngine:
             }
         except Exception:
             return {"running": False}
+
+    def _get_self_reflection_context(self) -> Dict:
+        """Get self-reflection context — opinions, corrections, gaps."""
+        try:
+            from app.services.self_reflection import self_reflection
+
+            return {
+                "opinions": self_reflection.get_opinions()[:5],
+                "corrections": self_reflection.get_corrections()[:3],
+                "gaps": self_reflection.get_gaps()[:3],
+                "dataset_size": self_reflection.get_dataset_stats().get(
+                    "total_entries", 0
+                ),
+                "learning_rate": self_reflection.self_model.get("learning_rate", 0),
+                "total_reflections": self_reflection.self_model.get(
+                    "total_reflections", 0
+                ),
+            }
+        except Exception:
+            return {}
 
     def _get_uptime(self) -> str:
         elapsed = time.time() - self._start_time

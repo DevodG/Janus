@@ -21,7 +21,7 @@ GREETING_PATTERNS = [
 ]
 
 IDENTITY_PATTERNS = [
-    r"^\s*(who\s*(are|is)\s*(you|this)\b|what\s*(are|is)\s*(you|this)\b|tell\s*me\s*about\s*(yourself|you)\b|what\s*can\s*you\s*do\b)",
+    r"^\s*(who\s*(are|is)\s*(you|this)\s*$|what\s*(are|is)\s*(you|this)\s*$|tell\s*me\s*about\s*(yourself|you)\s*$|what\s*can\s*you\s*do\s*$)",
 ]
 
 COMMAND_PATTERNS = {

@@ -183,6 +183,52 @@ class JanusDaemon:
                         f"[DAEMON] Curiosity cycle: {curiosity_report.get('total_discoveries', 0)} discoveries, {curiosity_report.get('total_interests', 0)} interests"
                     )
 
+                    # Self-reflection: analyze own performance, form opinions
+                    try:
+                        from app.services.self_reflection import self_reflection
+                        from app.services.case_store import list_cases
+
+                        recent_cases = list_cases(limit=20)
+                        review = self_reflection.run_night_review(recent_cases)
+                        logger.info(
+                            f"[DAEMON] Self-review: {review.get('cases_reviewed', 0)} cases, "
+                            f"{review.get('opinions_formed', 0)} opinions, "
+                            f"learning_rate={review.get('learning_rate', 0)}"
+                        )
+
+                        # Generate pending thoughts from self-reflection
+                        gaps = self_reflection.get_gaps()[:2]
+                        for gap in gaps:
+                            self._pending_thoughts.append(
+                                {
+                                    "thought": f"I need to get better at {gap.get('topic', '')} — {gap.get('reason', '')}",
+                                    "priority": gap.get("urgency", 0.5),
+                                    "created_at": time.time(),
+                                    "source": "self_reflection",
+                                }
+                            )
+
+                        opinions = self_reflection.get_opinions()[:2]
+                        for op in opinions:
+                            if op.get("confidence", 0) > 0.7:
+                                self._pending_thoughts.append(
+                                    {
+                                        "thought": f"I've formed a view on {op.get('topic', '')}: {op.get('statement', '')[:100]}",
+                                        "priority": op.get("confidence", 0.5) * 0.8,
+                                        "created_at": time.time(),
+                                        "source": "self_reflection",
+                                    }
+                                )
+
+                        self._pending_thoughts.sort(
+                            key=lambda x: x.get("priority", 0), reverse=True
+                        )
+                        self._pending_thoughts = self._pending_thoughts[:30]
+                        self._save_pending_thoughts()
+
+                    except Exception as e:
+                        logger.error(f"[DAEMON] Self-reflection failed: {e}")
+
                 elapsed = time.time() - cycle_start
                 stats = self.signal_queue.get_stats()
 

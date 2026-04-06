@@ -120,6 +120,30 @@ def run(state: dict) -> dict:
         if user_ctx.get("recurring_interests"):
             system_context += f"\nTheir recurring interests: {', '.join(user_ctx['recurring_interests'][:3])}."
 
+        # Self-reflection context
+        reflection = context.get("self_reflection", {})
+        if reflection:
+            corrections = reflection.get("corrections", [])
+            if corrections:
+                system_context += "\n\nTHINGS YOU WERE WRONG ABOUT AND CORRECTED ON:"
+                for c in corrections[:3]:
+                    system_context += f"\n- You said: {c.get('original', '')[:100]}"
+                    system_context += f"\n  Correction: {c.get('correction', '')[:100]}"
+
+            gaps = reflection.get("gaps", [])
+            if gaps:
+                system_context += "\n\nTHINGS YOU KNOW YOU'RE WEAK AT:"
+                for g in gaps[:3]:
+                    system_context += (
+                        f"\n- {g.get('topic', '')}: {g.get('reason', '')[:100]}"
+                    )
+
+            opinions = reflection.get("opinions", [])
+            if opinions:
+                system_context += "\n\nVIEWS YOU'VE FORMED:"
+                for op in opinions[:3]:
+                    system_context += f"\n- On {op.get('topic', '')}: {op.get('statement', '')[:150]} (confidence: {op.get('confidence', 0)})"
+
     messages = [
         {"role": "system", "content": prompt},
         {

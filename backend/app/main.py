@@ -31,6 +31,7 @@ from app.services.circadian_rhythm import CircadianRhythm
 from app.services.dream_processor import DreamCycleProcessor
 from app.services.context_engine import context_engine
 from app.services.reflex_layer import reflex_layer
+from app.services.self_reflection import self_reflection
 from app.routers.simulation import router as simulation_router
 from app.routers.learning import (
     router as learning_router,
@@ -178,6 +179,52 @@ def get_pending_thoughts():
         "pending_thoughts": thoughts,
         "count": len(thoughts),
     }
+
+
+@app.get("/self/opinions")
+def get_opinions(topic: str = None):
+    """Get the system's formed opinions."""
+    return {"opinions": self_reflection.get_opinions(topic)}
+
+
+@app.get("/self/corrections")
+def get_corrections(topic: str = None):
+    """Get corrections the user has made."""
+    return {"corrections": self_reflection.get_corrections(topic)}
+
+
+@app.get("/self/gaps")
+def get_gaps():
+    """Get knowledge gaps the system has identified."""
+    return {"gaps": self_reflection.get_gaps()}
+
+
+@app.get("/self/dataset")
+def get_dataset_stats():
+    """Get training dataset statistics."""
+    return self_reflection.get_dataset_stats()
+
+
+@app.get("/self/report")
+def get_self_report():
+    """Get full self-reflection report."""
+    return {
+        "opinions": self_reflection.get_opinions()[:10],
+        "corrections": self_reflection.get_corrections()[:5],
+        "gaps": self_reflection.get_gaps()[:5],
+        "dataset": self_reflection.get_dataset_stats(),
+        "self_model": self_reflection.self_model,
+    }
+
+
+@app.post("/self/correct")
+def submit_correction(data: dict):
+    """User submits a correction — the system remembers."""
+    user_input = data.get("user_input", "")
+    original = data.get("original", "")
+    correction = data.get("correction", "")
+    self_reflection.record_correction(user_input, original, correction)
+    return {"status": "remembered"}
 
 
 @app.get("/config/status")
@@ -412,6 +459,16 @@ def run_org(task: UserTask):
         context_engine.record_performance(
             success=bool(final_answer),
             confidence=final.get("confidence", 0.5),
+            elapsed=elapsed,
+        )
+
+        # Self-reflection: analyze own response quality
+        self_reflection.reflect_on_response(
+            user_input=user_input,
+            response=final_answer,
+            confidence=final.get("confidence", 0.5),
+            data_sources=final.get("data_sources", []),
+            gaps=final.get("caveats", []),
             elapsed=elapsed,
         )
 
