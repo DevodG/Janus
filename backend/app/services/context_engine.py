@@ -102,9 +102,9 @@ class ContextEngine:
                 "capabilities": self._system_state.get("capabilities", []),
                 "weaknesses": self._system_state.get("weaknesses", []),
                 "pending_thoughts": self._system_state.get("pending_thoughts", [])[:5],
-                "recent_discoveries": self._system_state.get("recent_discoveries", [
+                "recent_discoveries": self._system_state.get("recent_discoveries", [])[
                     :3
-                ]),
+                ],
                 "uptime": self._get_uptime(),
                 "total_cases_analyzed": self._user_state.get("total_interactions", 0),
             },
