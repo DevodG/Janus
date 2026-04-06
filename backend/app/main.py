@@ -227,6 +227,45 @@ def submit_correction(data: dict):
     return {"status": "remembered"}
 
 
+@app.post("/self/learn")
+def trigger_learning(max_gaps: int = 3, max_datasets: int = 2, max_samples: int = 50):
+    """Trigger autonomous learning cycle — search HF datasets for gaps."""
+    from app.services.autonomous_learner import autonomous_learner
+
+    result = autonomous_learner.run_learning_cycle(
+        max_gaps=max_gaps,
+        max_datasets_per_gap=max_datasets,
+        max_samples_per_dataset=max_samples,
+    )
+    return result
+
+
+@app.get("/self/learning-status")
+def get_learning_status():
+    """Get autonomous learner status."""
+    from app.services.autonomous_learner import autonomous_learner
+
+    return autonomous_learner.get_status()
+
+
+@app.get("/self/fine-tuning")
+def get_fine_tuning_stats():
+    """Get fine-tuning dataset statistics."""
+    from app.services.fine_tuning_builder import fine_tuning_builder
+
+    return fine_tuning_builder.get_stats()
+
+
+@app.get("/self/datasets")
+def get_available_datasets(topic: str = None):
+    """Search HF Hub for relevant datasets."""
+    from app.services.hf_dataset_searcher import hf_dataset_searcher
+
+    if topic:
+        return {"datasets": hf_dataset_searcher.search_for_gap(topic)}
+    return {"curated": hf_dataset_searcher.get_curated_datasets()}
+
+
 @app.get("/config/status")
 def config_status():
     return {

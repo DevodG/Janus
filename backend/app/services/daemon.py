@@ -229,6 +229,23 @@ class JanusDaemon:
                     except Exception as e:
                         logger.error(f"[DAEMON] Self-reflection failed: {e}")
 
+                    # Autonomous learning: search HF datasets for gaps, extract knowledge
+                    try:
+                        from app.services.autonomous_learner import autonomous_learner
+
+                        learning_result = autonomous_learner.run_learning_cycle(
+                            max_gaps=2,
+                            max_datasets_per_gap=2,
+                            max_samples_per_dataset=30,
+                        )
+                        logger.info(
+                            f"[DAEMON] Autonomous learning: {learning_result.get('gaps_addressed', 0)} gaps, "
+                            f"{learning_result.get('knowledge_added', 0)} knowledge, "
+                            f"{learning_result.get('training_pairs_added', 0)} training pairs"
+                        )
+                    except Exception as e:
+                        logger.error(f"[DAEMON] Autonomous learning failed: {e}")
+
                 elapsed = time.time() - cycle_start
                 stats = self.signal_queue.get_stats()
 
