@@ -1,6 +1,6 @@
 """
-Research agent — MiroOrg v2.
-Uses Tavily web search, News API, Knowledge Store, and API Discovery
+Research agent — Janus.
+Uses lightweight HTTP crawler (no Playwright needed), Knowledge Store, and API Discovery
 to gather context before calling the LLM for structured analysis.
 """
 
@@ -8,24 +8,23 @@ import os, json, re, logging
 import httpx
 from app.agents._model import call_model
 from app.agents.api_discovery import discover_apis, call_discovered_api
-from app.config import load_prompt
+from app.config import load_prompt, CRAWLER_ENABLED
 from app.memory import knowledge_store
 
 logger = logging.getLogger(__name__)
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
+JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/")
 
 
 def _extract_json(text: str) -> dict | None:
     """Robustly extract JSON from model response."""
-    # Try direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # Strip markdown code fences
     cleaned = re.sub(r"```(?:json)?\s*\n?", "", text).strip()
     cleaned = re.sub(r"\n?```\s*$", "", cleaned).strip()
     try:
@@ -33,7 +32,6 @@ def _extract_json(text: str) -> dict | None:
     except json.JSONDecodeError:
         pass
 
-    # Find JSON object in text
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1 and end > start:
@@ -46,7 +44,90 @@ def _extract_json(text: str) -> dict | None:
     return None
 
 
-# ─── Tool: Tavily Web Search ─────────────────────────────────────────────────
+def _duckduckgo_urls(query: str, max_results: int = 5) -> list[str]:
+    """Get URLs from DuckDuckGo HTML search (no API key)."""
+    urls = []
+    try:
+        search_url = f"https://html.duckduckgo.com/html/?q={httpx.quote(query)}"
+        with httpx.Client(timeout=15) as client:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+            }
+            resp = client.get(search_url, headers=headers, follow_redirects=True)
+            if resp.status_code == 200:
+                pattern = re.compile(r'class="result__a"[^>]*href="([^"]+)"')
+                for match in pattern.finditer(resp.text):
+                    url = match.group(1)
+                    if url and url.startswith("http") and url not in urls:
+                        urls.append(url)
+                        if len(urls) >= max_results:
+                            break
+    except Exception as e:
+        logger.warning(f"DuckDuckGo search failed: {e}")
+    return urls
+
+
+def _extract_content(url: str) -> str | None:
+    """Extract clean content from a URL using Jina Reader (free, no key needed)."""
+    try:
+        jina_url = f"{JINA_READER_BASE}{url}"
+        with httpx.Client(timeout=12) as client:
+            r = client.get(jina_url, follow_redirects=True)
+            if r.status_code == 200 and len(r.text) > 100:
+                return r.text[:5000]
+    except Exception:
+        pass
+
+    try:
+        with httpx.Client(timeout=10) as client:
+            headers = {"User-Agent": "Mozilla/5.0 (compatible; Janus/1.0)"}
+            r = client.get(url, headers=headers, follow_redirects=True, timeout=10)
+            if r.status_code == 200:
+                text = re.sub(r"<script[^>]*>.*?</script>", "", r.text, flags=re.DOTALL)
+                text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
+                text = re.sub(r"<[^>]+>", " ", text)
+                text = re.sub(r"\s+", " ", text).strip()
+                return text[:5000] if len(text) > 100 else None
+    except Exception:
+        pass
+
+    return None
+
+
+def crawl_web_search(query: str, max_results: int = 3) -> list[dict]:
+    """
+    Self-hosted web research: DuckDuckGo for URLs → Jina Reader for content.
+    Optimized for speed: 3 results, parallel fetch, short timeouts.
+    """
+    if not CRAWLER_ENABLED:
+        return []
+
+    urls = _duckduckgo_urls(query, max_results)
+    if not urls:
+        return []
+
+    results = []
+    # Fetch in parallel with ThreadPoolExecutor
+    import concurrent.futures
+
+    def _fetch_one(url):
+        content = _extract_content(url)
+        if content:
+            title = content.split("\n")[0][:200] if "\n" in content else url
+            return {"title": title, "url": url, "content": content[:2000]}
+        return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {executor.submit(_fetch_one, url): url for url in urls[:max_results]}
+        for future in concurrent.futures.as_completed(futures, timeout=25):
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)
+            except Exception:
+                pass
+
+    return results
 
 
 def tavily_search(query: str, max_results: int = 5) -> list[dict]:
@@ -70,9 +151,6 @@ def tavily_search(query: str, max_results: int = 5) -> list[dict]:
     except Exception as e:
         logger.warning(f"Tavily search failed: {e}")
         return []
-
-
-# ─── Tool: News API ──────────────────────────────────────────────────────────
 
 
 def news_search(query: str, max_articles: int = 5) -> list[dict]:
@@ -106,9 +184,6 @@ def news_search(query: str, max_articles: int = 5) -> list[dict]:
         return []
 
 
-# ─── Research Node ────────────────────────────────────────────────────────────
-
-
 def run(state: dict) -> dict:
     route = state.get("route", {})
     intent = route.get("intent", state.get("user_input", ""))
@@ -116,14 +191,22 @@ def run(state: dict) -> dict:
 
     context_blocks = []
 
-    # Step 1: Tavily web search
-    web_results = tavily_search(intent)
-    if web_results:
+    # Step 1: Self-hosted crawler (DuckDuckGo + Jina Reader)
+    crawl_results = crawl_web_search(intent)
+    if crawl_results:
         formatted = "\n".join(
-            f"- {r.get('title', 'Untitled')}\n  URL: {r.get('url', '')}\n  {r.get('content', '')[:300]}"
-            for r in web_results
+            f"- {r.get('title', 'Untitled')}\n  URL: {r.get('url', '')}\n  {r.get('content', '')[:500]}"
+            for r in crawl_results
         )
-        context_blocks.append(f"[Web Search Results]\n{formatted}")
+        context_blocks.append(f"[Web Crawl Results]\n{formatted}")
+    elif TAVILY_API_KEY:
+        web_results = tavily_search(intent)
+        if web_results:
+            formatted = "\n".join(
+                f"- {r.get('title', 'Untitled')}\n  URL: {r.get('url', '')}\n  {r.get('content', '')[:300]}"
+                for r in web_results
+            )
+            context_blocks.append(f"[Web Search Results]\n{formatted}")
 
     # Step 2: News API (if requires_news or finance domain)
     if route.get("requires_news") or domain == "finance":
@@ -201,7 +284,6 @@ def run(state: dict) -> dict:
     if raw_response:
         result = _extract_json(raw_response)
         if result is None:
-            # Last resort: use raw text as summary
             logger.warning(
                 f"[AGENT PARSE FALLBACK] research: using raw text as summary"
             )

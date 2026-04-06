@@ -2,7 +2,7 @@
 Domain pack registry for managing and discovering domain packs.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 import logging
 
 from app.domain_packs.base import DomainPack
@@ -31,21 +31,21 @@ class DomainPackRegistry:
     def detect_domain(self, query: str) -> Optional[str]:
         """
         Detect which domain pack matches the query based on keywords.
-        
+
         Args:
             query: The user's query
-            
+
         Returns:
             Domain pack name if detected, None otherwise
         """
         query_lower = query.lower()
-        
+
         for name, pack in self._packs.items():
             for keyword in pack.keywords:
                 if keyword.lower() in query_lower:
                     logger.info(f"Detected domain '{name}' from keyword '{keyword}'")
                     return name
-        
+
         return None
 
     def list_packs(self) -> List[str]:
@@ -54,10 +54,7 @@ class DomainPackRegistry:
 
     def get_capabilities(self) -> Dict[str, Any]:
         """Get capabilities of all registered domain packs."""
-        return {
-            name: pack.get_capabilities()
-            for name, pack in self._packs.items()
-        }
+        return {name: pack.get_capabilities() for name, pack in self._packs.items()}
 
 
 # Global registry instance

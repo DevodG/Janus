@@ -259,7 +259,7 @@ export default function SentinelPage() {
   // ── Loading ──
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center pb-20">
+      <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-6">
           <JanusOrb size={56} thinking />
           <p className="text-xs font-mono text-indigo-400 uppercase tracking-widest animate-pulse">
@@ -273,7 +273,7 @@ export default function SentinelPage() {
   // ── Disabled ──
   if (!status?.sentinel_enabled) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center pb-20">
+      <div className="flex h-full flex-col items-center justify-center">
         <div className="glass rounded-3xl p-12 text-center max-w-md">
           <Shield size={40} className="text-gray-600 mx-auto mb-6" />
           <h2 className="text-lg font-light tracking-[0.15em] text-gradient-subtle uppercase mb-3">
@@ -292,7 +292,8 @@ export default function SentinelPage() {
   const domainExpertise = intelligence?.domain_expertise || {};
 
   return (
-    <div className="max-w-[1480px] mx-auto px-10 py-10 relative">
+    <div className="h-full overflow-y-auto">
+    <div className="max-w-[1400px] mx-auto px-6 py-8 relative">
 
       {/* ── Background flare ── */}
       <div className="fixed top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
@@ -880,6 +881,7 @@ export default function SentinelPage() {
 
         </AnimatePresence>
       </div>
+    </div>
     </div>
   );
 }

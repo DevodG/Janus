@@ -26,10 +26,18 @@ def load_prompt(name: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-APP_VERSION = os.getenv("APP_VERSION", "0.3.0")
+APP_VERSION = os.getenv("APP_VERSION", "0.4.0")
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "openrouter").lower()
-FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "ollama").lower()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "huggingface").lower()
+FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "openrouter").lower()
+
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
+HUGGINGFACE_MODEL = os.getenv("HUGGINGFACE_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
+CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
@@ -56,6 +64,9 @@ JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
 MIROFISH_ENABLED = False  # Deprecated — using native simulation engine
 MIROFISH_API_BASE = ""
 MIROFISH_TIMEOUT_SECONDS = 0
+
+CRAWLER_ENABLED = os.getenv("CRAWLER_ENABLED", "true").lower() == "true"
+CRAWLER_TIMEOUT = int(os.getenv("CRAWLER_TIMEOUT", "30"))
 
 SIMULATION_TRIGGER_KEYWORDS = [
     item.strip().lower()
@@ -86,9 +97,14 @@ def validate_config():
 
     # Validate primary provider configuration
     primary = PRIMARY_PROVIDER.lower()
-    if primary not in ["openrouter", "ollama", "openai"]:
+    if primary not in ["huggingface", "openrouter", "ollama", "openai"]:
         errors.append(
-            f"PRIMARY_PROVIDER '{PRIMARY_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai"
+            f"PRIMARY_PROVIDER '{PRIMARY_PROVIDER}' is not supported. Must be one of: huggingface, openrouter, ollama, openai"
+        )
+
+    if primary == "huggingface" and not HUGGINGFACE_API_KEY:
+        warnings.append(
+            "PRIMARY_PROVIDER is 'huggingface' but HUGGINGFACE_API_KEY is missing - relying on fallback"
         )
 
     if primary == "openrouter" and not OPENROUTER_API_KEY:
@@ -108,9 +124,14 @@ def validate_config():
 
     # Validate fallback provider configuration
     fallback = FALLBACK_PROVIDER.lower()
-    if fallback not in ["openrouter", "ollama", "openai"]:
+    if fallback not in ["huggingface", "openrouter", "ollama", "openai"]:
         errors.append(
-            f"FALLBACK_PROVIDER '{FALLBACK_PROVIDER}' is not supported. Must be one of: openrouter, ollama, openai"
+            f"FALLBACK_PROVIDER '{FALLBACK_PROVIDER}' is not supported. Must be one of: huggingface, openrouter, ollama, openai"
+        )
+
+    if fallback == "huggingface" and not HUGGINGFACE_API_KEY:
+        warnings.append(
+            "FALLBACK_PROVIDER is 'huggingface' but HUGGINGFACE_API_KEY is missing - fallback will fail"
         )
 
     if fallback == "openrouter" and not OPENROUTER_API_KEY:
@@ -198,6 +219,14 @@ def get_config():
         primary_provider = PRIMARY_PROVIDER
         fallback_provider = FALLBACK_PROVIDER
 
+        huggingface_api_key = HUGGINGFACE_API_KEY
+        huggingface_model = HUGGINGFACE_MODEL
+
+        gemini_api_key = GEMINI_API_KEY
+        groq_api_key = GROQ_API_KEY
+        cloudflare_account_id = CLOUDFLARE_ACCOUNT_ID
+        cloudflare_api_token = CLOUDFLARE_API_TOKEN
+
         openrouter_api_key = OPENROUTER_API_KEY
         openrouter_base_url = OPENROUTER_BASE_URL
         openrouter_chat_model = OPENROUTER_CHAT_MODEL
@@ -219,6 +248,9 @@ def get_config():
 
         mirofish_enabled = MIROFISH_ENABLED
         mirofish_api_base = MIROFISH_API_BASE
+
+        crawler_enabled = CRAWLER_ENABLED
+        crawler_timeout = CRAWLER_TIMEOUT
 
         data_dir = str(DATA_DIR)
         memory_dir = str(MEMORY_DIR)

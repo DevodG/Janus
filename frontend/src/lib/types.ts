@@ -23,6 +23,20 @@ export interface CaseRecord {
   final_answer_preview?: string;
   saved_at?: string;
   simulation_id?: string;
+  // Extended fields from /run response
+  final?: {
+    response?: string;
+    summary?: string;
+    confidence?: number;
+    data_sources?: string[];
+  };
+  domain?: string;
+  query_type?: string;
+  cached?: boolean;
+  elapsed_seconds?: number;
+  learned?: boolean;
+  learning_reason?: string;
+  adaptive_context?: Record<string, any>;
 }
 
 export interface SimulationRecord {

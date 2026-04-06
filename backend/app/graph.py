@@ -1,5 +1,5 @@
 """
-MiroOrg v2 — Optimized LangGraph pipeline.
+Janus — LangGraph pipeline.
 
 Optimized graph topology (2-3 model calls instead of 5):
   [switchboard]
@@ -12,8 +12,7 @@ Optimized graph topology (2-3 model calls instead of 5):
                             │
                           [END]
 
-The synthesizer now handles planning, verification, and synthesis in one call.
-This reduces latency from 5 model calls (3-6 min) to 2-3 calls (1-2 min).
+Context from the context engine is injected into every LLM call.
 """
 
 import uuid
@@ -29,26 +28,16 @@ from app.agents import mirofish_node, finance_node
 logger = logging.getLogger(__name__)
 
 
-# ── State Type ────────────────────────────────────────────────────────────────
-
-
 class AgentState(TypedDict, total=False):
-    # Input
     user_input: str
     case_id: str
-
-    # Pipeline state
-    route: dict  # switchboard output
-    simulation: dict  # mirofish output (optional)
-    finance: dict  # finance_node output (optional)
-    research: dict  # research output
-    final: dict  # synthesizer output
-
-    # Control
+    route: dict
+    simulation: dict
+    finance: dict
+    research: dict
+    final: dict
     errors: list
-
-
-# ── Node wrappers with timing ────────────────────────────────────────────────
+    context: dict
 
 
 def switchboard_node(state: AgentState) -> dict:
@@ -93,20 +82,13 @@ def synthesizer_node(state: AgentState) -> dict:
     return result
 
 
-# ── Routing functions ─────────────────────────────────────────────────────────
-
-
 def after_switchboard(state: AgentState) -> str:
-    """Route based on switchboard flags."""
     route = state.get("route", {})
     if route.get("requires_simulation"):
         return "mirofish"
     if route.get("requires_finance_data"):
         return "finance"
     return "research"
-
-
-# ── Build graph ───────────────────────────────────────────────────────────────
 
 
 def build_graph():
@@ -120,20 +102,15 @@ def build_graph():
 
     g.set_entry_point("switchboard")
 
-    # After switchboard: fork based on flags
     g.add_conditional_edges(
         "switchboard",
         after_switchboard,
         {"mirofish": "mirofish", "finance": "finance", "research": "research"},
     )
 
-    # mirofish and finance both merge into research
     g.add_edge("mirofish", "research")
     g.add_edge("finance", "research")
-
-    # Research goes directly to synthesizer (no planner/verifier loop)
     g.add_edge("research", "synthesizer")
-
     g.add_edge("synthesizer", END)
     return g.compile()
 
@@ -141,22 +118,24 @@ def build_graph():
 compiled_graph = build_graph()
 
 
-def run_case(user_input: str) -> dict:
+def run_case(user_input: str, context: dict = None) -> dict:
     """Run the optimized agent pipeline on user input."""
     case_id = str(uuid.uuid4())
     t0 = time.perf_counter()
     logger.info("Starting case %s", case_id)
 
-    result = compiled_graph.invoke(
-        {
-            "case_id": case_id,
-            "user_input": user_input,
-            "route": {},
-            "research": {},
-            "final": {},
-            "errors": [],
-        }
-    )
+    initial_state = {
+        "case_id": case_id,
+        "user_input": user_input,
+        "route": {},
+        "research": {},
+        "final": {},
+        "errors": [],
+    }
+    if context:
+        initial_state["context"] = context
+
+    result = compiled_graph.invoke(initial_state)
 
     elapsed = time.perf_counter() - t0
     logger.info("Case %s completed in %.2fs", case_id, elapsed)

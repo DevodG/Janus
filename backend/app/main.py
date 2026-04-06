@@ -29,6 +29,8 @@ from app.services.daemon import JanusDaemon
 from app.services.adaptive_pipeline import adaptive_pipeline
 from app.services.circadian_rhythm import CircadianRhythm
 from app.services.dream_processor import DreamCycleProcessor
+from app.services.context_engine import context_engine
+from app.services.reflex_layer import reflex_layer
 from app.routers.simulation import router as simulation_router
 from app.routers.learning import (
     router as learning_router,
@@ -42,7 +44,7 @@ from app.config import get_config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="MiroOrg v2", version=APP_VERSION)
+app = FastAPI(title="Janus", version=APP_VERSION)
 
 # Initialize domain packs
 from app.domain_packs.init_packs import init_domain_packs
@@ -133,6 +135,21 @@ async def on_startup():
         except Exception as e:
             logger.error(f"Failed to start sentinel scheduler: {e}")
 
+    # Start Janus daemon in background thread
+    daemon_enabled = os.getenv("DAEMON_ENABLED", "true").lower() == "true"
+    if daemon_enabled:
+        try:
+            import threading
+            from app.services.daemon import janus_daemon
+
+            daemon_thread = threading.Thread(
+                target=janus_daemon.run, daemon=True, name="janus-daemon"
+            )
+            daemon_thread.start()
+            logger.info("Janus daemon started in background thread")
+        except Exception as e:
+            logger.error(f"Failed to start Janus daemon: {e}")
+
 
 # ── Health ────────────────────────────────────────────────────────────────────
 
@@ -147,10 +164,28 @@ def health_deep():
     return deep_health()
 
 
+@app.get("/context")
+def get_context():
+    """Get the current system context."""
+    return context_engine.build_context("")
+
+
+@app.get("/pending-thoughts")
+def get_pending_thoughts():
+    """Get pending thoughts the system wants to share."""
+    thoughts = context_engine.get_pending_thoughts()
+    return {
+        "pending_thoughts": thoughts,
+        "count": len(thoughts),
+    }
+
+
 @app.get("/config/status")
 def config_status():
     return {
         "app_version": APP_VERSION,
+        "groq_key_present": bool(os.getenv("GROQ_API_KEY")),
+        "gemini_key_present": bool(os.getenv("GEMINI_API_KEY")),
         "openrouter_key_present": bool(os.getenv("OPENROUTER_API_KEY")),
         "ollama_base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         "ollama_model": os.getenv("OLLAMA_MODEL", "llama3.2"),
@@ -256,18 +291,31 @@ def run_org(task: UserTask):
         user_input = task.user_input
         logger.info("Processing /run: %s", user_input[:100])
 
-        # Step 1: Classify the query
+        # Step 1: Try reflex layer first (instant, contextual, no model call)
+        context = context_engine.build_context(user_input)
+        reflex = reflex_layer.respond(user_input, context)
+        if reflex:
+            logger.info("Reflex layer responded instantly")
+            context_engine.update_after_interaction(
+                user_input, reflex.get("final_answer", ""), context
+            )
+            return reflex
+
+        # Step 2: Classify the query
         query_type, query_confidence, query_meta = query_classifier.classify(user_input)
         domain = query_meta.get("detected_domain", "general")
         logger.info(
             f"Query classified: type={query_type.value}, domain={domain}, confidence={query_confidence:.2f}"
         )
 
-        # Step 2: Try cache first
+        # Step 3: Try cache first
         cached = cache_manager.get(user_input)
         if cached:
             logger.info(
                 f"Cache HIT ({cached['cache_age_hours']:.1f}h old, {cached['hit_count']} hits)"
+            )
+            context_engine.update_after_interaction(
+                user_input, cached["answer"], context
             )
             return {
                 "case_id": "",
@@ -283,13 +331,13 @@ def run_org(task: UserTask):
                 "outputs": [],
             }
 
-        # Step 3: Get adaptive intelligence context
+        # Step 4: Get adaptive intelligence context
         ai_context = adaptive_intelligence.get_context_for_query(user_input, domain)
         logger.info(
             f"Adaptive context: {ai_context['total_cases_learned']} cases learned, personality_depth={ai_context['system_personality']['analytical_depth']:.2f}"
         )
 
-        # Step 4: Run the full pipeline
+        # Step 5: Run the full pipeline
         start = time.perf_counter()
         result = run_case(user_input)
         elapsed = time.perf_counter() - start
@@ -316,7 +364,7 @@ def run_org(task: UserTask):
         }
         save_case(result.get("case_id", ""), payload)
 
-        # Step 5: Cache the result
+        # Step 6: Cache the result
         cache_manager.put(
             query=user_input,
             answer=final_answer,
@@ -331,7 +379,7 @@ def run_org(task: UserTask):
         )
         logger.info(f"Result cached: type={query_type.value}, domain={domain}")
 
-        # Step 5b: Store in memory graph
+        # Step 6b: Store in memory graph
         case_id = result.get("case_id", "")
         memory_graph.add_query(
             query_id=case_id,
@@ -353,13 +401,21 @@ def run_org(task: UserTask):
                     memory_graph.add_entity(entity_id, cleaned, "entity")
                     memory_graph.link_query_entity(case_id, entity_id, 0.5)
 
-        # Step 6: Learn from this case (adaptive intelligence)
+        # Step 7: Learn from this case (adaptive intelligence)
         adaptive_intelligence.learn_from_case(payload, elapsed)
         logger.info(
             f"Adaptive intelligence updated: total_cases={adaptive_intelligence.total_cases}"
         )
 
-        # Step 7: Fire-and-forget: traditional learning
+        # Update context engine
+        context_engine.update_after_interaction(user_input, final_answer, context)
+        context_engine.record_performance(
+            success=bool(final_answer),
+            confidence=final.get("confidence", 0.5),
+            elapsed=elapsed,
+        )
+
+        # Step 8: Fire-and-forget: traditional learning
         should_learn, learn_reason = learning_filter.should_learn(
             query_type=query_type,
             query=user_input,

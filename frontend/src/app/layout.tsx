@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import AppShell from "@/components/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,8 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="h-full bg-gray-950 text-gray-100 font-sans">
-        {children}
+      <body className="h-full font-sans" style={{ background: 'var(--janus-bg)', color: 'var(--janus-text)' }}>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

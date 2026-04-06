@@ -4,23 +4,50 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, Globe, BarChart3, Layers, Activity as PulseIcon,
-  Zap, Hexagon, Shield, Terminal, Settings,
-  ChevronLeft, ChevronRight, Menu, X
+  MessageSquare, Globe, BarChart3, Layers, Activity,
+  Zap, Shield, Terminal, Settings, Plus,
+  ChevronLeft, ChevronRight, Menu, X, Brain
 } from 'lucide-react';
 
-const navItems = [
-  { id: '/', label: 'Command', icon: Sparkles, section: 'Main' },
-  { id: '/intel', label: 'Intel Stream', icon: Globe, section: 'Main' },
-  { id: '/markets', label: 'Markets', icon: BarChart3, section: 'Main' },
-  { id: '/workspace', label: 'Workspace', icon: Layers, section: 'Main' },
-  { id: '/pulse', label: 'Pulse', icon: PulseIcon, section: 'Main' },
-  { id: '/cases', label: 'Cases', icon: Hexagon, section: 'System' },
-  { id: '/simulation', label: 'Simulations', icon: Zap, section: 'System' },
-  { id: '/sentinel', label: 'Sentinel', icon: Shield, section: 'System' },
-  { id: '/prompts', label: 'Prompt Lab', icon: Terminal, section: 'System' },
-  { id: '/config', label: 'Config', icon: Settings, section: 'System' },
+const navSections = [
+  {
+    label: 'Main',
+    items: [
+      { path: '/', label: 'Chat', icon: MessageSquare },
+      { path: '/intel', label: 'Intel', icon: Globe },
+      { path: '/markets', label: 'Markets', icon: BarChart3 },
+      { path: '/workspace', label: 'Workspace', icon: Brain },
+      { path: '/pulse', label: 'Pulse', icon: Activity },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { path: '/cases', label: 'Cases', icon: Layers },
+      { path: '/simulation', label: 'Simulation', icon: Zap },
+      { path: '/sentinel', label: 'Sentinel', icon: Shield },
+      { path: '/prompts', label: 'Prompts', icon: Terminal },
+      { path: '/config', label: 'Config', icon: Settings },
+    ],
+  },
 ];
+
+function JanusOrbSmall({ pulse = false }: { pulse?: boolean }) {
+  return (
+    <div className="relative w-8 h-8 shrink-0">
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: 'radial-gradient(circle at 35% 35%, #818cf8, #4f46e5 60%, #1e1b4b 100%)',
+          boxShadow: '0 0 12px rgba(99,102,241,0.3)',
+        }}
+      />
+      {pulse && (
+        <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-indigo-400" />
+      )}
+    </div>
+  );
+}
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,150 +70,166 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(iv);
   }, [fetchStatus]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
     return pathname?.startsWith(path);
   };
 
-  const sections = ['Main', 'System'];
+  const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 h-14 border-b border-white/[0.04] shrink-0">
+        <JanusOrbSmall pulse={daemonStatus?.running} />
+        {(!collapsed || isMobile) && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-[13px] font-light tracking-[0.2em] text-gradient"
+          >
+            JANUS
+          </motion.span>
+        )}
+      </div>
+
+      {/* New Chat button */}
+      <div className="px-3 pt-3 pb-1 shrink-0">
+        <button
+          onClick={() => router.push('/')}
+          className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.03] transition-all text-sm text-gray-400 hover:text-gray-200 ${collapsed && !isMobile ? 'justify-center' : ''}`}
+        >
+          <Plus size={16} className="shrink-0" />
+          {(!collapsed || isMobile) && <span className="text-[12px]">New conversation</span>}
+        </button>
+      </div>
+
+      {/* Nav sections */}
+      <nav className="flex-1 overflow-y-auto py-2 px-2">
+        {navSections.map(section => (
+          <div key={section.label} className="mb-1">
+            {(!collapsed || isMobile) && (
+              <div className="px-2 pt-4 pb-1.5 text-[10px] font-medium text-gray-600 uppercase tracking-[0.15em]">
+                {section.label}
+              </div>
+            )}
+            {collapsed && !isMobile && <div className="h-3" />}
+            <div className="space-y-0.5">
+              {section.items.map(item => {
+                const active = isActive(item.path);
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => router.push(item.path)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all duration-200 group ${
+                      active
+                        ? 'bg-white/[0.06] text-gray-100'
+                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.03]'
+                    } ${collapsed && !isMobile ? 'justify-center px-2' : ''}`}
+                    title={collapsed && !isMobile ? item.label : undefined}
+                  >
+                    <Icon size={16} className={`shrink-0 ${active ? 'text-indigo-400' : 'group-hover:text-gray-400'}`} />
+                    {(!collapsed || isMobile) && (
+                      <span className="text-[12px] truncate">{item.label}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Status footer */}
+      {(!collapsed || isMobile) && (
+        <div className="px-4 py-3 border-t border-white/[0.04] shrink-0">
+          <div className="flex items-center gap-2">
+            <div className={`w-1.5 h-1.5 rounded-full ${daemonStatus?.running ? 'bg-emerald-400' : 'bg-gray-600'}`} />
+            <span className="text-[10px] text-gray-600">
+              {daemonStatus?.running ? 'System active' : 'Offline'}
+            </span>
+          </div>
+          {daemonStatus?.circadian && (
+            <div className="text-[10px] text-gray-700 mt-0.5 capitalize ml-3.5">
+              {daemonStatus.circadian.current_phase} phase
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <div className="h-screen bg-gray-950 text-gray-100 flex overflow-hidden">
-      {/* Mobile overlay */}
+    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--janus-bg)' }}>
+      {/* Desktop Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? 68 : 260 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="hidden lg:flex flex-col border-r border-white/[0.04] relative shrink-0"
+        style={{ background: 'rgba(10, 10, 15, 0.8)' }}
+      >
+        <NavContent />
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute top-3 -right-3 w-6 h-6 rounded-full border border-white/[0.08] bg-[#111118] flex items-center justify-center text-gray-600 hover:text-gray-400 hover:border-white/[0.15] transition-all z-10"
+        >
+          {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        </button>
+      </motion.aside>
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-12 border-b border-white/[0.04] flex items-center justify-between px-4 z-30" style={{ background: 'rgba(10, 10, 15, 0.95)', backdropFilter: 'blur(12px)' }}>
+        <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-400">
+          <Menu size={18} />
+        </button>
+        <div className="flex items-center gap-2">
+          <JanusOrbSmall />
+          <span className="text-[12px] tracking-[0.2em] text-gradient">JANUS</span>
+        </div>
+        <div className="w-8" />
+      </div>
+
+      {/* Mobile Overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 z-40 lg:hidden"
             onClick={() => setMobileOpen(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ width: collapsed ? 64 : 240 }}
-        className={`hidden lg:flex flex-col bg-gray-900/80 border-r border-white/5 relative z-30 shrink-0`}
-      >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-white/5">
-          {!collapsed && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-light tracking-[0.2em] bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-              JANUS
-            </motion.span>
-          )}
-          <button onClick={() => setCollapsed(!collapsed)} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500 hover:text-gray-300 transition-colors">
-            {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
-        </div>
-
-        {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
-          {sections.map(section => (
-            <div key={section}>
-              {!collapsed && (
-                <div className="px-3 py-2 text-[9px] font-mono text-gray-600 uppercase tracking-widest">
-                  {section}
-                </div>
-              )}
-              {navItems.filter(item => item.section === section).map(item => {
-                const active = isActive(item.id);
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => router.push(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
-                      active
-                        ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20'
-                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
-                    } ${collapsed ? 'justify-center' : ''}`}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <Icon size={16} className="shrink-0" />
-                    {!collapsed && (
-                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-mono text-[11px] uppercase tracking-wider truncate">
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        {/* Status */}
-        {!collapsed && (
-          <div className="px-4 py-3 border-t border-white/5">
-            <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${daemonStatus?.running ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
-              <span className="text-[10px] font-mono text-gray-500 uppercase tracking-wider">
-                {daemonStatus?.running ? 'Living' : 'Offline'}
-              </span>
-            </div>
-            {daemonStatus?.circadian && (
-              <div className="text-[9px] font-mono text-gray-700 mt-1 capitalize">
-                {daemonStatus.circadian.current_phase} phase
-              </div>
-            )}
-          </div>
-        )}
-      </motion.aside>
-
-      {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-gray-900/90 backdrop-blur-sm border-b border-white/5 flex items-center justify-between px-4 z-30">
-        <button onClick={() => setMobileOpen(true)} className="p-2 rounded-lg hover:bg-white/5 text-gray-400">
-          <Menu size={18} />
-        </button>
-        <span className="text-sm font-light tracking-[0.2em] bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">JANUS</span>
-        <div className="w-8" />
-      </div>
-
-      {/* Mobile drawer */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-72 bg-gray-900 border-r border-white/5 z-50 lg:hidden"
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className="fixed top-0 left-0 bottom-0 w-72 z-50 lg:hidden flex flex-col border-r border-white/[0.04]"
+            style={{ background: 'var(--janus-bg)' }}
           >
-            <div className="flex items-center justify-between h-14 px-4 border-b border-white/5">
-              <span className="text-sm font-light tracking-[0.2em] bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">JANUS</span>
-              <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500">
+            <div className="absolute top-3 right-3">
+              <button onClick={() => setMobileOpen(false)} className="p-1 rounded-lg hover:bg-white/[0.05] text-gray-500">
                 <X size={16} />
               </button>
             </div>
-            <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
-              {sections.map(section => (
-                <div key={section}>
-                  <div className="px-3 py-2 text-[9px] font-mono text-gray-600 uppercase tracking-widest">{section}</div>
-                  {navItems.filter(item => item.section === section).map(item => {
-                    const active = isActive(item.id);
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => { router.push(item.id); setMobileOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm ${
-                          active ? 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
-                        }`}
-                      >
-                        <Icon size={16} className="shrink-0" />
-                        <span className="font-mono text-[11px] uppercase tracking-wider">{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </nav>
+            <NavContent isMobile />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main content */}
-      <main className="flex-1 min-w-0 overflow-hidden pt-14 lg:pt-0">
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 overflow-hidden pt-12 lg:pt-0">
         {children}
       </main>
     </div>

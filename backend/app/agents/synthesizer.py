@@ -70,6 +70,7 @@ def run(state: dict) -> dict:
     simulation = state.get("simulation", {})
     finance = state.get("finance", {})
     replan_count = state.get("replan_count", 0)
+    context = state.get("context", {})
 
     prompt = load_prompt("synthesizer")
     parser = PydanticOutputParser(pydantic_object=SynthesizerOutput)
@@ -90,6 +91,35 @@ def run(state: dict) -> dict:
             "NOTE: Verifier did not fully pass and replan limit was reached. Acknowledge limitations."
         )
 
+    # Inject system context into the synthesizer
+    system_context = ""
+    if context:
+        system_self = context.get("system_self", {})
+        pending = system_self.get("pending_thoughts", [])
+        discoveries = system_self.get("recent_discoveries", [])
+        user_ctx = context.get("user", {})
+
+        if pending:
+            thoughts = [t.get("thought", "") for t in pending[:3] if t.get("thought")]
+            if thoughts:
+                system_context += "\n\nTHINGS YOU'VE BEEN THINKING ABOUT:\n"
+                system_context += "\n".join(f"- {t}" for t in thoughts)
+
+        if discoveries:
+            system_context += "\n\nRECENT DISCOVERIES:\n"
+            for d in discoveries[:3]:
+                system_context += f"- {d.get('discovery', '')}\n"
+
+        if user_ctx.get("is_returning"):
+            system_context += f"\n\nThis user has had {user_ctx.get('conversation_count', 0)} conversations with you."
+            if user_ctx.get("last_topic"):
+                system_context += f" Last topic: {user_ctx['last_topic']}."
+            if user_ctx.get("time_away"):
+                system_context += f" They've been away for {user_ctx['time_away']}."
+
+        if user_ctx.get("recurring_interests"):
+            system_context += f"\nTheir recurring interests: {', '.join(user_ctx['recurring_interests'][:3])}."
+
     messages = [
         {"role": "system", "content": prompt},
         {
@@ -97,6 +127,7 @@ def run(state: dict) -> dict:
             "content": (
                 f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
                 + "\n\n".join(context_parts)
+                + (f"\n\n{system_context}" if system_context else "")
                 + "\n\n"
                 + parser.get_format_instructions()
             ),
