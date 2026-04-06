@@ -32,6 +32,7 @@ from app.services.dream_processor import DreamCycleProcessor
 from app.services.context_engine import context_engine
 from app.services.reflex_layer import reflex_layer
 from app.services.self_reflection import self_reflection
+from app.services.self_training import self_training_engine
 from app.routers.simulation import router as simulation_router
 from app.routers.learning import (
     router as learning_router,
@@ -264,6 +265,12 @@ def get_available_datasets(topic: str = None):
     if topic:
         return {"datasets": hf_dataset_searcher.search_for_gap(topic)}
     return {"curated": hf_dataset_searcher.get_curated_datasets()}
+
+
+@app.get("/self/training")
+def get_training_report():
+    """Get self-training report."""
+    return self_training_engine.get_training_report()
 
 
 @app.get("/config/status")
@@ -509,6 +516,21 @@ def run_org(task: UserTask):
             data_sources=final.get("data_sources", []),
             gaps=final.get("caveats", []),
             elapsed=elapsed,
+        )
+
+        # Self-training: critique, refine prompts, improve responses
+        training_result = self_training_engine.train_on_response(
+            user_input=user_input,
+            response=final_answer,
+            confidence=final.get("confidence", 0.5),
+            data_sources=final.get("data_sources", []),
+            elapsed=elapsed,
+            prompt_name="synthesizer",
+        )
+        logger.info(
+            f"Self-training cycle #{training_result['training_cycle']}: "
+            f"score={training_result['prompt_score']}, "
+            f"weaknesses={len(training_result['critique'].get('weaknesses', []))}"
         )
 
         # Step 8: Fire-and-forget: traditional learning

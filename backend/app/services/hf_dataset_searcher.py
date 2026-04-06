@@ -179,20 +179,49 @@ class HFDatasetSearcher:
         self, dataset_name: str, max_samples: int = 100, split: str = "train"
     ) -> List[Dict]:
         """
-        Stream a sample from a dataset without full download.
-
-        Args:
-            dataset_name: HF dataset name
-            max_samples: Number of samples to stream
-            split: Dataset split to use
-
-        Returns:
-            List of sample records
+        Get dataset info via HF Hub API (lightweight, no datasets library needed).
+        Returns dataset metadata and sample info instead of full data.
         """
-        if not self._check_datasets_available():
-            logger.warning(
-                f"Cannot stream {dataset_name}: datasets library not available"
-            )
+        try:
+            from huggingface_hub import HfApi, hf_hub_download
+            import json
+
+            api = HfApi()
+
+            # Get dataset info
+            ds_info = api.dataset_info(dataset_name)
+
+            # Try to get a small sample from the dataset card or README
+            sample_data = {
+                "dataset_name": dataset_name,
+                "description": getattr(ds_info, "card_data", {})
+                .get("dataset_info", {})
+                .get("description", "")
+                if hasattr(ds_info, "card_data") and ds_info.card_data
+                else "",
+                "tags": getattr(ds_info, "tags", []) or [],
+                "downloads": getattr(ds_info, "downloads", 0) or 0,
+                "size_categories": getattr(ds_info, "size_categories", []) or [],
+            }
+
+            # Try to download a small sample file if available
+            try:
+                # Look for README.md or dataset_info.json
+                readme = api.hf_hub_download(
+                    repo_id=dataset_name,
+                    filename="README.md",
+                    repo_type="dataset",
+                )
+                with open(readme) as f:
+                    content = f.read()[:5000]
+                    sample_data["readme_preview"] = content
+            except Exception:
+                pass
+
+            return [sample_data]
+
+        except Exception as e:
+            logger.error(f"Failed to get dataset info for {dataset_name}: {e}")
             return []
 
         try:

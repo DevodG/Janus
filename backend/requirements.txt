@@ -13,4 +13,3 @@ markdownify>=0.11.0
 lxml>=5.0.0
 aiohttp>=3.9.0
 huggingface_hub>=0.20.0
-datasets>=2.14.0

@@ -3,13 +3,12 @@ Autonomous Learner for Janus.
 
 Orchestrates the full self-improvement loop:
 1. Identify gaps from self-reflection
-2. Search HF Hub for relevant datasets
-3. Stream and extract knowledge
-4. Update knowledge base
-5. Build fine-tuning dataset
-6. Reduce gap urgency
+2. Search HF Hub for relevant datasets (lightweight, no downloads)
+3. Extract dataset metadata as knowledge
+4. Build fine-tuning dataset from conversations
+5. Reduce gap urgency
 
-Runs during daemon night cycles.
+Runs during daemon night cycles. Uses ONLY huggingface_hub API - no heavy libraries.
 """
 
 import json
@@ -20,7 +19,6 @@ from datetime import datetime, timezone
 
 from app.services.self_reflection import self_reflection
 from app.services.hf_dataset_searcher import hf_dataset_searcher
-from app.services.dataset_extractor import dataset_extractor
 from app.services.fine_tuning_builder import fine_tuning_builder
 from app.memory import knowledge_store
 
@@ -31,6 +29,7 @@ class AutonomousLearner:
     """
     Autonomous self-improvement system.
     Identifies gaps, finds datasets, extracts knowledge, builds training data.
+    Lightweight - uses only HF Hub API, no dataset downloads.
     """
 
     def __init__(self):
@@ -41,19 +40,11 @@ class AutonomousLearner:
     def run_learning_cycle(
         self,
         max_gaps: int = 3,
-        max_datasets_per_gap: int = 2,
-        max_samples_per_dataset: int = 50,
+        max_datasets_per_gap: int = 3,
     ) -> Dict:
         """
         Run a complete autonomous learning cycle.
-
-        Args:
-            max_gaps: Maximum number of gaps to address
-            max_datasets_per_gap: Max datasets to search per gap
-            max_samples_per_dataset: Max samples to stream per dataset
-
-        Returns:
-            Learning cycle results
+        Lightweight - only uses HF Hub API for dataset search and metadata.
         """
         self.total_cycles += 1
         start_time = time.time()
@@ -70,13 +61,13 @@ class AutonomousLearner:
         results = {
             "cycle": self.total_cycles,
             "gaps_addressed": 0,
-            "datasets_searched": 0,
+            "datasets_found": 0,
             "knowledge_added": 0,
             "training_pairs_added": 0,
             "details": [],
         }
 
-        # Step 2: For each gap, search and learn
+        # Step 2: For each gap, search HF Hub for relevant datasets
         for gap in gaps:
             gap_topic = gap.get("topic", "")
             if not gap_topic:
@@ -84,11 +75,11 @@ class AutonomousLearner:
 
             logger.info(f"[AUTONOMOUS LEARNER] Addressing gap: {gap_topic[:100]}")
 
-            # Search for relevant datasets
+            # Search for relevant datasets (lightweight API call)
             datasets = hf_dataset_searcher.search_for_gap(
                 gap_topic, max_datasets_per_gap
             )
-            results["datasets_searched"] += len(datasets)
+            results["datasets_found"] += len(datasets)
 
             if not datasets:
                 logger.info(
@@ -96,56 +87,45 @@ class AutonomousLearner:
                 )
                 continue
 
-            # Step 3: Stream and extract knowledge
+            # Step 3: Store dataset metadata as knowledge
             for ds_info in datasets:
                 ds_name = ds_info.get("name", "")
                 if not ds_name:
                     continue
 
-                logger.info(f"[AUTONOMOUS LEARNER] Streaming {ds_name}")
+                logger.info(f"[AUTONOMOUS LEARNER] Found dataset: {ds_name}")
 
-                # Stream samples
-                samples = hf_dataset_searcher.stream_dataset_sample(
-                    ds_name, max_samples=max_samples_per_dataset
-                )
+                # Create knowledge entry from dataset metadata
+                knowledge_entry = {
+                    "text": f"Relevant dataset for {gap_topic}: {ds_name}. "
+                    f"Description: {ds_info.get('description', 'N/A')[:200]}. "
+                    f"Downloads: {ds_info.get('downloads', 0)}. "
+                    f"Tags: {', '.join(ds_info.get('tags', [])[:5])}.",
+                    "source": f"hf_dataset:{ds_name}",
+                    "topic": gap_topic,
+                    "timestamp": time.time(),
+                    "confidence": ds_info.get("relevance_score", 0.5),
+                }
 
-                if not samples:
-                    continue
-
-                # Extract facts
-                facts = dataset_extractor.extract_facts_from_samples(samples, gap_topic)
-
-                # Extract instruction pairs
-                instruction_pairs = dataset_extractor.extract_instruction_pairs(samples)
-
-                # Step 4: Store knowledge
-                for fact in facts:
-                    try:
-                        knowledge_store.save_knowledge(fact)
-                        results["knowledge_added"] += 1
-                        self.total_knowledge_added += 1
-                    except Exception as e:
-                        logger.error(f"Failed to save knowledge: {e}")
-
-                # Step 5: Add to fine-tuning dataset
-                pairs_added = fine_tuning_builder.add_dataset_pairs(
-                    instruction_pairs, ds_name
-                )
-                results["training_pairs_added"] += pairs_added
+                try:
+                    knowledge_store.save_knowledge(knowledge_entry)
+                    results["knowledge_added"] += 1
+                    self.total_knowledge_added += 1
+                except Exception as e:
+                    logger.error(f"Failed to save knowledge: {e}")
 
                 results["details"].append(
                     {
                         "gap": gap_topic[:100],
                         "dataset": ds_name,
-                        "samples_streamed": len(samples),
-                        "facts_extracted": len(facts),
-                        "training_pairs": pairs_added,
+                        "downloads": ds_info.get("downloads", 0),
+                        "relevance": ds_info.get("relevance_score", 0),
                     }
                 )
 
             results["gaps_addressed"] += 1
 
-        # Step 6: Add conversation data to training dataset
+        # Step 4: Add conversation data to training dataset
         self._add_recent_conversations_to_training()
 
         elapsed = time.time() - start_time
@@ -190,7 +170,6 @@ class AutonomousLearner:
             "total_knowledge_added": self.total_knowledge_added,
             "last_learning_cycle": self.last_learning_cycle,
             "fine_tuning_dataset": fine_tuning_builder.get_stats(),
-            "extraction_stats": dataset_extractor.get_extraction_stats(),
         }
 
 
