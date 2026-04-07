@@ -15,6 +15,7 @@ from app.config import (
     MEMORY_DIR,
     PROMPTS_DIR,
     load_prompt,
+    PRIMARY_PROVIDER,
 )
 from app.services.case_store import list_cases, get_case, delete_case, memory_stats
 from app.services.prompt_store import list_prompts, get_prompt, update_prompt
@@ -43,6 +44,8 @@ from app.routers.sentinel import router as sentinel_router
 from app.routers.finance import router as finance_router
 from app.config import get_config, FEATURES, ensure_data_dirs
 from app.services.dataset_persistence import load_on_startup, save_on_shutdown
+from app.services.observation import scorer, get_tracer
+import uuid
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -418,6 +421,44 @@ def _log_agent_errors(result: dict):
                 )
 
 
+def _log_trace(
+    query,
+    query_type,
+    domain,
+    output,
+    latency_ms,
+    confidence,
+    tool_results,
+    cached=False,
+):
+    """Log a trace to the observation layer."""
+    try:
+        _tracer = get_tracer()
+        if _tracer is not None:
+            trace_data = {
+                "trace_id": str(uuid.uuid4()),
+                "query": query,
+                "query_type": query_type,
+                "domain": domain,
+                "routing_path": "reflex"
+                if cached == True
+                else "switchboard→research→synthesizer",
+                "provider_used": PRIMARY_PROVIDER,
+                "output": output[:2000] if output else "",
+                "output_length": len(output) if output else 0,
+                "latency_ms": int(latency_ms),
+                "confidence": confidence,
+                "tool_results": tool_results,
+                "errors": [],
+                "cached": cached,
+            }
+            scoring = scorer.score(trace_data)
+            trace_data.update(scoring)
+            _tracer.log_trace(trace_data)
+    except Exception as e:
+        logger.warning(f"Trace logging failed: {e}")
+
+
 def _fire_and_forget_learning(payload: dict):
     """Fire-and-forget learning from a completed case."""
     from app.routers.learning import learning_engine as _le
@@ -450,6 +491,17 @@ def run_org(task: UserTask):
             context_engine.update_after_interaction(
                 user_input, reflex.get("final_answer", ""), context
             )
+            # Log trace for reflex response
+            _log_trace(
+                user_input,
+                "reflex",
+                "general",
+                reflex.get("final_answer", ""),
+                0,
+                0.5,
+                [],
+                True,
+            )
             return reflex
 
         # Step 2: Classify the query
@@ -467,6 +519,18 @@ def run_org(task: UserTask):
             )
             context_engine.update_after_interaction(
                 user_input, cached["answer"], context
+            )
+            # Log trace for cached response
+            _log_trace(
+                user_input,
+                cached.get("query_type", "cached"),
+                cached.get("domain", "general"),
+                cached["answer"],
+                0,
+                0.9,
+                [],
+                True,
+                cached=True,
             )
             return {
                 "case_id": "",
@@ -514,6 +578,17 @@ def run_org(task: UserTask):
             ],
         }
         save_case(result.get("case_id", ""), payload)
+
+        # ── Trace observation (self-improvement) ──────────────────────────
+        _log_trace(
+            user_input,
+            query_type.value,
+            domain,
+            final_answer,
+            elapsed * 1000,
+            final.get("confidence", 0.5),
+            result.get("research", {}).get("data_sources", []),
+        )
 
         # Step 6: Cache the result
         cache_manager.put(
@@ -931,3 +1006,28 @@ def memory_queries(domain: str = None, search: str = None, limit: int = 20):
 def memory_related(query_id: str, limit: int = 5):
     """Get queries related to a given query."""
     return memory_graph.get_related_queries(query_id, limit=limit)
+
+
+# ── Self-Improvement: Trace Endpoints ─────────────────────────────
+
+
+@app.get("/traces")
+def list_traces(
+    limit: int = Query(default=50, ge=1, le=200),
+    score_min: float = Query(default=0.0, ge=0.0, le=1.0),
+    domain: str = Query(default=None),
+):
+    """List traces with optional filters."""
+    _tracer = get_tracer()
+    if _tracer is None:
+        return {"error": "Tracer not initialized"}
+    return _tracer.get_traces(limit=limit, score_min=score_min, domain=domain)
+
+
+@app.get("/traces/stats")
+def trace_stats():
+    """Get trace statistics."""
+    _tracer = get_tracer()
+    if _tracer is None:
+        return {"error": "Tracer not initialized"}
+    return _tracer.get_stats()

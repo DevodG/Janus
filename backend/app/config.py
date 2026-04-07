@@ -57,7 +57,11 @@ OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
 OPENAI_REASONER_MODEL = os.getenv("OPENAI_REASONER_MODEL", "gpt-4o")
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+# News APIs - multiple providers for redundancy
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
+NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY", "pub_cc1c7a4792ba4e9ab3db82d7eac4a487")
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "7fecc89c143490cfe47b4a67fcf43dc9")
+NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "92b805b134354c94ae31d9d0cc0a1814")
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "")
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
 
@@ -238,6 +242,8 @@ FEATURES = {
     "adaptive": os.getenv("FEATURE_ADAPTIVE", "false").lower() == "true",
     "self_training": os.getenv("FEATURE_SELF_TRAINING", "false").lower() == "true",
     "experimental": os.getenv("FEATURE_EXPERIMENTAL", "false").lower() == "true",
+    "user_patterns": os.getenv("FEATURE_USER_PATTERNS", "false").lower() == "true",
+    "lora": os.getenv("FEATURE_LORA", "false").lower() == "true",
 }
 
 
