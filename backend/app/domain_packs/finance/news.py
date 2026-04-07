@@ -1,7 +1,9 @@
 """
 News module for finance domain pack.
 
-Provides access to financial news via NewsAPI.
+Primary: Actually Relevant (free, no key, curated)
+Fallback: Alpha Vantage (requires API key)
+Legacy: NewsAPI (deprecated, doesn't work on hosted servers)
 """
 
 from typing import List, Dict, Any
@@ -14,16 +16,73 @@ from app.config import NEWSAPI_KEY, ALPHAVANTAGE_API_KEY
 
 logger = logging.getLogger(__name__)
 
+ACTUALLY_RELEVANT_API = "https://actually-relevant-api.onrender.com/api"
+
+
+def _normalize_actually_relevant(stories: list) -> List[Dict[str, Any]]:
+    """Convert Actually Relevant stories to the standard article format."""
+    articles = []
+    for s in stories:
+        articles.append(
+            {
+                "title": s.get("title", ""),
+                "source": {
+                    "name": s.get("feed", {}).get(
+                        "displayTitle", s.get("feed", {}).get("title", "")
+                    )
+                },
+                "url": s.get("sourceUrl", ""),
+                "publishedAt": s.get("datePublished", ""),
+                "description": (s.get("summary") or "")[:200],
+                "stance": "neutral",
+                "sentiment_score": 0.5,
+                "scam_score": 0.0,
+                "rumor_score": 0.0,
+                "source_credibility": 0.8,
+            }
+        )
+    return articles
+
+
+def _fetch_actually_relevant(
+    issue_slug: str = None, page_size: int = 10
+) -> List[Dict[str, Any]]:
+    """Fetch curated stories from Actually Relevant API."""
+    try:
+        params = {"pageSize": page_size}
+        if issue_slug:
+            params["issueSlug"] = issue_slug
+        with httpx.Client(timeout=15) as client:
+            response = client.get(f"{ACTUALLY_RELEVANT_API}/stories", params=params)
+        if response.status_code == 200:
+            data = response.json()
+            stories = data.get("data", [])
+            if stories:
+                logger.info(
+                    f"Retrieved {len(stories)} curated stories from Actually Relevant"
+                )
+                return _normalize_actually_relevant(stories[:page_size])
+    except Exception as e:
+        logger.warning(f"Actually Relevant API failed: {e}")
+    return []
+
 
 def search_news(
     query: str, page_size: int = 10, language: str = "en", sort_by: str = "publishedAt"
 ) -> List[Dict[str, Any]]:
-    """
-    Search for news articles.
-    """
-    if not NEWSAPI_KEY and not ALPHAVANTAGE_API_KEY:
-        logger.warning("Both NewsAPI and Alpha Vantage keys missing")
-        return []
+    """Search for news articles."""
+    articles = _fetch_actually_relevant(page_size=page_size)
+    if articles:
+        query_lower = query.lower()
+        filtered = [
+            a
+            for a in articles
+            if query_lower in (a.get("title", "") or "").lower()
+            or query_lower in (a.get("description", "") or "").lower()
+        ]
+        if filtered:
+            return filtered
+        return articles
 
     if NEWSAPI_KEY:
         try:
@@ -38,36 +97,39 @@ def search_news(
                 response = client.get(
                     "https://newsapi.org/v2/everything", params=params
                 )
-
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get("articles", [])
                 if articles:
                     logger.info(
-                        f"Found {len(articles)} news articles for '{query}' via NewsAPI"
+                        f"Found {len(articles)} articles for '{query}' via NewsAPI"
                     )
                     return articles
         except Exception as e:
-            logger.warning(f"NewsAPI search failed, falling back to Alpha Vantage: {e}")
+            logger.warning(f"NewsAPI search failed: {e}")
 
-    return _search_alphavantage(query, page_size)
+    if ALPHAVANTAGE_API_KEY:
+        return _search_alphavantage(query, page_size)
+
+    return []
 
 
 def get_top_headlines(
     category: str = "business", country: str = "us", page_size: int = 10
 ) -> List[Dict[str, Any]]:
-    """
-    Get top headlines by category.
+    """Get top headlines by category."""
+    issue_map = {
+        "business": None,
+        "technology": "science-technology",
+        "science": "science-technology",
+        "health": "human-development",
+        "general": None,
+    }
+    issue_slug = issue_map.get(category)
+    articles = _fetch_actually_relevant(issue_slug=issue_slug, page_size=page_size)
+    if articles:
+        return articles
 
-    Args:
-        category: News category ('business', 'technology', etc.)
-        country: Country code (default: 'us')
-        page_size: Number of results (max 100)
-
-    Returns:
-        List of top headline articles
-    """
-    # Try NewsAPI first
     if NEWSAPI_KEY:
         try:
             params = {
@@ -80,30 +142,24 @@ def get_top_headlines(
                 response = client.get(
                     "https://newsapi.org/v2/top-headlines", params=params
                 )
-
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get("articles", [])
                 if articles:
-                    logger.info(
-                        f"Retrieved {len(articles)} top headlines from NewsAPI for {category}/{country}"
-                    )
                     return articles
         except Exception as e:
-            logger.warning(
-                f"NewsAPI headlines failed, falling back to Alpha Vantage: {e}"
-            )
+            logger.warning(f"NewsAPI headlines failed: {e}")
 
-    # Fallback to Alpha Vantage news sentiment
-    return _get_headlines_from_alphavantage(category, page_size)
+    if ALPHAVANTAGE_API_KEY:
+        return _get_headlines_from_alphavantage(category, page_size)
+
+    return []
 
 
 def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]]:
     """Search Alpha Vantage news by query/ticker/company name."""
     if not ALPHAVANTAGE_API_KEY:
-        logger.warning("Alpha Vantage API key missing for search")
         return []
-
     try:
         params = {
             "function": "NEWS_SENTIMENT",
@@ -113,18 +169,11 @@ def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]
         }
         with httpx.Client(timeout=15) as client:
             response = client.get("https://www.alphavantage.co/query", params=params)
-
         if response.status_code != 200:
-            logger.error(f"Alpha Vantage search error {response.status_code}")
             return []
-
         data = response.json()
         if "Error Message" in data or "Information" in data:
-            logger.warning(
-                f"Alpha Vantage search error: {data.get('Error Message', data.get('Information', ''))}"
-            )
             return []
-
         feed = data.get("feed", [])
         query_lower = query.lower()
         filtered = []
@@ -135,10 +184,8 @@ def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]
                 filtered.append(item)
             if len(filtered) >= page_size:
                 break
-
         if not filtered:
             filtered = feed[:page_size]
-
         articles = []
         for item in filtered:
             articles.append(
@@ -154,13 +201,9 @@ def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]
                     "description": (item.get("summary") or "")[:200],
                 }
             )
-
-        logger.info(
-            f"Retrieved {len(articles)} articles from Alpha Vantage for '{query}'"
-        )
         return articles
     except Exception as e:
-        logger.error(f"Error fetching Alpha Vantage search for '{query}': {e}")
+        logger.error(f"Alpha Vantage search error: {e}")
         return []
 
 
@@ -169,10 +212,7 @@ def _get_headlines_from_alphavantage(
 ) -> List[Dict[str, Any]]:
     """Get headlines from Alpha Vantage News & Sentiment endpoint."""
     if not ALPHAVANTAGE_API_KEY:
-        logger.warning("Alpha Vantage API key missing for news fallback")
         return []
-
-    # Map NewsAPI categories to Alpha Vantage topics
     topic_map = {
         "business": "FINANCIAL_MARKETS",
         "technology": "TECHNOLOGY",
@@ -183,7 +223,6 @@ def _get_headlines_from_alphavantage(
         "health": "TECHNOLOGY",
     }
     topic = topic_map.get(category, "FINANCIAL_MARKETS")
-
     try:
         params = {
             "function": "NEWS_SENTIMENT",
@@ -193,18 +232,11 @@ def _get_headlines_from_alphavantage(
         }
         with httpx.Client(timeout=15) as client:
             response = client.get("https://www.alphavantage.co/query", params=params)
-
         if response.status_code != 200:
-            logger.error(f"Alpha Vantage news error {response.status_code}")
             return []
-
         data = response.json()
         if "Error Message" in data or "Information" in data:
-            logger.warning(
-                f"Alpha Vantage news error: {data.get('Error Message', data.get('Information', ''))}"
-            )
             return []
-
         feed = data.get("feed", [])
         articles = []
         for item in feed[:page_size]:
@@ -221,26 +253,32 @@ def _get_headlines_from_alphavantage(
                     "description": (item.get("summary") or "")[:200],
                 }
             )
-
-        logger.info(
-            f"Retrieved {len(articles)} headlines from Alpha Vantage for {category}"
-        )
         return articles
     except Exception as e:
-        logger.error(f"Error fetching Alpha Vantage headlines: {e}")
+        logger.error(f"Alpha Vantage headlines error: {e}")
         return []
 
 
 def get_company_news(company_name: str, days_back: int = 7) -> List[Dict[str, Any]]:
-    """
-    Get recent news about a specific company.
-    """
+    """Get recent news about a specific company."""
+    articles = _fetch_actually_relevant(page_size=20)
+    if articles:
+        company_lower = company_name.lower()
+        filtered = [
+            a
+            for a in articles
+            if company_lower in (a.get("title", "") or "").lower()
+            or company_lower in (a.get("description", "") or "").lower()
+        ]
+        if filtered:
+            return filtered
+        return articles[:10]
+
     if NEWSAPI_KEY:
         try:
             from_date = (datetime.now() - timedelta(days=days_back)).strftime(
                 "%Y-%m-%d"
             )
-
             params = {
                 "q": company_name,
                 "from": from_date,
@@ -253,16 +291,12 @@ def get_company_news(company_name: str, days_back: int = 7) -> List[Dict[str, An
                 response = client.get(
                     "https://newsapi.org/v2/everything", params=params
                 )
-
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get("articles", [])
                 if articles:
-                    logger.info(
-                        f"Found {len(articles)} articles about '{company_name}' in last {days_back} days via NewsAPI"
-                    )
                     return articles
         except Exception as e:
-            logger.warning(f"NewsAPI company news failed for '{company_name}': {e}")
+            logger.warning(f"NewsAPI company news failed: {e}")
 
     return _search_alphavantage(company_name, 20)
