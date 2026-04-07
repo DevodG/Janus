@@ -45,6 +45,7 @@ from app.routers.finance import router as finance_router
 from app.config import get_config, FEATURES, ensure_data_dirs
 from app.services.dataset_persistence import load_on_startup, save_on_shutdown
 from app.services.observation import scorer, get_tracer
+from app.services.curation import curator, hf_pusher
 import uuid
 
 logging.basicConfig(level=logging.INFO)
@@ -431,7 +432,7 @@ def _log_trace(
     tool_results,
     cached=False,
 ):
-    """Log a trace to the observation layer."""
+    """Log a trace to the observation layer and curate it."""
     try:
         _tracer = get_tracer()
         if _tracer is not None:
@@ -455,6 +456,8 @@ def _log_trace(
             scoring = scorer.score(trace_data)
             trace_data.update(scoring)
             _tracer.log_trace(trace_data)
+            # Curate the trace (quality gate)
+            curator.curate_trace(trace_data)
     except Exception as e:
         logger.warning(f"Trace logging failed: {e}")
 
@@ -1031,3 +1034,30 @@ def trace_stats():
     if _tracer is None:
         return {"error": "Tracer not initialized"}
     return _tracer.get_stats()
+
+
+# ── Self-Improvement: Curation Endpoints ─────────────────────────────
+
+
+@app.get("/curation/examples")
+def curated_examples(
+    limit: int = Query(default=50, ge=1, le=200),
+    domain: str = Query(default=None),
+    query_type: str = Query(default=None),
+):
+    """Get curated examples for training."""
+    return curator.get_curated_examples(
+        limit=limit, domain=domain, query_type=query_type
+    )
+
+
+@app.get("/curation/stats")
+def curation_stats():
+    """Get curation statistics."""
+    return curator.get_stats()
+
+
+@app.post("/curation/push-to-hf")
+def push_to_hf(limit: int = 500):
+    """Push curated examples to HuggingFace dataset repo."""
+    return hf_pusher.push_curated_dataset(limit=limit)
