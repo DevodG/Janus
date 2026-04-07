@@ -115,11 +115,40 @@ def build_graph():
     return g.compile()
 
 
-compiled_graph = build_graph()
+# Lazy graph compilation — prevents import-time crash if agents fail to load
+_compiled_graph = None
+_graph_build_error = None
+
+
+def get_compiled_graph():
+    """Lazy graph compilation with error handling. Call at runtime, not import."""
+    global _compiled_graph, _graph_build_error
+    if _compiled_graph is not None:
+        return _compiled_graph
+    if _graph_build_error is not None:
+        raise RuntimeError(f"Graph compilation previously failed: {_graph_build_error}")
+    try:
+        _compiled_graph = build_graph()
+        logger.info("LangGraph pipeline compiled successfully")
+        return _compiled_graph
+    except Exception as e:
+        _graph_build_error = str(e)
+        logger.error(f"LangGraph build failed: {e}")
+        raise
+
+
+def graph_status():
+    """Return graph compilation status without triggering compilation."""
+    if _compiled_graph is not None:
+        return {"status": "ready"}
+    if _graph_build_error:
+        return {"status": "failed", "error": _graph_build_error}
+    return {"status": "not_compiled"}
 
 
 def run_case(user_input: str, context: dict = None) -> dict:
     """Run the optimized agent pipeline on user input."""
+    graph = get_compiled_graph()
     case_id = str(uuid.uuid4())
     t0 = time.perf_counter()
     logger.info("Starting case %s", case_id)
@@ -135,7 +164,7 @@ def run_case(user_input: str, context: dict = None) -> dict:
     if context:
         initial_state["context"] = context
 
-    result = compiled_graph.invoke(initial_state)
+    result = graph.invoke(initial_state)
 
     elapsed = time.perf_counter() - t0
     logger.info("Case %s completed in %.2fs", case_id, elapsed)

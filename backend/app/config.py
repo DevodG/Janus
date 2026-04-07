@@ -85,7 +85,6 @@ FINANCE_DOMAIN_PACK_ENABLED = (
 
 # Configuration validation
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -177,12 +176,13 @@ def validate_config():
     except Exception as e:
         errors.append(f"Failed to create data directories: {e}")
 
-    # Log results
+    # Log results — NEVER exit, always allow degraded mode
     if errors:
-        logger.error("Configuration validation failed with errors:")
+        logger.error(
+            "Configuration validation errors (app will start in degraded mode):"
+        )
         for error in errors:
             logger.error(f"  - {error}")
-        sys.exit(1)
 
     if warnings:
         logger.warning("Configuration validation completed with warnings:")
@@ -191,13 +191,67 @@ def validate_config():
     else:
         logger.info("Configuration validation passed")
 
-
-# Run validation on import (startup)
-validate_config()
+    return warnings
 
 
-# Learning layer configuration
-LEARNING_ENABLED = os.getenv("LEARNING_ENABLED", "true").lower() == "true"
+# ── Data directory initialization ────────────────────────────────────────────
+
+ALL_DATA_DIRS = [
+    DATA_DIR,
+    MEMORY_DIR,
+    SIMULATION_DIR,
+    DATA_DIR / "memory",
+    DATA_DIR / "simulations",
+    DATA_DIR / "logs",
+    DATA_DIR / "knowledge",
+    DATA_DIR / "skills",
+    DATA_DIR / "prompt_versions",
+    DATA_DIR / "learning",
+    DATA_DIR / "cache",
+    DATA_DIR / "adaptive",
+    DATA_DIR / "sentinel",
+    DATA_DIR / "sentinel" / "pending_patches",
+    DATA_DIR / "curiosity",
+    DATA_DIR / "daemon",
+    DATA_DIR / "dreams",
+    DATA_DIR / "memory_graph",
+    DATA_DIR / "router_state",
+]
+
+
+def ensure_data_dirs():
+    """Idempotent: create all runtime data dirs. Call once at startup."""
+    for d in ALL_DATA_DIRS:
+        try:
+            d.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            logger.warning(f"Failed to create data dir {d}: {e}")
+
+
+# ── Feature Flags ────────────────────────────────────────────────────────────
+
+FEATURES = {
+    "daemon": os.getenv("FEATURE_DAEMON", "true").lower() == "true",
+    "learning": os.getenv("FEATURE_LEARNING", "false").lower() == "true",
+    "sentinel": os.getenv("FEATURE_SENTINEL", "false").lower() == "true",
+    "simulation": os.getenv("FEATURE_SIMULATION", "true").lower() == "true",
+    "adaptive": os.getenv("FEATURE_ADAPTIVE", "false").lower() == "true",
+    "self_training": os.getenv("FEATURE_SELF_TRAINING", "false").lower() == "true",
+    "experimental": os.getenv("FEATURE_EXPERIMENTAL", "false").lower() == "true",
+}
+
+
+def get_feature_status():
+    """Return current feature flag status."""
+    return {
+        name: {"enabled": enabled, "env_var": f"FEATURE_{name.upper()}"}
+        for name, enabled in FEATURES.items()
+    }
+
+
+# ── Learning layer configuration ─────────────────────────────────────────────
+
+LEARNING_ENABLED = os.getenv("LEARNING_ENABLED", "false").lower() == "true"
 KNOWLEDGE_MAX_SIZE_MB = int(os.getenv("KNOWLEDGE_MAX_SIZE_MB", "200"))
 LEARNING_SCHEDULE_INTERVAL = int(os.getenv("LEARNING_SCHEDULE_INTERVAL", "6"))  # hours
 LEARNING_BATCH_SIZE = int(os.getenv("LEARNING_BATCH_SIZE", "10"))

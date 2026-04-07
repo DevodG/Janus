@@ -41,7 +41,8 @@ from app.routers.learning import (
 )
 from app.routers.sentinel import router as sentinel_router
 from app.routers.finance import router as finance_router
-from app.config import get_config
+from app.config import get_config, FEATURES, ensure_data_dirs
+from app.services.dataset_persistence import load_on_startup, save_on_shutdown
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,14 +54,8 @@ from app.domain_packs.init_packs import init_domain_packs
 
 init_domain_packs()
 
-# Initialize learning layer
+# Config is needed for feature flags; learning services init moved to startup event
 config = get_config()
-if config.learning_enabled:
-    try:
-        init_learning_services(config)
-        logger.info("Learning layer initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize learning layer: {e}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,10 +70,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(simulation_router)
-app.include_router(learning_router)
-app.include_router(sentinel_router)
+# ── Router Registration ──────────────────────────────────────────────────────
+
+# Always-on: finance (core domain pack)
 app.include_router(finance_router)
+
+# Feature-gated routers
+if FEATURES.get("simulation", True):
+    app.include_router(simulation_router)
+    logger.info("Simulation router enabled")
+else:
+    logger.info("Simulation router disabled (FEATURE_SIMULATION=false)")
+
+if FEATURES.get("learning", False):
+    app.include_router(learning_router)
+    logger.info("Learning router enabled")
+else:
+    logger.info("Learning router disabled (FEATURE_LEARNING=false)")
+
+if FEATURES.get("sentinel", False):
+    app.include_router(sentinel_router)
+    logger.info("Sentinel router enabled")
+else:
+    logger.info("Sentinel router disabled (FEATURE_SENTINEL=false)")
 
 
 # ── Request Timing Middleware ─────────────────────────────────────────────────
@@ -119,16 +133,38 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.on_event("startup")
 async def on_startup():
     """Start background tasks on app startup."""
-    if config.learning_enabled:
-        try:
-            start_scheduler_background()
-            logger.info("Background learning scheduler started")
-        except Exception as e:
-            logger.error(f"Failed to start learning scheduler: {e}")
+    global query_classifier, cache_manager, learning_filter, memory_graph, janus_daemon
 
-    # Start sentinel scheduler
-    sentinel_enabled = os.getenv("SENTINEL_ENABLED", "true").lower() == "true"
-    if sentinel_enabled:
+    # Step 1: Create all runtime data directories (idempotent)
+    ensure_data_dirs()
+
+    # Step 2: Restore daemon data from dataset repo (non-blocking)
+    try:
+        load_on_startup()
+    except Exception as e:
+        logger.warning(f"Dataset persistence unavailable: {e}")
+
+    # Step 3: Initialize core services (always)
+    try:
+        query_classifier = QueryClassifier()
+        cache_manager = IntelligentCacheManager()
+        learning_filter = LearningFilter()
+        memory_graph = MemoryGraph()
+        logger.info("Core services initialized")
+    except Exception as e:
+        logger.error(f"Core services init failed: {e} — continuing in degraded mode")
+
+    # Step 4: Initialize learning layer (feature-gated)
+    if FEATURES.get("learning", False) and config.learning_enabled:
+        try:
+            init_learning_services(config)
+            start_scheduler_background()
+            logger.info("Learning layer + scheduler started")
+        except Exception as e:
+            logger.error(f"Failed to start learning layer: {e}")
+
+    # Step 5: Start sentinel scheduler (feature-gated)
+    if FEATURES.get("sentinel", False):
         try:
             from app.services.sentinel.scheduler import start_sentinel_scheduler
 
@@ -137,13 +173,12 @@ async def on_startup():
         except Exception as e:
             logger.error(f"Failed to start sentinel scheduler: {e}")
 
-    # Start Janus daemon in background thread
-    daemon_enabled = os.getenv("DAEMON_ENABLED", "true").lower() == "true"
-    if daemon_enabled:
+    # Step 6: Start Janus daemon in background thread (feature-gated)
+    if FEATURES.get("daemon", True):
         try:
             import threading
-            from app.services.daemon import janus_daemon
 
+            janus_daemon = JanusDaemon()
             daemon_thread = threading.Thread(
                 target=janus_daemon.run, daemon=True, name="janus-daemon"
             )
@@ -151,6 +186,12 @@ async def on_startup():
             logger.info("Janus daemon started in background thread")
         except Exception as e:
             logger.error(f"Failed to start Janus daemon: {e}")
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    """Save daemon data to dataset repo before shutdown."""
+    save_on_shutdown()
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -164,6 +205,14 @@ def health():
 @app.get("/health/deep")
 def health_deep():
     return deep_health()
+
+
+@app.get("/health/features")
+def feature_status():
+    """Get current feature flag status."""
+    from app.config import get_feature_status
+
+    return get_feature_status()
 
 
 @app.get("/context")
@@ -273,6 +322,22 @@ def get_training_report():
     return self_training_engine.get_training_report()
 
 
+@app.get("/self/continuous-training")
+def get_continuous_training_status():
+    """Get continuous self-training status."""
+    from app.services.continuous_training import continuous_self_trainer
+
+    return continuous_self_trainer.get_status()
+
+
+@app.post("/self/continuous-training/run")
+def trigger_continuous_training():
+    """Manually trigger a continuous training cycle."""
+    from app.services.continuous_training import continuous_self_trainer
+
+    return continuous_self_trainer.run_training_cycle()
+
+
 @app.get("/config/status")
 def config_status():
     return {
@@ -313,32 +378,18 @@ def agent_detail(agent_name: str):
 
 
 # ── Caching & Intelligence Services ──────────────────────────────────────────
-
-query_classifier = QueryClassifier()
-cache_manager = IntelligentCacheManager()
-learning_filter = LearningFilter()
-memory_graph = MemoryGraph()
+# These are initialized in the startup event to avoid import-time side effects.
+# Declared here as module-level None so endpoints can reference them.
+query_classifier = None
+cache_manager = None
+learning_filter = None
+memory_graph = None
 
 # ── Background Daemon ────────────────────────────────────────────────────────
-
+# Daemon is started in the startup event (on_startup), NOT here.
+# Starting it at module level creates a duplicate thread with the startup event,
+# causing data races on shared state (_pending_thoughts, signal_queue, files).
 janus_daemon = None
-
-
-def start_janus_daemon():
-    """Start the background intelligence daemon."""
-    global janus_daemon
-    try:
-        janus_daemon = JanusDaemon()
-        import threading
-
-        thread = threading.Thread(target=janus_daemon.run, daemon=True)
-        thread.start()
-        logger.info("Janus background daemon started")
-    except Exception as e:
-        logger.error(f"Failed to start Janus daemon: {e}")
-
-
-start_janus_daemon()
 
 
 # ── Case Execution ────────────────────────────────────────────────────────────
@@ -381,6 +432,13 @@ def _fire_and_forget_learning(payload: dict):
 @app.post("/run")
 def run_org(task: UserTask):
     try:
+        # Guard: core services must be available
+        if query_classifier is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Core services unavailable — app is in degraded mode",
+            )
+
         user_input = task.user_input
         logger.info("Processing /run: %s", user_input[:100])
 
@@ -671,11 +729,6 @@ def case_delete(case_id: str):
     return {"deleted": True, "case_id": case_id}
 
 
-@app.get("/memory/stats")
-def memory_stats_endpoint():
-    return memory_stats()
-
-
 # ── Prompts ───────────────────────────────────────────────────────────────────
 
 
@@ -853,9 +906,15 @@ def trigger_curiosity_cycle():
 
 
 @app.get("/memory/stats")
-def memory_graph_stats():
-    """Get memory graph statistics."""
-    return memory_graph.get_stats()
+def memory_stats_endpoint():
+    """Get memory graph statistics for the pulse page."""
+    stats = memory_graph.get_stats()
+    return {
+        "queries": stats.get("total_queries", 0),
+        "entities": stats.get("total_entities", 0),
+        "links": stats.get("total_links", 0),
+        "domains": stats.get("domain_counts", {}),
+    }
 
 
 @app.get("/memory/queries")
