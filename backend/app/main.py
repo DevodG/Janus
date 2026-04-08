@@ -46,6 +46,7 @@ from app.config import get_config, FEATURES, ensure_data_dirs
 from app.services.dataset_persistence import load_on_startup, save_on_shutdown
 from app.services.observation import scorer, get_tracer
 from app.services.curation import curator, hf_pusher
+from app.services.domain_classifier import domain_classifier, DomainType
 import uuid
 
 logging.basicConfig(level=logging.INFO)
@@ -509,9 +510,24 @@ def run_org(task: UserTask):
 
         # Step 2: Classify the query
         query_type, query_confidence, query_meta = query_classifier.classify(user_input)
-        domain = query_meta.get("detected_domain", "general")
+        domain_from_query = query_meta.get("detected_domain", "general")
+
+        # Additional domain classification for improved routing
+        domain_classification = domain_classifier.classify(user_input)
+        domain = domain_classification.domain.value
+
+        # Enhance metadata with domain classification details
+        query_meta["domain_classification"] = {
+            "domain": domain,
+            "confidence": domain_classification.confidence,
+            "keywords_found": domain_classification.keywords_found,
+            "reasoning": domain_classification.reasoning,
+        }
+
         logger.info(
-            f"Query classified: type={query_type.value}, domain={domain}, confidence={query_confidence:.2f}"
+            f"Query classified: type={query_type.value}, domain={domain} "
+            f"(query_classifier: {domain_from_query}, domain_classifier: {domain_classification.domain.value} "
+            f"conf={domain_classification.confidence:.2f})"
         )
 
         # Step 3: Try cache first
@@ -1061,3 +1077,59 @@ def curation_stats():
 def push_to_hf(limit: int = 500):
     """Push curated examples to HuggingFace dataset repo."""
     return hf_pusher.push_curated_dataset(limit=limit)
+
+
+# ── Self-Improvement: Domain Classification Endpoints ─────────────────────────────
+
+
+@app.get("/domain/classify")
+def classify_domain(
+    query: str = Query(..., description="Query to classify"),
+):
+    """Classify a query into a domain."""
+    classification = domain_classifier.classify(query)
+    return {
+        "query": query,
+        "domain": classification.domain.value,
+        "confidence": classification.confidence,
+        "keywords_found": classification.keywords_found,
+        "reasoning": classification.reasoning,
+    }
+
+
+@app.get("/domain/confidence")
+def domain_confidence(
+    query: str = Query(..., description="Query to check"),
+    domain: str = Query(
+        ..., description="Domain to check confidence for (finance, technology, etc.)"
+    ),
+):
+    """Get confidence score for a specific domain."""
+    try:
+        domain_enum = DomainType(domain.lower())
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid domain: {domain}. Valid domains are: {[d.value for d in DomainType]}",
+        )
+
+    confidence = domain_classifier.get_domain_confidence(query, domain_enum)
+    return {"query": query, "domain": domain, "confidence": confidence}
+
+
+@app.get("/domain/top")
+def top_domains(
+    query: str = Query(..., description="Query to analyze"),
+    top_n: int = Query(
+        default=3, ge=1, le=12, description="Number of top domains to return"
+    ),
+):
+    """Get top N domain classifications for a query."""
+    top_domains = domain_classifier.get_top_domains(query, top_n=top_n)
+    return {
+        "query": query,
+        "top_domains": [
+            {"domain": domain.value, "confidence": confidence}
+            for domain, confidence in top_domains
+        ],
+    }
