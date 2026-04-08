@@ -46,7 +46,7 @@ from app.config import get_config, FEATURES, ensure_data_dirs
 from app.services.dataset_persistence import load_on_startup, save_on_shutdown
 from app.services.observation import scorer, get_tracer
 from app.services.curation import curator, hf_pusher
-from app.services.domain_classifier import domain_classifier, DomainType
+from app.services.domain_classifier import domain_classifier
 import uuid
 
 logging.basicConfig(level=logging.INFO)
