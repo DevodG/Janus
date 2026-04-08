@@ -92,9 +92,19 @@ class DomainClassifier:
             "education": DomainType.EDUCATION,
         }
 
+        try:
+            registry = domain_registry.get_registry()
+        except Exception as e:
+            logger.warning(f"Could not get domain registry: {e}")
+            registry = None
+
         for pack_name, domain_type in domain_mapping.items():
             try:
-                pack = domain_registry.get_pack(pack_name)
+                if registry is not None:
+                    pack = registry.get_pack(pack_name)
+                else:
+                    pack = None
+
                 if pack and hasattr(pack, "get_keywords"):
                     keywords[domain_type] = pack.get_keywords()
                 elif pack and hasattr(pack, "DOMAIN_KEYWORDS"):
