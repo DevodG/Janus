@@ -23,6 +23,7 @@ RUN mkdir -p /app/app/data/context /app/app/data/daemon /app/app/data/adaptive /
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PORT=7860
+ENV PYTHONPATH=/app/backend:$PYTHONPATH
 
 # Expose port and run the application
 EXPOSE 7860
