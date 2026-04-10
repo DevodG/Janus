@@ -9,9 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY backend/ ./backend/
+COPY app.py.bak ./app.py
 
 RUN mkdir -p /app/backend/app/data/context /app/backend/app/data/daemon /app/backend/app/data/adaptive /app/backend/app/data/knowledge /app/backend/app/data/memory /app/backend/app/data/simulations
+
+RUN ln -sf /app/backend/app /app/app
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=7860
