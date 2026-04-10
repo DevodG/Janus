@@ -1,9 +1,9 @@
 """
 News module for finance domain pack.
 
-Primary: Actually Relevant (free, no key, curated)
-Fallback: Alpha Vantage (requires API key)
-Legacy: NewsAPI (deprecated, doesn't work on hosted servers)
+Primary: Yahoo Finance (free, no key, stock-specific)
+Fallback: Actually Relevant (free, no key, curated)
+Legacy: Alpha Vantage (requires API key)
 """
 
 from typing import List, Dict, Any
@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import logging
 
 import httpx
+import yfinance
 
 from app.config import NEWSAPI_KEY, ALPHAVANTAGE_API_KEY
 
@@ -45,13 +46,15 @@ def _normalize_actually_relevant(stories: list) -> List[Dict[str, Any]]:
 
 
 def _fetch_actually_relevant(
-    issue_slug: str = None, page_size: int = 10
+    issue_slug: str = None, page_size: int = 10, search_query: str = None
 ) -> List[Dict[str, Any]]:
     """Fetch curated stories from Actually Relevant API."""
     try:
         params = {"pageSize": page_size}
         if issue_slug:
             params["issueSlug"] = issue_slug
+        if search_query:
+            params["query"] = search_query
         with httpx.Client(timeout=15) as client:
             response = client.get(f"{ACTUALLY_RELEVANT_API}/stories", params=params)
         if response.status_code == 200:
@@ -67,11 +70,53 @@ def _fetch_actually_relevant(
     return []
 
 
+def _get_yahoo_finance_news(symbol: str) -> List[Dict[str, Any]]:
+    """Get news from Yahoo Finance for a specific symbol."""
+    try:
+        ticker = yfinance.Ticker(symbol)
+        news = ticker.news
+        if not news:
+            logger.info(f"No news from Yahoo Finance for {symbol}")
+            return []
+
+        articles = []
+        for item in news:
+            try:
+                content = item.get("content", item)
+                provider = content.get("provider", {}) or {}
+                articles.append(
+                    {
+                        "title": content.get("title", ""),
+                        "source": {
+                            "name": provider.get("displayName", "Yahoo Finance")
+                            if isinstance(provider, dict)
+                            else "Yahoo Finance"
+                        },
+                        "url": (content.get("clickThroughUrl") or {}).get("url", "")
+                        if isinstance(content.get("clickThroughUrl"), dict)
+                        else "",
+                        "publishedAt": content.get("pubDate", ""),
+                        "description": content.get("summary", "")[:200]
+                        if content.get("summary")
+                        else "",
+                    }
+                )
+            except Exception as inner_e:
+                logger.warning(f"Failed to parse news item: {inner_e}")
+                continue
+
+        logger.info(f"Got {len(articles)} articles from Yahoo Finance for {symbol}")
+        return articles
+    except Exception as e:
+        logger.warning(f"Yahoo Finance news failed for {symbol}: {e}")
+    return []
+
+
 def search_news(
     query: str, page_size: int = 10, language: str = "en", sort_by: str = "publishedAt"
 ) -> List[Dict[str, Any]]:
     """Search for news articles."""
-    articles = _fetch_actually_relevant(page_size=page_size)
+    articles = _fetch_actually_relevant(page_size=page_size, search_query=query)
     if articles:
         query_lower = query.lower()
         filtered = [
@@ -126,7 +171,9 @@ def get_top_headlines(
         "general": None,
     }
     issue_slug = issue_map.get(category)
-    articles = _fetch_actually_relevant(issue_slug=issue_slug, page_size=page_size)
+    articles = _fetch_actually_relevant(
+        issue_slug=issue_slug, page_size=page_size, search_query=category
+    )
     if articles:
         return articles
 
@@ -259,9 +306,46 @@ def _get_headlines_from_alphavantage(
         return []
 
 
-def get_company_news(company_name: str, days_back: int = 7) -> List[Dict[str, Any]]:
+def get_company_news(
+    company_name: str, days_back: int = 7, symbol: str = None
+) -> List[Dict[str, Any]]:
     """Get recent news about a specific company."""
-    articles = _fetch_actually_relevant(page_size=20)
+    if symbol:
+        yf_articles = _get_yahoo_finance_news(symbol)
+        if yf_articles:
+            logger.info(
+                f"Found {len(yf_articles)} articles from Yahoo Finance for {symbol}"
+            )
+            return yf_articles[:10]
+
+    search_queries = []
+    if symbol:
+        clean_symbol = symbol.split(".")[0]
+        search_queries.append(clean_symbol)
+        search_queries.append(f"{clean_symbol} stock")
+
+    if company_name and company_name != symbol:
+        search_queries.insert(0, company_name)
+        if "." in company_name:
+            search_queries.insert(1, company_name.split(".")[0])
+
+    for query in search_queries:
+        if not query:
+            continue
+        articles = _fetch_actually_relevant(page_size=20, search_query=query)
+        if articles:
+            query_lower = query.lower()
+            symbol_lower = (symbol or "").lower()
+            filtered = [
+                a
+                for a in articles
+                if query_lower in (a.get("title", "") or "").lower()
+                or symbol_lower in (a.get("title", "") or "").lower()
+            ]
+            if filtered:
+                return filtered[:10]
+
+    articles = _fetch_actually_relevant(page_size=20, search_query=company_name)
     if articles:
         company_lower = company_name.lower()
         filtered = [

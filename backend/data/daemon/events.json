@@ -598,5 +598,1105 @@
     },
     "timestamp": "2026-04-04T17:24:55Z",
     "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Appeals court rebuffs Anthropic in latest round of its AI battle with the Trump administration",
+      "description": "A federal appeals court on Wednesday refused to block the Pentagon from blacklisting artificial intelligence laboratory Anthropic in a decision that differed from the conclusions reached in another judge\u2019s ruling on the same issues",
+      "source": "Abcnews.com",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: fed"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://abcnews.com/Technology/wireStory/appeals-court-rebuffs-anthropic-latest-round-ai-battle-131862547",
+      "timestamp": "2026-04-09T08:51:39Z"
+    },
+    "timestamp": "2026-04-09T08:51:39Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal",
+      "sector"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Italy's 10 Best AI Companies Leading Innovation in 2026: From Enterprise Platforms to Physical AI",
+      "description": "MILAN \u2014 Italy's artificial intelligence sector is gaining momentum in 2026, with a mix of established enterprise players, fast-growing startups and deep-tech ventures pushing boundaries in healthcare, legal tech, robotics, finance and content generation. Whil\u2026",
+      "source": "Ibtimes.com.au",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.ibtimes.com.au/italys-10-best-ai-companies-leading-innovation-2026-enterprise-platforms-physical-ai-1865880",
+      "timestamp": "2026-04-09T08:47:03Z"
+    },
+    "timestamp": "2026-04-09T08:47:03Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Sensex @ 95,000 in 9 months? Morgan Stanley's Ridham Desai says bull market coming",
+      "description": "Morgan Stanley forecasts the Sensex could reach 95,000 by December 2026, signaling a new bull market driven by India's strong growth prospects and favorable valuations. Despite near-term challenges, a confluence of macro, earnings, and flow indicators support\u2026",
+      "source": "The Times of India",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: earnings"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/markets/stocks/news/sensex-95000-in-9-months-morgan-stanleys-ridham-desai-says-bull-market-coming/articleshow/130136131.cms",
+      "timestamp": "2026-04-09T08:39:05Z"
+    },
+    "timestamp": "2026-04-09T08:39:05Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Frontiers | Neonicotinoids: insecticides or a threat to public health?",
+      "description": "Neonicotinoid insecticides, developed in the 1990s, are widely used in agriculture due to their effectiveness against insect pests (Zhao et al., 2020). Their...",
+      "source": "Frontiersin.org",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2026.1816900/full",
+      "timestamp": "2026-04-09T08:36:48Z"
+    },
+    "timestamp": "2026-04-09T08:36:48Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "legal"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "(VIDEO) Elon Musk Posts Grok Imagine Video: Himself in Yukata Showing Off 'Cool' Flag-Wearing Shiba Inu Dog",
+      "description": "AUSTIN, Texas \u2014 Elon Musk lit up X on Thursday with a 10-second AI-generated video that has already racked up more than 2.2 million views in hours, featuring a grinning Musk in a traditional Japanese yukata and headband, proudly introducing his \"cool\" Shiba I\u2026",
+      "source": "Ibtimes.com.au",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: rate",
+        "Market-relevant: sec",
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.ibtimes.com.au/video-elon-musk-posts-grok-imagine-video-himself-yukata-showing-off-cool-flag-wearing-shiba-1865869",
+      "timestamp": "2026-04-09T08:14:26Z"
+    },
+    "timestamp": "2026-04-09T08:14:26Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Bill Gates Selling These 5 Stocks in 2026: Foundation Trims Holdings to Fuel Philanthropy",
+      "description": "SEATTLE \u2014 Bill Gates continues to methodically sell shares from the Bill & Melinda Gates Foundation Trust portfolio in 2026, primarily to generate cash for the foundation's ambitious global health and poverty-fighting initiatives as annual spending ramps up t\u2026",
+      "source": "Ibtimes.com.au",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.ibtimes.com.au/bill-gates-selling-these-5-stocks-2026-foundation-trims-holdings-fuel-philanthropy-1865876",
+      "timestamp": "2026-04-09T08:34:43Z"
+    },
+    "timestamp": "2026-04-09T08:34:43Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "geopolitical",
+      "sector"
+    ],
+    "primary_type": "geopolitical",
+    "source": {
+      "type": "news",
+      "title": "Pakistan\u2019s stock market plunges, KSE100 index drops 3,800 points on fading ceasefire hopes",
+      "description": "Pakistan's stock market experienced a sharp decline on Thursday. This follows a significant surge on Wednesday after news of a temporary ceasefire between the US and Iran. However, escalating Middle East conflict has now dampened hopes for a Pakistan-brokered\u2026",
+      "source": "The Times of India",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: surge",
+        "Market-relevant: plunge"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://economictimes.indiatimes.com/markets/stocks/news/pakistans-stock-market-plunges-kse100-index-drops-3800-points-on-fading-ceasefire-hopes/articleshow/130135303.cms",
+      "timestamp": "2026-04-09T08:23:09Z"
+    },
+    "timestamp": "2026-04-09T08:23:09Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "ESR secures $850 million from existing shareholders to fund Asia growth",
+      "description": "Asia-Pacific-focused asset owner and manager \u200bESR said on \u200bThursday it has secured $850 million in fresh \u200bequity from existing shareholders to fund growth in its logistics real estate and data centre businesses.",
+      "source": "The Times of India",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "positive",
+      "url": "https://economictimes.indiatimes.com/markets/digital-real-estate/realty-news/esr-secures-850-million-from-existing-shareholders-to-fund-asia-growth/articleshow/130134927.cms",
+      "timestamp": "2026-04-09T08:17:27Z"
+    },
+    "timestamp": "2026-04-09T08:17:27Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "sector"
+    ],
+    "primary_type": "sector",
+    "source": {
+      "type": "news",
+      "title": "Not A Threat: Stablecoin Yield Won\u2019t Harm Banks, White House Economists Say",
+      "description": "In a positive development for the crypto industry, a recent study by White House economists affirmed that stablecoin yield won\u2019t harm community banks, and its prohibition won\u2019t have a meaningful impact on overall lending in the banking system. Related Reading\u2026",
+      "source": "Bitcoinist",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://bitcoinist.com/stablecoin-yield-wont-harm-banks-white-house/",
+      "timestamp": "2026-04-09T08:00:37Z"
+    },
+    "timestamp": "2026-04-09T08:00:37Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Fed minutes show growing openness to rate hikes",
+      "description": "A growing group of Federal Reserve policymakers felt last month that interest rate hikes might be needed to counter inflation that continued to exceed the Fed's 2% target, according to the minutes of their March 17-18 meeting.",
+      "source": "RTE",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: rate",
+        "Market-relevant: inflation"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.rte.ie/news/business/2026/0409/1567327-us-federal-reserve-minutes/",
+      "timestamp": "2026-04-09T06:39:49Z"
+    },
+    "timestamp": "2026-04-09T06:39:49Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Roth Conversions for a Smarter Retirement",
+      "description": "Answering listener questions about how they can make smarter use of Roth accounts and tax-efficient retirement strategies and how they can think about reducing future RMDs.\nThe post Roth Conversions for a Smarter Retirement appeared first on The White Coat In\u2026",
+      "source": "Whitecoatinvestor.com",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.whitecoatinvestor.com/roth-conversions-for-a-smarter-retirement-466/",
+      "timestamp": "2026-04-09T06:30:00Z"
+    },
+    "timestamp": "2026-04-09T06:30:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "geopolitical"
+    ],
+    "primary_type": "geopolitical",
+    "source": {
+      "type": "news",
+      "title": "Gold surges amid fragile ceasefire as markets brace for volatility",
+      "description": "Gold surged to $4,850/oz (+3.1%) post-ceasefire announcement, while oil briefly plunged below $100/barrel\u2014but Bank of America warns prices could spike to $130+ if war resumes, and $200+ if Iran blocks the Strait of Hormuz. Trump\u2019s temporary halt to bombing is\u2026",
+      "source": "Naturalnews.com",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: ban",
+        "Market-relevant: surge",
+        "Market-relevant: plunge"
+      ],
+      "severity": "medium",
+      "sentiment": "positive",
+      "url": "https://www.naturalnews.com/2026-04-09-gold-surges-amid-ceasefire-markets-brace-volatility.html",
+      "timestamp": "2026-04-09T06:00:00Z"
+    },
+    "timestamp": "2026-04-09T06:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "France Completes Withdrawal of Gold Holdings from New York Federal Reserve",
+      "description": "France Completes Withdrawal of Gold Holdings from New York Federal Reserve The French Treasury has confirmed the completion of its multi-year operation to repatriate all its gold reserves held at the Federal Reserve Bank of New York. The move, finalized in th\u2026",
+      "source": "Naturalnews.com",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.naturalnews.com/2026-04-09-france-withdraws-gold-holdings-ny-federal-reserve.html",
+      "timestamp": "2026-04-09T06:00:00Z"
+    },
+    "timestamp": "2026-04-09T06:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "US Stock Market | Fed\u2019s Daly signals patience as inflation risks linger",
+      "description": "Mary Daly signalled confidence in the U.S. economy even as inflation risks persist due to elevated oil prices and Middle East tensions. Speaking to Reuters, she stressed patience on policy moves, noting strong domestic momentum and no immediate need for rate \u2026",
+      "source": "The Times of India",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: rate",
+        "Market-relevant: inflation"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/markets/us-stocks/news/us-stock-market-feds-daly-signals-patience-as-inflation-risks-linger/articleshow/130130626.cms",
+      "timestamp": "2026-04-09T05:34:49Z"
+    },
+    "timestamp": "2026-04-09T05:34:49Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "analyst"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Bitcoin's next big move hinges on oil, and right now it's a total coin flip",
+      "description": "Analysts say a sustained 15%\u201316% decline in crude could revive Fed rate cut bets, sending BTC higher.",
+      "source": "CoinDesk",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.coindesk.com/markets/2026/04/09/bitcoin-s-next-big-move-hinges-on-oil-and-right-now-it-s-a-total-coin-flip",
+      "timestamp": "2026-04-09T05:22:58Z"
+    },
+    "timestamp": "2026-04-09T05:22:58Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Dinosaur skeletons are selling for millions. What does that mean for researchers and museums?",
+      "description": "The sale of a Triceratops fossil, dubbed \u201cTrey,\u201d for $5.55 million is the latest in a list of dinosaur specimens fetching colossal fees in commercial sales. Is science missing out?",
+      "source": "CNN",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: loss"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.cnn.com/science/dinosaur-skeletons-selling-for-millions-science-missing-out-spc",
+      "timestamp": "2026-04-09T08:01:38Z"
+    },
+    "timestamp": "2026-04-09T08:01:38Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "product"
+    ],
+    "primary_type": "product",
+    "source": {
+      "type": "news",
+      "title": "BingX Kicks Off Global Capital Gala, Spotlighting TradFi Trading Opportunities",
+      "description": "PANAMA CITY, April 09, 2026 (GLOBE NEWSWIRE) -- BingX, a leading cryptocurrency exchange and Web3-AI company, today announced the launch of its Global Capital Gala, a trading campaign spotlighting BingX's expanding TradFi range of global assets. Running from \u2026",
+      "source": "GlobeNewswire",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: launch"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.globenewswire.com/news-release/2026/04/09/3270672/0/en/BingX-Kicks-Off-Global-Capital-Gala-Spotlighting-TradFi-Trading-Opportunities.html",
+      "timestamp": "2026-04-09T07:32:00Z"
+    },
+    "timestamp": "2026-04-09T07:32:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Britain to call for toll-free Strait of Hormuz, says Lebanon must be part of Iran ceasefire",
+      "description": "In an annual foreign policy speech, Cooper is expected to say that shipping must be toll-free through the strategically vital Strait of Hormuz.",
+      "source": "CNBC",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: rate",
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://www.cnbc.com/2026/04/09/uk-cooper-iran-war-strait-of-hormuz-tolls-lebanon-israel-ceasefire.html",
+      "timestamp": "2026-04-09T07:27:42Z"
+    },
+    "timestamp": "2026-04-09T07:27:42Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Fast food, faster charging? BYD and KFC China collaborate to offer 9-minute refueling stations",
+      "description": "BYD announced Wednesday a partnership with KFC China to develop a network of \"nine-minute\" drive-thrus across the mainland.",
+      "source": "CNBC",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.cnbc.com/2026/04/09/byd-and-kfc-collaborate-to-offer-9-minute-refueling-stations-in-china.html",
+      "timestamp": "2026-04-09T08:50:31Z"
+    },
+    "timestamp": "2026-04-09T08:50:31Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "management"
+    ],
+    "primary_type": "management",
+    "source": {
+      "type": "news",
+      "title": "EV financing platform Astranova Mobility raises Rs 60 crore from IvyCap, ADB, Trucks VC",
+      "description": "Mundra, who is the CEO of the startup, said a significant portion of the capital will be deployed to strengthen data, AI and engineering capabilities. He added that the company is targeting over five-fold growth in the next 18 months.",
+      "source": "The Times of India",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: ceo"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/tech/funding/ev-financing-platform-astranova-mobility-raises-rs-60-crore-from-ivycap-adb-trucks-vc/articleshow/130134646.cms",
+      "timestamp": "2026-04-09T08:17:40Z"
+    },
+    "timestamp": "2026-04-09T08:17:40Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "product"
+    ],
+    "primary_type": "product",
+    "source": {
+      "type": "news",
+      "title": "Kia confirms electric city car for 2027, new family SUV for 2029",
+      "description": "Lower-riding sibling to EV2 could take 'EV1' badge and be an electric Picanto replacement\n\n\nTwo crucial new volume models inbound as Kia aims to ramp up EV sales in challenging market\n\nKia will launch a new small electric hatchback in Europe next year as part\u2026",
+      "source": "Autocar",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: launch"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.autocar.co.uk/car-news/electric-cars/kia-confirms-electric-city-car-2027-new-family-suv-2029",
+      "timestamp": "2026-04-09T07:52:52Z"
+    },
+    "timestamp": "2026-04-09T07:52:52Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "product",
+      "legal",
+      "geopolitical",
+      "supply_chain"
+    ],
+    "primary_type": "product",
+    "source": {
+      "type": "news",
+      "title": "Kia delays launch of software-focused cars, unveils big hike to investment plans",
+      "description": "SEOUL, April 9 : South Korea's Kia Corp said on Thursday it had pushed back plans to build \"software-defined vehicles\" by one year to 2028, and announced a hefty hike in investment plans, underscoring its struggles to catch up with the likes of Tesla.Shares i\u2026",
+      "source": "CNA",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: launch"
+      ],
+      "severity": "medium",
+      "sentiment": "positive",
+      "url": "https://www.channelnewsasia.com/business/kia-delays-launch-software-focused-cars-unveils-big-hike-investment-plans-6045886",
+      "timestamp": "2026-04-09T05:20:08Z"
+    },
+    "timestamp": "2026-04-09T05:20:08Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "From Kashmir to Edinburgh: Who is Dr Zarak Bhat - Kashmir scholar lands prestigious AI role at Edinburgh University",
+      "description": "Dr. Zarak Bhat, an Indian PhD scholar from Kashmir, is making significant contributions to AI-driven semiconductor design. Her research at the University of Edinburgh focuses on using machine learning to accelerate and enhance the design and testing of semico\u2026",
+      "source": "The Times of India",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://timesofindia.indiatimes.com/etimes/trending/from-kashmir-to-edinburgh-who-is-dr-zarak-bhat-kashmir-scholar-lands-prestigious-ai-role-at-edinburgh-university/articleshow/130135692.cms",
+      "timestamp": "2026-04-09T08:32:13Z"
+    },
+    "timestamp": "2026-04-09T08:32:13Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "UV Curing System Market Size to Exceed USD 39.25 Billion by 2035 | Research by SNS Insider",
+      "description": "UV Curing System Market Size, Share, Revenue Trends & Segmentation, by Technology, Type, Pressure Type, Application, Vertical, and Region | Forecast 2035...",
+      "source": "GlobeNewswire",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: revenue"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.globenewswire.com/news-release/2026/04/09/3270671/0/en/UV-Curing-System-Market-Size-to-Exceed-USD-39-25-Billion-by-2035-Research-by-SNS-Insider.html",
+      "timestamp": "2026-04-09T07:30:00Z"
+    },
+    "timestamp": "2026-04-09T07:30:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal",
+      "supply_chain"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Apple\u2019s self-designed AI server chip \u201cBaltra\u201d may be manufactured by TSMC",
+      "description": "Apple and Broadcom\u2019s collaboration on an AI server chip, internally codenamed \u201cBaltra\u201d, is expected to be manufactured by TSMC using the N3E process, the second-generation 3nm fabrication technology. Apple\u2019s self-designed AI server chip is also likely to use \u2026",
+      "source": "TechNode",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "http://technode.com/2026/04/09/apples-self-designed-ai-server-chip-baltra-may-be-manufactured-by-tsmc-using-3nm-n3e-process/",
+      "timestamp": "2026-04-09T07:13:20Z"
+    },
+    "timestamp": "2026-04-09T07:13:20Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "supply_chain"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Why is TSMC CoWoS capacity expanding fast? #tech",
+      "description": "TSMC ramps CoWoS packaging as AI chip demand surges TSMC says its most advanced chip packaging technology, CoWoS, is growing at an 80% compound annual growth rate as the company ramps capacity. CoWoS is used to combine compute dies and other components into s\u2026",
+      "source": "Alltoc.com",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: rate",
+        "Market-relevant: surge"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://alltoc.com/tech/why-is-tsmc-cowos-capacity-expanding-fast",
+      "timestamp": "2026-04-09T06:01:25Z"
+    },
+    "timestamp": "2026-04-09T06:01:25Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal",
+      "geopolitical"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Singapore Cyber Security Agency chief: Cyber stability a necessity, not a luxury",
+      "description": "With state-linked attacks rising and international rules unravelling, Singapore\u2019s cyber security commissioner calls for global cooperation to prevent catastrophic conflict in cyber space",
+      "source": "ComputerWeekly.com",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.computerweekly.com/news/366641228/Singapore-Cyber-Security-Agency-chief-Cyber-stability-a-necessity-not-a-luxury",
+      "timestamp": "2026-04-09T08:56:08Z"
+    },
+    "timestamp": "2026-04-09T08:56:08Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "management"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Top 10 Most Innovative CEOs in the World 2026: AI Visionaries Reshaping Industries",
+      "description": "As artificial intelligence accelerates from hype to infrastructure in 2026, a select group of CEOs stands out for turning bold ideas into transformative realities across technology, energy, space and computing. These leaders are not just managing companies \u2014 \u2026",
+      "source": "Ibtimes.com.au",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: rate",
+        "Market-relevant: ceo"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.ibtimes.com.au/top-10-most-innovative-ceos-world-2026-ai-visionaries-reshaping-industries-1865883",
+      "timestamp": "2026-04-09T08:53:15Z"
+    },
+    "timestamp": "2026-04-09T08:53:15Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "geopolitical",
+      "sector"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Inflation was cooling. The Iran war could send it racing higher again.",
+      "description": "Economic forecasts show that this week's March Consumer Price Index could show prices climbing at their fastest pace in nearly two years.",
+      "source": "CBS News",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: inflation"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.cbsnews.com/news/inflation-cpi-report-march-iran-war-oil-gas-prices/",
+      "timestamp": "2026-04-09T09:00:11Z"
+    },
+    "timestamp": "2026-04-09T09:00:11Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "How Trump's tax law boosts the wealthy and leaves behind some workers he promised to help",
+      "description": "President Donald Trump pledged \u201cno tax on tips, no tax on overtime, no tax on Social Security.\u201d For some who are filing their taxes this year, the reality is different.",
+      "source": "NBC News",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.nbcnews.com/business/economy/trump-tax-law-tips-overtime-social-security-outcome-wealthy-reality-rcna266612",
+      "timestamp": "2026-04-09T09:00:00Z"
+    },
+    "timestamp": "2026-04-09T09:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "product"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "U.S. Treasury yields steady ahead of key U.S. inflation data releases",
+      "description": "U.S. Treasury yields held steady early Thursday as investors prepared for several key economic data releases.",
+      "source": "CNBC",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: inflation"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.cnbc.com/2026/04/09/us-treasury-yields-steady-ahead-of-key-us-inflation-data-releases.html",
+      "timestamp": "2026-04-09T08:58:42Z"
+    },
+    "timestamp": "2026-04-09T08:58:42Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal",
+      "sector"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Chainalysis: $100 Trillion Could Shift To Crypto\u2011Native Generations By 2048",
+      "description": "Blockchain analytics firm Chainalysis has revealed that a significant transfer of wealth over the next two decades could transform the way global payments are made, with stablecoins likely to play a central role in this change for the broader crypto sector.\u00a0 \u2026",
+      "source": "Bitcoinist",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://bitcoinist.com/chainalysis-100-trillion-shift-crypto-generations/",
+      "timestamp": "2026-04-09T09:00:56Z"
+    },
+    "timestamp": "2026-04-09T09:00:56Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "product"
+    ],
+    "primary_type": "product",
+    "source": {
+      "type": "news",
+      "title": "AP\u00a0CM to launch India\u2019s first indigenous Quantum computers testing facility in Amaravati on April 14",
+      "description": "The Chief Minister will witness a live quantum system initiation with the cooling process of the processor on the Amaravati 1Q system being triggered virtually as the system is housed at Medha towers",
+      "source": "BusinessLine",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: launch"
+      ],
+      "severity": "medium",
+      "sentiment": "positive",
+      "url": "https://www.thehindubusinessline.com/info-tech/apcm-to-launch-indias-first-indigenous-quantum-computers-testing-facility-in-amaravati-on-april-14/article70842022.ece",
+      "timestamp": "2026-04-09T09:01:13Z"
+    },
+    "timestamp": "2026-04-09T09:01:13Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings",
+      "product",
+      "legal"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Why Anthropic is Secretly Holding Back the Claude Mythos Release",
+      "description": "Anthropic, OpenAI and DeepSeek are navigating a pivotal moment in AI development, with each company unveiling or preparing significant advancements. Universe of AI explores the latest updates, including the leaked details of Anthropic\u2019s Claude Mythos, which r\u2026",
+      "source": "Geeky Gadgets",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.geeky-gadgets.com/claude-mythos-cybersecurity-2/",
+      "timestamp": "2026-04-09T09:15:00Z"
+    },
+    "timestamp": "2026-04-09T09:15:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Metlen: Turnover up 25% to 7.1 billion euros in 2025",
+      "description": "METLEN on Thursday announced its revenue rose 25% to 7,107 million euros, from 5,683 million euros in 2024, reflecting the company\u2019s strong growth momentum.\nEarnings Before Interest, Taxes, Depreciation and\u2026\nMetlen: Turnover up 25% to 7.1 billion euros in 202\u2026",
+      "source": "Naftemporiki.gr",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: earnings",
+        "Market-relevant: revenue"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.naftemporiki.gr/english/2096408/metlen-turnover-up-25-to-7-1-billion-euros-in-2025/",
+      "timestamp": "2026-04-09T09:16:55Z"
+    },
+    "timestamp": "2026-04-09T09:16:55Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal",
+      "sector"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "JPMorgan Chase Says Several Key Sectors To Lead the Market in \u2018Everything Rally\u2019 Scenario: Report",
+      "description": "Traders at JPMorgan Chase are laying out three scenarios for the US stock market that are tied to developments in the Middle East. Starting with a \u201cstatus quo\u201d scenario, JPMorgan\u2019s trading desk says stocks would witness some stability in the short term if ten\u2026",
+      "source": "The Daily Hodl",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: sec",
+        "Market-relevant: rally"
+      ],
+      "severity": "medium",
+      "sentiment": "positive",
+      "url": "https://dailyhodl.com/2026/04/09/jpmorgan-chase-says-several-key-sectors-to-lead-the-market-in-everything-rally-scenario-report/",
+      "timestamp": "2026-04-09T09:15:22Z"
+    },
+    "timestamp": "2026-04-09T09:15:22Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "geopolitical"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Gold, silver outlook: Will Iran war ceasefire spark rebound in precious metals?",
+      "description": "Gold and silver are stabilising after steep declines triggered by the West Asia conflict, but the fragile ceasefire has kept traders cautious. While easing crude prices and a softer dollar offer relief, experts say sustained gains will depend on inflation tre\u2026",
+      "source": "The Times of India",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: inflation"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/markets/commodities/news/gold-silver-outlook-will-iran-war-ceasefire-spark-rebound-in-precious-metals/articleshow/130138296.cms",
+      "timestamp": "2026-04-09T09:16:18Z"
+    },
+    "timestamp": "2026-04-09T09:16:18Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "Trump\u2019s Wreckage of Social Security and Medicare",
+      "description": "The assault on cherished social insurance programs is a gift to Democrats, but only if they are clear about how to defend them.\nThe post Trump\u2019s Wreckage of Social Security and Medicare appeared first on The American Prospect.",
+      "source": "The American Prospect",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "http://prospect.org/2026/04/09/trumps-wreckage-social-security-medicare/",
+      "timestamp": "2026-04-09T09:15:00Z"
+    },
+    "timestamp": "2026-04-09T09:15:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "product",
+      "geopolitical"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Mercedes to hike prices again; luxury market splits with BMW",
+      "description": "Mercedes plans around 11 product launches this year, with a higher skew toward top-end vehicles, reinforcing its premiumisation strategy",
+      "source": "BusinessLine",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: rate",
+        "Market-relevant: launch"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.thehindubusinessline.com/companies/mercedes-to-hike-prices-again-luxury-market-splits-with-bmw/article70841422.ece",
+      "timestamp": "2026-04-09T09:18:29Z"
+    },
+    "timestamp": "2026-04-09T09:18:29Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "management",
+      "product"
+    ],
+    "primary_type": "management",
+    "source": {
+      "type": "news",
+      "title": "Volkswagen group eyeing 5% market share in India before turn of decade: SAVWIPL MD & CEO",
+      "description": "Volkswagen Group aims for a 5 percent market share in India by 2030. Alternative fuel technologies will be crucial for this growth. The company is working on new product interventions for both internal combustion engines and electric vehicles. Investments wil\u2026",
+      "source": "The Times of India",
+      "topic": "electric vehicles",
+      "signals": [
+        "Market-relevant: ceo"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/industry/auto/auto-news/volkswagen-group-eyeing-5-market-share-in-india-before-turn-of-decade-savwipl-md-ceo/articleshow/130138494.cms",
+      "timestamp": "2026-04-09T09:26:00Z"
+    },
+    "timestamp": "2026-04-09T09:26:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "management"
+    ],
+    "primary_type": "management",
+    "source": {
+      "type": "news",
+      "title": "One of Kalshi's fastest-growing markets is about tech layoffs, cofounders say",
+      "description": "\"I think it's an important market, because people should know and position accordingly,\" Kalshi CEO Tarek Mansour said.",
+      "source": "Business Insider",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: ceo",
+        "Market-relevant: layoff"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.businessinsider.com/kalshi-market-tech-layoffs-mansour-lopes-lara-2026-4",
+      "timestamp": "2026-04-09T09:30:01Z"
+    },
+    "timestamp": "2026-04-09T09:30:01Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Losses mount, revenues down at Irish arm of Ann Summers",
+      "description": "Pre-tax losses at the main Irish arm of adult sex toy and lingerie retailer Ann Summers last year increased by 28% to \u20ac219,789.",
+      "source": "RTE",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: revenue",
+        "Market-relevant: loss"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://www.rte.ie/news/business/2026/0409/1567365-results-from-irish-arm-of-ann-summers/",
+      "timestamp": "2026-04-09T09:32:14Z"
+    },
+    "timestamp": "2026-04-09T09:32:14Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "geopolitical"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Iran Says Ceasefire Violated, Trump Lashes Out at NATO",
+      "description": "Today's top stories, with context, in just 15 minutes.On today's podcast:1) President Trump vowed to keep US troops in the Persian Gulf ahead of talks with Iran that are planned to firm up a fragile truce, while Tehran warned there may be mines in a strategic\u2026",
+      "source": "Omny.fm",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://omny.fm/shows/bloomberg-daybreak/vance-to-lead-iran-talks-trump-rebukes-nato-after-rutte-meeting",
+      "timestamp": "2026-04-09T09:30:47Z"
+    },
+    "timestamp": "2026-04-09T09:30:47Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "geopolitical"
+    ],
+    "primary_type": "geopolitical",
+    "source": {
+      "type": "news",
+      "title": "The long road to your crypto: ClipBanker and its marathon infection chain",
+      "description": "Threat actors are distributing a Trojan disguised as Proxifier software; through a multi-stage infection chain, it delivers ClipBanker \u2013 malware that replaces cryptocurrency wallet addresses in the clipboard.",
+      "source": "Securelist.com",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://securelist.com/clipbanker-malware-distributed-via-trojanized-proxifier/119341/",
+      "timestamp": "2026-04-09T09:30:17Z"
+    },
+    "timestamp": "2026-04-09T09:30:17Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "The alleged breach of China\u2019s National Supercomputing Center can have serious geopolitical consequences",
+      "description": "A hacker allegedly stole 10+ PB of sensitive military and aerospace data from China\u2019s National Supercomputing Center, risking national security. A massive alleged breach has hit China\u2019s National Supercomputing Center (NSCC) in Tianjin. A hacker claims to have\u2026",
+      "source": "Securityaffairs.com",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://securityaffairs.com/190536/hacking/the-alleged-breach-of-chinas-national-supercomputing-center-can-have-serious-geopolitical-consequences.html",
+      "timestamp": "2026-04-09T09:27:00Z"
+    },
+    "timestamp": "2026-04-09T09:27:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Physical Intellectual Property Market Research Report 2026-2032: Comparing Leaders ARM, Synopsys, Imagination Technologies, CEVA, Cadence Design Systems",
+      "description": "Explore integrated IP protection strategies, leverage regional dynamics, and adopt digital provenance to capitalize on tech convergence and bolster enforcement in evolving markets. Explore integrated IP protection strategies, leverage regional dynamics, and a\u2026",
+      "source": "GlobeNewswire",
+      "topic": "semiconductor",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.globenewswire.com/news-release/2026/04/09/3270708/28124/en/Physical-Intellectual-Property-Market-Research-Report-2026-2032-Comparing-Leaders-ARM-Synopsys-Imagination-Technologies-CEVA-Cadence-Design-Systems.html",
+      "timestamp": "2026-04-09T09:35:00Z"
+    },
+    "timestamp": "2026-04-09T09:35:00Z",
+    "severity": "medium"
   }
 ]

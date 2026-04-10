@@ -18,14 +18,31 @@ from pydantic import BaseModel
 
 from app.domain_packs.finance.ticker_resolver import extract_tickers, resolve_ticker
 from app.domain_packs.finance.entity_resolver import extract_entities
-from app.domain_packs.finance.stance_detector import detect_stance, analyze_price_action_language
+from app.domain_packs.finance.stance_detector import (
+    detect_stance,
+    analyze_price_action_language,
+)
 from app.domain_packs.finance.scam_detector import detect_scam_indicators
 from app.domain_packs.finance.rumor_detector import detect_rumor_indicators
-from app.domain_packs.finance.source_checker import check_source_credibility, aggregate_source_scores
-from app.domain_packs.finance.event_analyzer import analyze_event_impact, detect_event_type
-from app.domain_packs.finance.market_data import get_quote, get_company_overview, search_symbol
+from app.domain_packs.finance.source_checker import (
+    check_source_credibility,
+    aggregate_source_scores,
+)
+from app.domain_packs.finance.event_analyzer import (
+    analyze_event_impact,
+    detect_event_type,
+)
+from app.domain_packs.finance.market_data import (
+    get_quote,
+    get_company_overview,
+    search_symbol,
+    get_historical_data,
+)
 from app.domain_packs.finance.news import get_company_news, get_top_headlines
-from app.domain_packs.finance.prediction import structure_prediction_context, suggest_simulation_scenarios
+from app.domain_packs.finance.prediction import (
+    structure_prediction_context,
+    suggest_simulation_scenarios,
+)
 from app.agents._model import call_model
 
 logger = logging.getLogger(__name__)
@@ -47,6 +64,7 @@ class NewsAnalysisRequest(BaseModel):
 
 
 # ── Text Intelligence ─────────────────────────────────────────────────────────
+
 
 @router.post("/analyze/text")
 def analyze_text(req: AnalyzeTextRequest):
@@ -85,6 +103,7 @@ def analyze_text(req: AnalyzeTextRequest):
 
 # ── Ticker Intelligence ───────────────────────────────────────────────────────
 
+
 @router.get("/ticker/{symbol}")
 def ticker_intelligence(symbol: str):
     """
@@ -97,19 +116,28 @@ def ticker_intelligence(symbol: str):
         overview = get_company_overview(symbol)
 
         company_name = overview.get("Name") or symbol
-        news = get_company_news(company_name, days_back=7)
+        news = get_company_news(company_name, days_back=7, symbol=symbol)
 
         # Run stance detection on news headlines
         headlines_text = " ".join(
-            a.get("title", "") + " " + (a.get("description") or "")
-            for a in news[:10]
+            a.get("title", "") + " " + (a.get("description") or "") for a in news[:10]
         )
-        stance = detect_stance(headlines_text) if headlines_text.strip() else {"stance": "neutral", "confidence": 0.3, "sentiment_score": 0.5}
+        stance = (
+            detect_stance(headlines_text)
+            if headlines_text.strip()
+            else {"stance": "neutral", "confidence": 0.3, "sentiment_score": 0.5}
+        )
         events = detect_event_type(headlines_text) if headlines_text.strip() else []
-        event_impact = analyze_event_impact(headlines_text, events) if headlines_text.strip() else {}
+        event_impact = (
+            analyze_event_impact(headlines_text, events)
+            if headlines_text.strip()
+            else {}
+        )
 
         # Build AI signal using LLM
-        ai_signal = _generate_ai_signal(symbol, company_name, quote, overview, news[:5], stance, events)
+        ai_signal = _generate_ai_signal(
+            symbol, company_name, quote, overview, news[:5], stance, events
+        )
 
         return {
             "symbol": symbol,
@@ -141,7 +169,9 @@ def ticker_intelligence(symbol: str):
         }
     except Exception as e:
         logger.error(f"Ticker intelligence failed for {symbol}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch intelligence for {symbol}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch intelligence for {symbol}"
+        )
 
 
 @router.get("/search/{query}")
@@ -164,7 +194,14 @@ def search_ticker(query: str):
         return []
 
 
+@router.get("/historical/{symbol}")
+def get_historical(symbol: str, period: str = "3mo"):
+    """Get historical stock data for charts."""
+    return get_historical_data(symbol.upper().strip(), period)
+
+
 # ── News Intelligence ─────────────────────────────────────────────────────────
+
 
 @router.post("/news/analyze")
 def analyze_news(req: NewsAnalysisRequest):
@@ -175,11 +212,14 @@ def analyze_news(req: NewsAnalysisRequest):
         articles = get_company_news(req.query, days_back=7)
         if not articles:
             from app.domain_packs.finance.news import search_news
+
             articles = search_news(req.query, page_size=req.limit)
 
         analyzed = []
-        for article in articles[:req.limit]:
-            text = (article.get("title") or "") + " " + (article.get("description") or "")
+        for article in articles[: req.limit]:
+            text = (
+                (article.get("title") or "") + " " + (article.get("description") or "")
+            )
             url = article.get("url", "")
 
             stance = detect_stance(text)
@@ -187,18 +227,22 @@ def analyze_news(req: NewsAnalysisRequest):
             rumor = detect_rumor_indicators(text)
             source = check_source_credibility(url) if url else None
 
-            analyzed.append({
-                "title": article.get("title"),
-                "source": article.get("source", {}).get("name"),
-                "url": url,
-                "published_at": article.get("publishedAt"),
-                "description": (article.get("description") or "")[:200],
-                "stance": stance.get("stance"),
-                "sentiment_score": stance.get("sentiment_score"),
-                "scam_score": scam.get("scam_score"),
-                "rumor_score": rumor.get("rumor_score"),
-                "source_credibility": source.get("credibility_score") if source else 0.5,
-            })
+            analyzed.append(
+                {
+                    "title": article.get("title"),
+                    "source": article.get("source", {}).get("name"),
+                    "url": url,
+                    "published_at": article.get("publishedAt"),
+                    "description": (article.get("description") or "")[:200],
+                    "stance": stance.get("stance"),
+                    "sentiment_score": stance.get("sentiment_score"),
+                    "scam_score": scam.get("scam_score"),
+                    "rumor_score": rumor.get("rumor_score"),
+                    "source_credibility": source.get("credibility_score")
+                    if source
+                    else 0.5,
+                }
+            )
 
         return {"query": req.query, "articles": analyzed, "total": len(analyzed)}
     except Exception as e:
@@ -213,7 +257,9 @@ def get_headlines():
         articles = get_top_headlines(category="business", page_size=10)
         analyzed = []
         for article in articles[:10]:
-            text = (article.get("title") or "") + " " + (article.get("description") or "")
+            text = (
+                (article.get("title") or "") + " " + (article.get("description") or "")
+            )
             url = article.get("url", "")
 
             stance = detect_stance(text)
@@ -221,18 +267,22 @@ def get_headlines():
             rumor = detect_rumor_indicators(text)
             source = check_source_credibility(url) if url else None
 
-            analyzed.append({
-                "title": article.get("title"),
-                "source": article.get("source", {}).get("name"),
-                "url": url,
-                "published_at": article.get("publishedAt"),
-                "description": (article.get("description") or "")[:200],
-                "stance": stance.get("stance"),
-                "sentiment_score": stance.get("sentiment_score"),
-                "scam_score": scam.get("scam_score"),
-                "rumor_score": rumor.get("rumor_score"),
-                "source_credibility": source.get("credibility_score") if source else 0.5,
-            })
+            analyzed.append(
+                {
+                    "title": article.get("title"),
+                    "source": article.get("source", {}).get("name"),
+                    "url": url,
+                    "published_at": article.get("publishedAt"),
+                    "description": (article.get("description") or "")[:200],
+                    "stance": stance.get("stance"),
+                    "sentiment_score": stance.get("sentiment_score"),
+                    "scam_score": scam.get("scam_score"),
+                    "rumor_score": rumor.get("rumor_score"),
+                    "source_credibility": source.get("credibility_score")
+                    if source
+                    else 0.5,
+                }
+            )
         return analyzed
     except Exception as e:
         logger.error(f"Headlines fetch failed: {e}")
@@ -240,6 +290,7 @@ def get_headlines():
 
 
 # ── AI Signal Generator ───────────────────────────────────────────────────────
+
 
 def _generate_ai_signal(
     symbol: str,
@@ -255,14 +306,16 @@ def _generate_ai_signal(
         price = quote.get("05. price", "N/A")
         change_pct = quote.get("10. change percent", "N/A")
         headlines = "\n".join(f"- {a.get('title', '')}" for a in news[:5])
-        event_names = ", ".join(e.get("event_type", "") for e in events[:3]) or "none detected"
+        event_names = (
+            ", ".join(e.get("event_type", "") for e in events[:3]) or "none detected"
+        )
 
         prompt = f"""You are a financial intelligence analyst. Analyze this data and give a concise signal.
 
 Company: {company_name} ({symbol})
 Current Price: {price}
 Change Today: {change_pct}
-Market Stance from News: {stance.get('stance')} (confidence: {stance.get('confidence', 0):.0%})
+Market Stance from News: {stance.get("stance")} (confidence: {stance.get("confidence", 0):.0%})
 Key Events Detected: {event_names}
 
 Recent Headlines:
@@ -281,6 +334,7 @@ Respond in this exact JSON format (no markdown, no extra text):
 
         # Parse JSON from response
         import json, re
+
         cleaned = raw.strip()
         if cleaned.startswith("```"):
             cleaned = re.sub(r"```[a-z]*\n?", "", cleaned).strip()
