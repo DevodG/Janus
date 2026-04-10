@@ -248,3 +248,4 @@ frontend/
 ## License
 
 MIT
+# Rebuild trigger
