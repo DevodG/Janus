@@ -1,3 +1,12 @@
+---
+title: Janus
+emoji: 🧠
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Janus
 
 **Cognitive Intelligence Interface** — A multi-agent AI system that researches, simulates scenarios, and produces expert-level analysis.
