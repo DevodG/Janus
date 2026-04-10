@@ -8,45 +8,45 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .schemas import UserTask, AgentRunRequest, PromptUpdateRequest
-from app.graph import run_case
-from app.memory import save_case
-from app.config import (
+from .graph import run_case
+from .memory import save_case
+from .config import (
     APP_VERSION,
     MEMORY_DIR,
     PROMPTS_DIR,
     load_prompt,
     PRIMARY_PROVIDER,
 )
-from app.services.case_store import list_cases, get_case, delete_case, memory_stats
-from app.services.prompt_store import list_prompts, get_prompt, update_prompt
-from app.services.health_service import deep_health
-from app.services.agent_registry import list_agents, get_agent, run_single_agent
-from app.services.query_classifier import QueryClassifier, QueryType
-from app.services.cache_manager import IntelligentCacheManager
-from app.services.learning_filter import LearningFilter
-from app.services.adaptive_intelligence import adaptive_intelligence
-from app.services.memory_graph import MemoryGraph
-from app.services.daemon import JanusDaemon
-from app.services.adaptive_pipeline import adaptive_pipeline
-from app.services.circadian_rhythm import CircadianRhythm
-from app.services.dream_processor import DreamCycleProcessor
-from app.services.context_engine import context_engine
-from app.services.reflex_layer import reflex_layer
-from app.services.self_reflection import self_reflection
-from app.services.self_training import self_training_engine
-from app.routers.simulation import router as simulation_router
-from app.routers.learning import (
+from .services.case_store import list_cases, get_case, delete_case, memory_stats
+from .services.prompt_store import list_prompts, get_prompt, update_prompt
+from .services.health_service import deep_health
+from .services.agent_registry import list_agents, get_agent, run_single_agent
+from .services.query_classifier import QueryClassifier, QueryType
+from .services.cache_manager import IntelligentCacheManager
+from .services.learning_filter import LearningFilter
+from .services.adaptive_intelligence import adaptive_intelligence
+from .services.memory_graph import MemoryGraph
+from .services.daemon import JanusDaemon
+from .services.adaptive_pipeline import adaptive_pipeline
+from .services.circadian_rhythm import CircadianRhythm
+from .services.dream_processor import DreamCycleProcessor
+from .services.context_engine import context_engine
+from .services.reflex_layer import reflex_layer
+from .services.self_reflection import self_reflection
+from .services.self_training import self_training_engine
+from .routers.simulation import router as simulation_router
+from .routers.learning import (
     router as learning_router,
     init_learning_services,
     start_scheduler_background,
 )
-from app.routers.sentinel import router as sentinel_router
-from app.routers.finance import router as finance_router
-from app.config import get_config, FEATURES, ensure_data_dirs
-from app.services.dataset_persistence import load_on_startup, save_on_shutdown
-from app.services.observation import scorer, get_tracer
-from app.services.curation import curator, hf_pusher
-from app.services.domain_classifier import domain_classifier
+from .routers.sentinel import router as sentinel_router
+from .routers.finance import router as finance_router
+from .config import get_config, FEATURES, ensure_data_dirs
+from .services.dataset_persistence import load_on_startup, save_on_shutdown
+from .services.observation import scorer, get_tracer
+from .services.curation import curator, hf_pusher
+from .services.domain_classifier import domain_classifier
 import uuid
 
 logging.basicConfig(level=logging.INFO)
@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Janus", version=APP_VERSION)
 
 # Initialize domain packs
-from app.domain_packs.init_packs import init_domain_packs
+from .domain_packs.init_packs import init_domain_packs
 
 init_domain_packs()
 
@@ -171,7 +171,7 @@ async def on_startup():
     # Step 5: Start sentinel scheduler (feature-gated)
     if FEATURES.get("sentinel", False):
         try:
-            from app.services.sentinel.scheduler import start_sentinel_scheduler
+            from .services.sentinel.scheduler import start_sentinel_scheduler
 
             start_sentinel_scheduler()
             logger.info("Sentinel scheduler started")
@@ -215,7 +215,7 @@ def health_deep():
 @app.get("/health/features")
 def feature_status():
     """Get current feature flag status."""
-    from app.config import get_feature_status
+    from .config import get_feature_status
 
     return get_feature_status()
 
@@ -285,7 +285,7 @@ def submit_correction(data: dict):
 @app.post("/self/learn")
 def trigger_learning(max_gaps: int = 3, max_datasets: int = 2, max_samples: int = 50):
     """Trigger autonomous learning cycle — search HF datasets for gaps."""
-    from app.services.autonomous_learner import autonomous_learner
+    from .services.autonomous_learner import autonomous_learner
 
     result = autonomous_learner.run_learning_cycle(
         max_gaps=max_gaps,
@@ -298,7 +298,7 @@ def trigger_learning(max_gaps: int = 3, max_datasets: int = 2, max_samples: int 
 @app.get("/self/learning-status")
 def get_learning_status():
     """Get autonomous learner status."""
-    from app.services.autonomous_learner import autonomous_learner
+    from .services.autonomous_learner import autonomous_learner
 
     return autonomous_learner.get_status()
 
@@ -306,7 +306,7 @@ def get_learning_status():
 @app.get("/self/fine-tuning")
 def get_fine_tuning_stats():
     """Get fine-tuning dataset statistics."""
-    from app.services.fine_tuning_builder import fine_tuning_builder
+    from .services.fine_tuning_builder import fine_tuning_builder
 
     return fine_tuning_builder.get_stats()
 
@@ -314,7 +314,7 @@ def get_fine_tuning_stats():
 @app.get("/self/datasets")
 def get_available_datasets(topic: str = None):
     """Search HF Hub for relevant datasets."""
-    from app.services.hf_dataset_searcher import hf_dataset_searcher
+    from .services.hf_dataset_searcher import hf_dataset_searcher
 
     if topic:
         return {"datasets": hf_dataset_searcher.search_for_gap(topic)}
@@ -330,7 +330,7 @@ def get_training_report():
 @app.get("/self/continuous-training")
 def get_continuous_training_status():
     """Get continuous self-training status."""
-    from app.services.continuous_training import continuous_self_trainer
+    from .services.continuous_training import continuous_self_trainer
 
     return continuous_self_trainer.get_status()
 
@@ -338,7 +338,7 @@ def get_continuous_training_status():
 @app.post("/self/continuous-training/run")
 def trigger_continuous_training():
     """Manually trigger a continuous training cycle."""
-    from app.services.continuous_training import continuous_self_trainer
+    from .services.continuous_training import continuous_self_trainer
 
     return continuous_self_trainer.run_training_cycle()
 
@@ -465,7 +465,7 @@ def _log_trace(
 
 def _fire_and_forget_learning(payload: dict):
     """Fire-and-forget learning from a completed case."""
-    from app.routers.learning import learning_engine as _le
+    from .routers.learning import learning_engine as _le
 
     if _le:
         try:
