@@ -1698,5 +1698,268 @@
     },
     "timestamp": "2026-04-09T09:35:00Z",
     "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings",
+      "legal",
+      "sector"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Cautious FY27 outlook for IT sector amid macro headwinds and AI transition: Sumeet Jain",
+      "description": "Indian IT firms face a period of measured growth in FY27. Global economic uncertainty and geopolitical risks are key challenges. While AI presents opportunities, its impact on revenue is not yet significant. Mid-cap IT companies show promise. According to Sum\u2026",
+      "source": "The Times of India",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: revenue",
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/markets/expert-view/cautious-fy27-outlook-for-it-sector-amid-macro-headwinds-and-ai-transition-sumeet-jain/articleshow/130138795.cms",
+      "timestamp": "2026-04-09T09:44:27Z"
+    },
+    "timestamp": "2026-04-09T09:44:27Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "legal"
+    ],
+    "primary_type": "legal",
+    "source": {
+      "type": "news",
+      "title": "10 petabytes of sensitive data stolen from China's National Supercomputing Center, hackers claim \u2014 daring heist would be largest ever China hack, covering 6,000 clients across science, defense, and beyond",
+      "description": "Hacker or hacker group steals secret data concerning aerospace engineering, bioinformatics, fusion modeling from China's National Supercomputing Center.",
+      "source": "Tom's Hardware UK",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: sec"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.tomshardware.com/tech-industry/cyber-security/10-petabytes-of-sensitive-data-stolen-from-chinas-national-supercomputing-center-hackers-claim-daring-heist-would-be-largest-ever-china-hack-covering-6-000-clients-across-science-defense-and-beyond",
+      "timestamp": "2026-04-09T09:42:50Z"
+    },
+    "timestamp": "2026-04-09T09:42:50Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings",
+      "macro"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "Strategy\u2019s STRC sees one of its highest volume days, with just one penny of volatility",
+      "description": "High yield structure keeps STRC pinned at par while enabling large scale bitcoin purchases.",
+      "source": "CoinDesk",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.coindesk.com/markets/2026/04/09/strategy-s-strc-sees-one-of-its-highest-volume-days-with-just-one-penny-of-volatility",
+      "timestamp": "2026-04-09T09:50:36Z"
+    },
+    "timestamp": "2026-04-09T09:50:36Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "The FIRE road map: Early retirees explain their 2-part investment strategy to hit financial independence",
+      "description": "For one couple, achieving financial independence required a two-part investment strategy: the accumulation phase and the income phase.",
+      "source": "Business Insider",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.businessinsider.com/retire-early-investment-strategy-financial-freedom-independence-saving-money-2026-4",
+      "timestamp": "2026-04-09T09:50:01Z"
+    },
+    "timestamp": "2026-04-09T09:50:01Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Your Brain Is Slowly Rewiring Itself Around AI, And We\u2019re Only Beginning to Notice",
+      "description": "Artificial intelligence is now deeply integrated into our thinking, subtly altering perception and decision-making through constant interaction.  Feedback loops shape our cognitive patterns, enhancing capabilities but also fostering dependency. While AI offer\u2026",
+      "source": "The Times of India",
+      "topic": "artificial intelligence",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://economictimes.indiatimes.com/news/international/us/your-brain-is-slowly-rewiring-itself-around-ai-and-were-only-beginning-to-notice/articleshow/130138352.cms",
+      "timestamp": "2026-04-09T09:59:14Z"
+    },
+    "timestamp": "2026-04-09T09:59:14Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "ma"
+    ],
+    "primary_type": "ma",
+    "source": {
+      "type": "news",
+      "title": "Whitestone REIT to Be Acquired by Ares for $1.7 Billion",
+      "description": "HOUSTON and NEW YORK, April 09, 2026 (GLOBE NEWSWIRE) -- Whitestone REIT (NYSE: WSR) (\u201cWhitestone\u201d or the \u201cCompany\u201d) and Ares Management Corporation (NYSE: ARES) today announced that Whitestone has entered into a definitive merger agreement (the \u201cMerger Agree\u2026",
+      "source": "GlobeNewswire",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: merger"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.globenewswire.com/news-release/2026/04/09/3270730/7647/en/Whitestone-REIT-to-Be-Acquired-by-Ares-for-1-7-Billion.html",
+      "timestamp": "2026-04-09T10:00:00Z"
+    },
+    "timestamp": "2026-04-09T10:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "The Historian Who Wants to Imagine an Alternative to Capitalism",
+      "description": "On November 5, 2008\u2014the nadir of that year\u2019s eponymous financial crisis\u2014Queen Elizabeth II visited the London School of Economics to celebrate the opening of a new building. In a moment that made headlines around the world, she asked her hosts about the marke\u2026",
+      "source": "The New Republic",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://newrepublic.com/article/208809/historian-wants-imagine-alternative-capitalism",
+      "timestamp": "2026-04-09T10:00:00Z"
+    },
+    "timestamp": "2026-04-09T10:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro",
+      "geopolitical"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Facts vs. influencers: Is the 'Dubai dream' really over?",
+      "description": "Some residents in Dubai insist life is going on as normal in the eternally-sunny emirate during the Iran war. Others proclaim the \"Dubai dream\" over, never to be recovered. Who's right? A slew of recent headlines have proclaimed that the Iran war marks the en\u2026",
+      "source": "DW (English)",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: rate"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.dw.com/en/facts-vs-influencers-is-the-dubai-dream-really-over/a-76711193",
+      "timestamp": "2026-04-09T09:56:00Z"
+    },
+    "timestamp": "2026-04-09T09:56:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "earnings",
+      "macro"
+    ],
+    "primary_type": "earnings",
+    "source": {
+      "type": "news",
+      "title": "As Epstein\u2019s Clients Walk Free, an Innocent Man Rots in a Cage for Promoting Liberty",
+      "description": "While the political establishment buries the names of elite predators and engineers foreign bloodshed to distract the masses, a peaceful man is losing nearly a decade of his life in a federal cage for the \u201ccrime\u201d of helping people bypass the fiat banking cart\u2026",
+      "source": "Activistpost.com",
+      "topic": "cryptocurrency",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.activistpost.com/as-epsteins-clients-walk-free-an-innocent-man-rots-in-a-cage-for-promoting-liberty/",
+      "timestamp": "2026-04-09T10:00:00Z"
+    },
+    "timestamp": "2026-04-09T10:00:00Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "geopolitical"
+    ],
+    "primary_type": "geopolitical",
+    "source": {
+      "type": "news",
+      "title": "Pakistan behind confusion over Lebanon? Conflicting remarks from US & Iran puncture Asim Munir, Shehbaz Sharif's peacemaker plan",
+      "description": "Less than 24 hours after a US-Iran ceasefire was announced, the agreement has been cast into doubt due to conflicting claims regarding its geographical scope. While US Vice President JD Vance explicitly stated the truce is limited to Iran and does not include\u2026",
+      "source": "The Times of India",
+      "topic": "stock market",
+      "signals": [
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "negative",
+      "url": "https://economictimes.indiatimes.com/news/new-updates/pakistan-behind-confusion-over-lebanon-conflicting-remarks-from-us-iran-puncture-asim-munir-shehbaz-sharifs-peacemaker-plan/articleshow/130138520.cms",
+      "timestamp": "2026-04-09T10:02:28Z"
+    },
+    "timestamp": "2026-04-09T10:02:28Z",
+    "severity": "medium"
+  },
+  {
+    "type": "event",
+    "event_types": [
+      "macro"
+    ],
+    "primary_type": "macro",
+    "source": {
+      "type": "news",
+      "title": "Fed policymakers flag possible rate hikes to tackle inflation",
+      "description": "Many U.S. central bank policymakers cited the possible need for interest rate hikes to counter the risk of sustained inflation from high oil prices, minutes of their recent meeting showed.",
+      "source": "Hurriyet Daily News",
+      "topic": "federal reserve",
+      "signals": [
+        "Market-relevant: fed",
+        "Market-relevant: rate",
+        "Market-relevant: inflation",
+        "Market-relevant: ban"
+      ],
+      "severity": "medium",
+      "sentiment": "neutral",
+      "url": "https://www.hurriyetdailynews.com/fed-policymakers-flag-possible-rate-hikes-to-tackle-inflation-220815",
+      "timestamp": "2026-04-09T10:01:59Z"
+    },
+    "timestamp": "2026-04-09T10:01:59Z",
+    "severity": "medium"
   }
 ]

@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.schemas import UserTask, AgentRunRequest, PromptUpdateRequest
+from .schemas import UserTask, AgentRunRequest, PromptUpdateRequest
 from app.graph import run_case
 from app.memory import save_case
 from app.config import (
