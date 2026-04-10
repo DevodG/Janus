@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-WORKDIR /app
+WORKDIR /app/backend
 
 # Install only essential system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,12 +18,11 @@ RUN playwright install --with-deps chromium 2>/dev/null || echo "Playwright inst
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/app/data/context /app/app/data/daemon /app/app/data/adaptive /app/app/data/knowledge /app/app/data/memory /app/app/data/simulations
+RUN mkdir -p /app/backend/app/data/context /app/backend/app/data/daemon /app/backend/app/data/adaptive /app/backend/app/data/knowledge /app/backend/app/data/memory /app/backend/app/data/simulations
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PORT=7860
-ENV PYTHONPATH=/app/backend:$PYTHONPATH
 
 # Expose port and run the application
 EXPOSE 7860
