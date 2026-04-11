@@ -24,7 +24,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 class CuriosityEngine:
     def __init__(self):
-        self.api_key = os.getenv("OPENROUTER_API_KEY", "")
+        # Removed OpenRouter dependency - using smart router
         self.discoveries: List[Dict] = []
         self.interests: Dict[str, float] = {}
         self._load_state()
@@ -112,50 +112,42 @@ class CuriosityEngine:
         return gaps[:5]
 
     def _explore_topic(self, topic: str) -> Optional[Dict]:
-        """Explore a topic autonomously."""
-        if not self.api_key:
-            return None
-
+        """Explore a topic autonomously using smart router (free providers)."""
         try:
-            r = httpx.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "HTTP-Referer": "https://huggingface.co",
-                    "X-Title": "Janus Curiosity",
-                    "Content-Type": "application/json",
+            from app.agents._model import call_model, safe_parse
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": f'You are Janus\'s curiosity engine. Explore \'{topic}\' deeply. Find unexpected connections, emerging patterns, non-obvious insights. Be specific. Return JSON: {{"key_insight": "..." , "evidence": ["...", "..."], "connections": ["..."], "why_it_matters": "..."}}',
                 },
-                json={
-                    "model": "qwen/qwen3.6-plus:free",
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": f'You are Janus\'s curiosity engine. Explore the topic \'{topic}\' deeply. Find unexpected connections, emerging patterns, and non-obvious insights. Be specific with evidence. Return JSON with: {{"key_insight": "...", "evidence": ["..."], "connections": ["..."], "why_it_matters": "..."}}',
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Explore {topic}. What's happening that most people aren't noticing? What connections exist between {topic} and other domains? What should I be watching?",
-                        },
-                    ],
-                    "max_tokens": 2048,
+                {
+                    "role": "user",
+                    "content": f"Explore {topic}. What patterns/connections are emerging? Evidence?",
                 },
-                timeout=60,
-            )
-            r.raise_for_status()
-            content = r.json()["choices"][0]["message"]["content"]
-
+            ]
+            
+            response = call_model(messages, max_tokens=2048, temperature=0.7)
+            parsed = safe_parse(response)
+            
+            if "error" in parsed:
+                logger.warning(f"[CURIOSITY] Parse failed for {topic}")
+                return None
+            
             discovery = {
                 "topic": topic,
-                "insight": content[:500],
+                "insight": f"{parsed.get('key_insight', '')[:300]} | Why: {parsed.get('why_it_matters', '')[:100]}",
                 "timestamp": datetime.utcnow().isoformat(),
                 "type": "autonomous_exploration",
+                "raw_response": parsed,
             }
-
-            self.interests[topic] = self.interests.get(topic, 0) + 0.1
-
+            
+            self.interests[topic] = self.interests.get(topic, 0) + 0.2
+            logger.info(f"[CURIOSITY] Discovered: {topic}")
+            
             return {"type": "exploration", "topic": topic, "discovery": discovery}
         except Exception as e:
-            logger.error(f"[CURIOSITY] Failed to explore {topic}: {e}")
+            logger.error(f"[CURIOSITY] Explore failed {topic}: {e}")
             return None
 
     def _find_connections(self) -> List[str]:
