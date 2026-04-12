@@ -1384,5 +1384,1315 @@
     "sentiment": "neutral",
     "url": "https://www.hurriyetdailynews.com/fed-policymakers-flag-possible-rate-hikes-to-tackle-inflation-220815",
     "timestamp": "2026-04-09T10:01:59Z"
+  },
+  {
+    "type": "news",
+    "title": "Inside Google\u2019s Powerful New Suite of Free AI Tools",
+    "description": "Google has unveiled a range of AI-driven applications through its Google Labs platform, each tailored to specific professional tasks. One standout example is Pomelli, a program designed for social media campaigns that generates branded assets by combining ele\u2026",
+    "source": "Geeky Gadgets",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.geeky-gadgets.com/google-workspace-ai-tools/",
+    "timestamp": "2026-04-09T10:11:00Z"
+  },
+  {
+    "type": "news",
+    "title": "ALIEN: EARTH Season 2 Adds GAME OF THRONES Star Peter Dinklage In Recurring Role",
+    "description": "The second season of Noah Hawley's Alien: Earth has added Game of Thrones star Peter Dinklage (Tyrion) in a mysterious recurring role...",
+    "source": "CBM (Comic Book Movie)",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://comicbookmovie.com/sci_fi/alien/alien-earth-season-2-adds-game-of-thrones-star-peter-dinklage-in-recurring-role-a227248",
+    "timestamp": "2026-04-09T10:07:46Z"
+  },
+  {
+    "type": "news",
+    "title": "Triple Flag Delivers a Record Start to 2026",
+    "description": "TORONTO \u2014 Triple Flag Precious Metals Corp. (with its subsidiaries, \u201cTriple Flag\u201d or the \u201cCompany\u201d) (TSX: TFPM, NYSE: TFPM) announced record revenue of US$147.0 million for the first quarter of 2026 from record quarterly metal sales of 30,166 gold equivalent \u2026",
+    "source": "Financial Post",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: revenue"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://financialpost.com/pmn/business-wire-news-releases-pmn/triple-flag-delivers-a-record-start-to-2026",
+    "timestamp": "2026-04-09T10:09:30Z"
+  },
+  {
+    "type": "news",
+    "title": "Farming & Agriculture Drone Market Research and Global Forecast Report 2026-2032: How Technological Maturation and New Commercial Models are Transforming the $9.98 Billion Industry",
+    "description": "Key opportunities in the farming and agriculture drone market include enhanced precision agriculture capabilities, regulatory evolution, flexible commercial models, and regional adoption strategies. Key opportunities in the farming and agriculture drone marke\u2026",
+    "source": "GlobeNewswire",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/09/3270743/28124/en/Farming-Agriculture-Drone-Market-Research-and-Global-Forecast-Report-2026-2032-How-Technological-Maturation-and-New-Commercial-Models-are-Transforming-the-9-98-Billion-Industry.html",
+    "timestamp": "2026-04-09T10:16:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Daily \u2013 Vickers Top Buyers & Sellers for 04/09/2026",
+    "description": "At Yahoo Finance, you get free stock quotes, up-to-date news, portfolio management resources, international market data, social interaction and mortgage rates that help you manage your financial life.",
+    "source": "Yahoo Entertainment",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://finance.yahoo.com/research/reports/ARGUS_46674_TopBottomInsiderActivity_1775729778000/",
+    "timestamp": "2026-04-09T10:16:18Z"
+  },
+  {
+    "type": "news",
+    "title": "Kia cuts EV target, confirms electric pickup, and plans to put Atlas robots in its Georgia factories",
+    "description": "In short:\u00a0On the day that 25% US tariffs on South Korean imports took effect, Kia held its 2026 CEO Investor Day in Seoul and presented a plan built for a changed world: a quietly reduced EV sales target for 2030, a major expansion of its hybrid range, the fi\u2026",
+    "source": "The Next Web",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: ceo",
+      "Market-relevant: expansion"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://thenextweb.com/news/kia-ceo-investor-day-2026-ev-pickup-atlas/",
+    "timestamp": "2026-04-09T10:13:09Z"
+  },
+  {
+    "type": "news",
+    "title": "Amazon cloud unit's annualized AI revenue exceeds $15 billion, CEO Jassy says",
+    "description": "April 9 : Amazon's AI services at its cloud-computing unit are generating annualized revenue of more than $15 billion, CEO Andy Jassy said, the first time the company has reported numbers on a business it has backed with billions of dollars in investment.The \u2026",
+    "source": "CNA",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: revenue",
+      "Market-relevant: ceo"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.channelnewsasia.com/business/amazon-cloud-units-annualized-ai-revenue-exceeds-15-billion-ceo-jassy-says-6046501",
+    "timestamp": "2026-04-09T10:21:28Z"
+  },
+  {
+    "type": "news",
+    "title": "Amazon cloud unit's AI revenue run rate exceeds $15 billion, CEO says",
+    "description": "April 9 : Amazon.com said on Thursday its cloud business's AI revenue run rate was more than $15 billion in the first quarter of 2026, the company's first disclosure of direct financial returns from its artificial intelligence efforts. The numbers are also \"a\u2026",
+    "source": "CNA",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: revenue",
+      "Market-relevant: rate",
+      "Market-relevant: ceo"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.channelnewsasia.com/business/amazon-cloud-units-ai-revenue-run-rate-exceeds-15-billion-ceo-says-6046501",
+    "timestamp": "2026-04-09T10:21:28Z"
+  },
+  {
+    "type": "news",
+    "title": "What is the Claude Mythos AI model by Anthropic and why is this strongest-ever AI model sparking global cybersecurity fears and massive concern worldwide?",
+    "description": "A major leak revealed the Claude Mythos AI model, instantly raising global cybersecurity concerns. Developed by Anthropic, this strongest-ever AI model shows powerful real-world capabilities. The Claude Mythos AI model can identify and exploit zero-day vulner\u2026",
+    "source": "The Times of India",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/news/international/us/what-is-the-claude-mythos-ai-model-by-anthropic-and-why-is-this-strongest-ever-ai-model-sparking-global-cybersecurity-fears-and-massive-concern-worldwide/articleshow/130139294.cms",
+    "timestamp": "2026-04-09T10:18:43Z"
+  },
+  {
+    "type": "news",
+    "title": "Pentagon's ouster of Anthropic opens doors for small AI rivals",
+    "description": "Since the Pentagon deemed Anthropic's products a \"supply-chain risk\" in March and the two sides became embroiled in a lawsuit, the military \u200bhas expressed increasing interest in AI startups like Smack Technologies, saying, \"We want more, we want demos, let's \u2026",
+    "source": "The Times of India",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: lawsuit"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/tech/artificial-intelligence/pentagons-ouster-of-anthropic-opens-doors-for-small-ai-rivals/articleshow/130139819.cms",
+    "timestamp": "2026-04-09T10:25:34Z"
+  },
+  {
+    "type": "news",
+    "title": "5 ways AI photo editing can fix dull or distracting images",
+    "description": "Photos are taken in a matter of seconds, but they often need some post-processing before they truly look good. Traditional image editing using apps or tools such as Photoshop and Lightroom is not only time-consuming, but also requires a lot of training. You h\u2026",
+    "source": "PCWorld",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.pcworld.com/article/3086078/5-ways-ai-photo-editing-can-fix-dull-or-distracting-images.html",
+    "timestamp": "2026-04-09T10:30:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Wipro to consider buyback of shares after steep stock crash this year",
+    "description": "An IT services major Wipro announced it will consider a share buyback alongside its Q4 results on April 16. This move follows a significant stock price decline and investor concerns about cash return versus AI investments.",
+    "source": "The Times of India",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: crash"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://economictimes.indiatimes.com/markets/stocks/news/wipro-to-consider-buyback-of-shares-after-steep-stock-crash-this-year/articleshow/130076073.cms",
+    "timestamp": "2026-04-09T10:34:16Z"
+  },
+  {
+    "type": "news",
+    "title": "Amazon cloud unit's AI revenue run rate exceeds $15 billion in first quarter, CEO says",
+    "description": "The numbers are also \"ascending rapidly\", \u200bAmazon CEO Andy Jassy said in a letter to shareholders, adding \u200bthat its cloud \u2060business as \u200ca whole would \u200bbe growing \u200beven faster without the \u2060capacity constraints that the tech \u200bindustry is currently facing.",
+    "source": "The Times of India",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: revenue",
+      "Market-relevant: rate",
+      "Market-relevant: ceo"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/tech/technology/amazon-cloud-units-ai-revenue-run-rate-exceeds-15-billion-in-first-quarter-ceo-says/articleshow/130140086.cms",
+    "timestamp": "2026-04-09T10:37:10Z"
+  },
+  {
+    "type": "news",
+    "title": "TCS Q4 results: Net profit jumps 29% QoQ to Rs 13,718 crore; revenue beats estimate",
+    "description": "Tata Consultancy Services Q4 FY26 Results: TCS said it saw continued improvement in business momentum, marking its third consecutive quarter of sequential growth. The company reported total contract value (TCV) of $12 billion for the quarter.",
+    "source": "Moneycontrol",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: revenue",
+      "Market-relevant: profit",
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.moneycontrol.com/news/business/earnings/tcs-q4-results-net-profit-jumps-29-qoq-to-rs-13-718-crore-revenue-beats-estimate-13884496.html",
+    "timestamp": "2026-04-09T10:37:09Z"
+  },
+  {
+    "type": "news",
+    "title": "AriseAlpha Launches Easy-to-Use AI Crypto Trading Bot for First-Time Investors in 2026",
+    "description": "AriseAlpha 2026 Review: Easy AI Crypto Trading Bot for Beginners with No Experience Required. New users get $12 real reward. Discover the best beginner-friendly automated crypto trading platform for passive income in 2026.",
+    "source": "GlobeNewswire",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.globenewswire.com/news-release/2026/04/09/3270756/0/en/AriseAlpha-Launches-Easy-to-Use-AI-Crypto-Trading-Bot-for-First-Time-Investors-in-2026.html",
+    "timestamp": "2026-04-09T10:36:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Go maintainer joins collective klaxon about encryption-breaking quantum computers \u2014 developer urges immediate switch to post-quantum methods to prevent worldwide disaster",
+    "description": "Go maintainer joins collective klaxon about encryption-breaking quantum computers and urges immediate switch to post-quantum methods to prevent disaster.",
+    "source": "Tom's Hardware UK",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Breaking news"
+    ],
+    "severity": "high",
+    "sentiment": "neutral",
+    "url": "https://www.tomshardware.com/tech-industry/cyber-security/go-maintainer-joins-collective-klaxon-about-encryption-breaking-quantum-computers-developer-urges-immediate-switch-to-post-quantum-methods-to-prevent-worldwide-disaster",
+    "timestamp": "2026-04-09T10:40:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Warren Buffett's Timeless Wisdom: 10 Best Quotes That Still Guide Investors in 2026",
+    "description": "Even after stepping down as CEO of Berkshire Hathaway at the end of 2025, Warren Buffett remains one of the most quoted voices in finance. His simple, folksy sayings on investing, patience and life continue to resonate as markets navigate high valuations, eco\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: ceo",
+      "Market-relevant: hire"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.ibtimes.com.au/warren-buffetts-timeless-wisdom-10-best-quotes-that-still-guide-investors-2026-1865893",
+    "timestamp": "2026-04-09T10:45:50Z"
+  },
+  {
+    "type": "news",
+    "title": "TSMC Shares Surge Past 2,000 TWD as AI Demand Fuels Record Q1 Revenue Surge",
+    "description": "TAIPEI, Taiwan \u2014 Taiwan Semiconductor Manufacturing Co. shares rocketed to a fresh intraday high of 2,000 Taiwan dollars Friday, jumping 2.30% as investors cheered the world's largest contract chipmaker's explosive growth fueled by insatiable demand for artif\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: revenue",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/tsmc-shares-surge-past-2000-twd-ai-demand-fuels-record-q1-revenue-surge-1866048",
+    "timestamp": "2026-04-10T09:42:06Z"
+  },
+  {
+    "type": "news",
+    "title": "Meta and Anthropic\u2019s new AI models are so powerful that they are not available to the general public",
+    "description": "At the heart of Anthropic's \"Mythos\" model that triggered an emergency meeting of the Fed and the US Treasury with Wall Street bankers on possible cyber risks - In the race to develop \"superintelligence\" and Meta with Muse Spark\nThe post Meta and Anthropic\u2019s \u2026",
+    "source": "Protothema.gr",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://en.protothema.gr/2026/04/10/meta-and-anthropics-new-ai-models-are-so-powerful-that-they-are-not-available-to-the-general-public/",
+    "timestamp": "2026-04-10T09:14:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Belgium's Top 10 AI Companies in 2026: Powering Europe's Deep Tech Surge",
+    "description": "BRUSSELS \u2014 Belgium has emerged as one of Europe's most dynamic artificial intelligence hubs in 2026, with a thriving ecosystem blending world-class research from imec, strong government support and a wave of well-funded startups delivering practical AI soluti\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/belgiums-top-10-ai-companies-2026-powering-europes-deep-tech-surge-1866042",
+    "timestamp": "2026-04-10T09:10:10Z"
+  },
+  {
+    "type": "news",
+    "title": "6 Must-Have Laravel Packages That Will Skyrocket Your Productivity in 2026",
+    "description": "Have you ever found yourself stuck late at night, facing a looming deadline, while your code stubbornly refuses to cooperate? Or perhaps\u2026",
+    "source": "Medium",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://medium.com/@developerawam/6-must-have-laravel-packages-that-will-skyrocket-your-productivity-in-2026-b71da250777b",
+    "timestamp": "2026-04-10T09:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Stock Market Holiday 2026: Are NSE, BSE closed on April 14 for Ambedkar Jayanti? Check market closing dates list",
+    "description": "Indian stock markets will remain shut on April 14 for Dr B.R. Ambedkar Jayanti, marking the seventh trading holiday of 2026. After this, nine more market holidays remain for the year. MCX will operate only in the evening session, while NCDEX will stay closed \u2026",
+    "source": "The Times of India",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/markets/stocks/news/stock-market-holiday-2026-are-nse-bse-closed-on-april-14-for-ambedkar-jayanti-check-market-closing-dates-list/articleshow/130165270.cms",
+    "timestamp": "2026-04-10T09:24:57Z"
+  },
+  {
+    "type": "news",
+    "title": "Top-Performing Africa Fund Wagers on Urbanization to Drive Gains",
+    "description": "A $250-million-dollar London-based equity fund is generating market-leading returns in Africa with wagers on banks and telecommunications companies.",
+    "source": "Financial Post",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://financialpost.com/pmn/business-pmn/top-performing-africa-fund-wagers-on-urbanization-to-drive-gains",
+    "timestamp": "2026-04-10T09:20:12Z"
+  },
+  {
+    "type": "news",
+    "title": "Goldman Sachs Sees Golden Opportunity in One Sector After Valuations Dropped Sharply: Report",
+    "description": "Banking giant Goldman Sachs is now bullish on a sector that has recently underperformed the broader market. A team of analysts led by Peter Oppenheimer, chief global equity strategist at Goldman Sachs Research, are predicting a massive rally for tech stocks, \u2026",
+    "source": "The Daily Hodl",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: sec",
+      "Market-relevant: ban",
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://dailyhodl.com/2026/04/10/goldman-sachs-sees-golden-opportunity-in-one-sector-after-valuations-dropped-sharply-report/",
+    "timestamp": "2026-04-10T09:15:35Z"
+  },
+  {
+    "type": "news",
+    "title": "Stefano Gabbana has resigned as Dolce & Gabbana chair",
+    "description": "Dolce & Gabbana co-founder Stefano Gabbana has stepped down as chairman, a move reportedly linked to the luxury brand's urgent need for fresh capital. Lenders are pushing for a significant injection of funds as part of a major debt refinancing. Gabbana is als\u2026",
+    "source": "The Times of India",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: resign",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://economictimes.indiatimes.com/news/international/business/stefano-gabbana-has-resigned-as-dolce-gabbana-chair/articleshow/130165005.cms",
+    "timestamp": "2026-04-10T09:11:49Z"
+  },
+  {
+    "type": "news",
+    "title": "Australian Dollar Strengthens in 2026: AUD Hits 3-Year Highs on RBA Hikes and Commodity Boom",
+    "description": "SYDNEY \u2014 The Australian dollar has posted solid gains in 2026, climbing more than 10% against the U.S. dollar over the past 12 months and reaching its highest levels in three years near 0.72 USD, driven by aggressive Reserve Bank of Australia rate hikes, resi\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.ibtimes.com.au/australian-dollar-strengthens-2026-aud-hits-3-year-highs-rba-hikes-commodity-boom-1866047",
+    "timestamp": "2026-04-10T09:38:29Z"
+  },
+  {
+    "type": "news",
+    "title": "Andy Mukherjee: China\u2019s dream of currency supremacy\u2014Has the war in West Asia helped its cause?",
+    "description": "China\u2019s bid to unseat the dollar is unfolding in the shadows of war, sanctions and oil deals. Although the greenback is still king, the more the US throws its weight around, the less secure its currency\u2019s future might be. This war\u2019s consequences may be larger\u2026",
+    "source": "Livemint",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.livemint.com/opinion/online-views/andy-mukherjee-dollar-china-currency-supremacy-west-asia-war-mbridge-chips-cips-renminbi-11775810003451.html",
+    "timestamp": "2026-04-10T09:00:54Z"
+  },
+  {
+    "type": "news",
+    "title": "March inflation report to offer first glimpse of Iran war's economic impact",
+    "description": "The U.S. is about to get an initial glimpse into how the economy has begun absorbing the war with Iran",
+    "source": "NBC News",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.nbcnews.com/business/economy/march-inflation-report-iran-war-gas-prices-rcna267535",
+    "timestamp": "2026-04-10T09:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "The job market is so bad, workers now think they have worse odds of finding a role than during the pandemic",
+    "description": "Data from the Federal Reserve Bank of New York shows that Americans are increasingly pessimistic about their job prospects.",
+    "source": "Fortune",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://fortune.com/2026/04/10/job-market-pessimism-fed-reserve-covid-pandemic/",
+    "timestamp": "2026-04-10T08:37:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Rhee to Leave BOK With More Guidance Tools and Transparency",
+    "description": "Rhee Chang Yong kept interest rates unchanged at his last rate decision as head of South Korea\u2019s central bank, leaving his successor with an open hand on how to proceed with policy and a wider range of tools to provide guidance.",
+    "source": "Financial Post",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: guidance",
+      "Market-relevant: rate",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://financialpost.com/pmn/business-pmn/rhee-to-leave-bok-with-more-guidance-tools-and-transparency",
+    "timestamp": "2026-04-10T08:28:58Z"
+  },
+  {
+    "type": "news",
+    "title": "Ethereum Dips to $2,180 as Ceasefire Rally Fades Amid ETF Inflows and CPI Watch",
+    "description": "NEW YORK \u2014 Ethereum traded near $2,180 early Friday, easing slightly after a strong midweek surge triggered by a U.S.-Iran ceasefire announcement, while investors weighed renewed institutional interest through spot ETFs against upcoming U.S. inflation data th\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation",
+      "Market-relevant: surge",
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/ethereum-dips-2180-ceasefire-rally-fades-amid-etf-inflows-cpi-watch-1866025",
+    "timestamp": "2026-04-10T08:12:42Z"
+  },
+  {
+    "type": "news",
+    "title": "Bitcoin Holds Steady Near $71,500 as ETF Inflows Surge on Iran Ceasefire Optimism",
+    "description": "NEW YORK \u2014 Bitcoin traded near $71,534 early Friday, showing resilience after a sharp rebound driven by easing Middle East tensions and robust institutional buying through U.S. spot exchange-traded funds, even as investors awaited March inflation data that co\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/bitcoin-holds-steady-near-71500-etf-inflows-surge-iran-ceasefire-optimism-1866024",
+    "timestamp": "2026-04-10T08:11:07Z"
+  },
+  {
+    "type": "news",
+    "title": "Chainlink Price Prediction April 2026: LINK Market Analysis",
+    "description": "Wondering where LINK will go in the future? That\u2019s a hot topic right now. A reasonably accurate Chainlink price prediction 2026 should consider the technical...\nThe post Chainlink Price Prediction April 2026: LINK Market Analysis appeared first on Bitcoin Fou\u2026",
+    "source": "Bitcoinfoundation.org",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://bitcoinfoundation.org/news/altcoins/chainlink-price-prediction-april-2026-link-market-analysis/",
+    "timestamp": "2026-04-10T07:45:12Z"
+  },
+  {
+    "type": "news",
+    "title": "Well-timed bets on Polymarket tied to the Iran war draw calls for investigations from lawmakers",
+    "description": "Calls are increasing inside Congress for investigations into the prediction market platform Polymarket after the latest instance where groups of anonymous traders made strategic, well-timed bets on a major geopolitical event hours before it occurred.",
+    "source": "NPR",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: investigation"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://www.npr.org/2026/04/10/nx-s1-5780569/betting-polymarket-iran-investigation-lawmakers",
+    "timestamp": "2026-04-10T07:33:15Z"
+  },
+  {
+    "type": "news",
+    "title": "Powell warned bank CEOs on Anthropic model risks: sources",
+    "description": "US Treasury Secretary Scott Bessent and Federal Reserve Chair Jerome Powell convened an urgent meeting with bank CEOs this week to warn of cyber risks posed by Anthropic's latest AI model, two sources familiar with the matter have said.",
+    "source": "RTE",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: sec",
+      "Market-relevant: ceo",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://www.rte.ie/news/business/2026/0410/1567506-powell-warned-bank-ceos-on-anthropic-model-risks-sources/",
+    "timestamp": "2026-04-10T07:07:43Z"
+  },
+  {
+    "type": "news",
+    "title": "Cardano Whales Return To The Table As Historical Data Says A Price Rally Could Be Coming",
+    "description": "Cardano has been one of the worst-hit altcoins in the crypto market, barely getting a rally in the last run and dropping fast once momentum shifted. Over the last year, the cryptocurrency\u2019s performance remained muted as it seemed like investors were focused o\u2026",
+    "source": "Bitcoinist",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://bitcoinist.com/cardano-whales-return-ada-price/",
+    "timestamp": "2026-04-10T09:30:58Z"
+  },
+  {
+    "type": "news",
+    "title": "Recovery scammers hit you when you\u2019re down: Here\u2019s how to avoid a second strike",
+    "description": "If you\u2019ve been the victim of fraud, you\u2019re likely already a lead on a \u2018sucker list\u2019 \u2013 and if you\u2019re not careful, your ordeal may be about to get worse.",
+    "source": "We Live Security",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.welivesecurity.com/en/scams/recovery-scammers-hit-when-down-avoid-second-strike/",
+    "timestamp": "2026-04-10T09:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Convicted killer William Sandeson seeks return of seized items",
+    "description": "William Sandeson wants his stuff back. The convicted killer has filed a notice in Nova Scotia Supreme Court for the return of items seized during the investigation into the murder of Taylor Samson, who was killed in Sandeson\u2019s Halifax apartment in August 2015.",
+    "source": "CBC News",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: investigation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.cbc.ca/news/canada/nova-scotia/william-sandeson-seeks-return-of-seized-items-9.7157911",
+    "timestamp": "2026-04-10T09:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Indictment: Jerusalem youth acted on behalf of Iran and documented sites in Jerusalem",
+    "description": "According to the indictment, the young man contacted an Iranian agent via Telegram, operated a \u201cburner phone,\" and carried out documentation missions in Israel in exchange for thousands of dollars.",
+    "source": "Israelnationalnews.com",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.israelnationalnews.com/news/425285",
+    "timestamp": "2026-04-10T08:13:13Z"
+  },
+  {
+    "type": "news",
+    "title": "Trends and Strategies Shaping the $7.2 Billion UV Adhesives Market Through 2035",
+    "description": "Booming UV Adhesives Market: Rising Demand in Electronics, Automotive, and Medical Sectors Spurs Innovation and Sustainability in Manufacturing Processes Booming UV Adhesives Market: Rising Demand in Electronics, Automotive, and Medical Sectors Spurs Innovati\u2026",
+    "source": "GlobeNewswire",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271600/28124/en/Trends-and-Strategies-Shaping-the-7-2-Billion-UV-Adhesives-Market-Through-2035.html",
+    "timestamp": "2026-04-10T09:37:00Z"
+  },
+  {
+    "type": "news",
+    "title": "China's car exports surge as expectations grow for EV pivot on Iran war energy shock",
+    "description": "The China Association of Automobile Manufacturers says Chinese exports of passenger cars have accelerated in March",
+    "source": "Abcnews.com",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://abcnews.com/International/wireStory/chinas-car-exports-surge-expectations-grow-ev-pivot-131908368",
+    "timestamp": "2026-04-10T09:27:49Z"
+  },
+  {
+    "type": "news",
+    "title": "EV bloodbath: US sales plunge as Tesla tightens its grip",
+    "description": "US EV sales plunge 27% in Q1 2026, with Tesla holding 54% share. Most automakers struggle, while Toyota posts rare growth.",
+    "source": "Business Insider",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: plunge"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://www.businessinsider.com/ev-shakeout-us-market-tesla-toyota-2026-4",
+    "timestamp": "2026-04-10T09:00:02Z"
+  },
+  {
+    "type": "news",
+    "title": "\u201cOne Dangote Is Not Enough!\u201d \u2014 Sujimoto\u2019s Birthday Open Letter to President Tinubu Sparks National Debate",
+    "description": "Sujimoto\u2019s open letter to President Tinubu advocates for a national champions strategy to boost Nigeria\u2019s economy by deliberately creating more industriali\n\nRead More: https://punchng.com/one-dangote-is-not-enough-sujimotos-birthday-open-letter-to-president-t\u2026",
+    "source": "The Punch",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://punchng.com/one-dangote-is-not-enough-sujimotos-birthday-open-letter-to-president-tinubu-sparks-national-debate/",
+    "timestamp": "2026-04-10T09:40:02Z"
+  },
+  {
+    "type": "news",
+    "title": "TSMC posts 35% jump in revenue to new record high as AI chip demand stays strong",
+    "description": "TSMC is benefiting from sustained demand for advanced semiconductors from its key customers like Apple and Nvidia.",
+    "source": "CNBC",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: revenue"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.cnbc.com/2026/04/10/tsmc-q1-record-revenue-ai-chip-demand-strong.html",
+    "timestamp": "2026-04-10T08:13:07Z"
+  },
+  {
+    "type": "news",
+    "title": "Augmented Reality in Automotive Strategic Intelligence Report 2026 - Automakers Should Invest in AR Heads-up Displays",
+    "description": "AR offers significant opportunities in the automotive sector by enhancing design processes, improving vehicle safety with heads-up displays, and boosting customer engagement. By integrating AR with ADAS and collaborating with tech vendors, automakers can stay\u2026",
+    "source": "GlobeNewswire",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271555/28124/en/Augmented-Reality-in-Automotive-Strategic-Intelligence-Report-2026-Automakers-Should-Invest-in-AR-Heads-up-Displays.html",
+    "timestamp": "2026-04-10T08:05:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Lithography Equipment Market Size to Grow USD 53.94 Billion by 2035 | SNS Insider",
+    "description": "Lithography Equipment Market Size, Share, Revenue Trends & Segment, By Technology, Equipment, Application, End Use, and Region | Global Forecast 2035...",
+    "source": "GlobeNewswire",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: revenue"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271541/0/en/Lithography-Equipment-Market-Size-to-Grow-USD-53-94-Billion-by-2035-SNS-Insider.html",
+    "timestamp": "2026-04-10T07:30:00Z"
+  },
+  {
+    "type": "news",
+    "title": "10 Best AI Chip Makers in 2026: NVIDIA Dominates AI Chip Race as Market Surges Toward $500 Billion Milestone",
+    "description": "SAN FRANCISCO \u2014 NVIDIA Corp. solidified its commanding lead in the exploding artificial intelligence chip sector in early 2026, capturing roughly 80-85% of the AI accelerator market while the broader AI semiconductor industry hurtled toward half a trillion do\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/10-best-ai-chip-makers-2026-nvidia-dominates-ai-chip-race-market-surges-toward-500-billion-1866051",
+    "timestamp": "2026-04-10T09:46:44Z"
+  },
+  {
+    "type": "news",
+    "title": "CoinEx Monthly | Repricing Risk and Resilient Bitcoin",
+    "description": "HONG KONG, April 10, 2026 (GLOBE NEWSWIRE) -- March was a month in which crypto traded firmly within the global macro narrative. Bitcoin remained range-bound and volatile as the market absorbed the inflationary shock from the disruption of Strait of Hormuz, a\u2026",
+    "source": "GlobeNewswire",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271605/0/en/CoinEx-Monthly-Repricing-Risk-and-Resilient-Bitcoin.html",
+    "timestamp": "2026-04-10T09:46:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Bond Traders Hedge Against More Losses as Inflation Data Looms",
+    "description": "Investors in the $31 trillion Treasury market are going into a closely-watched report on consumer prices hedging against more losses in government bonds, as a fragile truce between the US and Iran takes hold.",
+    "source": "Financial Post",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: loss",
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://financialpost.com/pmn/business-pmn/bond-traders-hedge-against-more-losses-as-inflation-data-looms",
+    "timestamp": "2026-04-10T09:51:01Z"
+  },
+  {
+    "type": "news",
+    "title": "'We will not survive\u2019: Honda, Ford, Toyota flag growing China threat!",
+    "description": "Global automakers like Honda, Ford, and Toyota are facing intense competition in China's rapidly evolving auto market, particularly with the surge in electric vehicles. Chinese manufacturers' swift development cycles and aggressive pricing are challenging leg\u2026",
+    "source": "The Times of India",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://timesofindia.indiatimes.com/auto/cars/we-will-not-survive-honda-ford-toyota-flag-growing-china-threat/articleshow/130165413.cms",
+    "timestamp": "2026-04-10T09:50:08Z"
+  },
+  {
+    "type": "news",
+    "title": "For White-Collar Workers, AI Also Stands for \u201cApocalyptic Insecurity\u201d",
+    "description": "Every day, Jade, 30, logs into her insurance tech job in Raleigh, North Carolina, to optimize systems with AI. She does her work diligently. But she can\u2019t stop the feeling she\u2019s building processes that will one day edge her out of a job. \u201cHalf the time it fee\u2026",
+    "source": "The New Republic",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://newrepublic.com/article/208683/white-collar-workers-ai-apocalyptic-insecurity",
+    "timestamp": "2026-04-10T10:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "My Husband\u2019s Parents Think We\u2019re About to Make a Life-Altering Financial Mistake",
+    "description": "We're adults!",
+    "source": "Slate Magazine",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://slate.com/advice/2026/04/money-advice-husband-dream-killer.html",
+    "timestamp": "2026-04-10T10:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "MEXC Launches USD1 Earn Event, Offering Up to 12% APR on Both Fixed-Term and Holding Rewards",
+    "description": "MEXC announced the official launch of the USD1 Earn event, advanced KYC-verified users can subscribe to MEXC's USD1 fixed-term product for a 12% APR....",
+    "source": "GlobeNewswire",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271608/0/en/MEXC-Launches-USD1-Earn-Event-Offering-Up-to-12-APR-on-Both-Fixed-Term-and-Holding-Rewards.html",
+    "timestamp": "2026-04-10T10:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Terence Corcoran: Does China meet Mark Carney\u2019s ESG standards?",
+    "description": "Can the buildup between Canada and China take place within an ESG framework that reaches beyond profits and trade flows? Read more.",
+    "source": "Financial Post",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: profit"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://financialpost.com/opinion/does-china-meet-mark-carney-esg-standards",
+    "timestamp": "2026-04-10T10:00:54Z"
+  },
+  {
+    "type": "news",
+    "title": "Precedence Research Brings Precedence Q: The Ultimate Platform for Real-Time Data, Analytics, and Market Statistics",
+    "description": "Precedence Research launches Precedence Q, a real-time market intelligence platform delivering advanced analytics, forecasting, and insights to drive growth and investment decisions. Precedence Research launches Precedence Q, a real-time market intelligence p\u2026",
+    "source": "GlobeNewswire",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271615/0/en/Precedence-Research-Brings-Precedence-Q-The-Ultimate-Platform-for-Real-Time-Data-Analytics-and-Market-Statistics.html",
+    "timestamp": "2026-04-10T10:03:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Breaking: Bayern lose one of their talents to injury",
+    "description": "Lennart Karl is suffering from a muscle tear in the back of his right thigh and will be out indefinitely. Just a few days before the Champions League quarter-final second leg against Real Madrid, one ...",
+    "source": "Onefootball.com",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Breaking news",
+      "Market-relevant: sec"
+    ],
+    "severity": "high",
+    "sentiment": "neutral",
+    "url": "https://onefootball.com/en/news/breaking-bayern-lose-one-of-their-talents-to-injury-42688604",
+    "timestamp": "2026-04-10T10:12:00Z"
+  },
+  {
+    "type": "news",
+    "title": "EOSE Securities Alert: Eos Energy Securities Fraud Class Action Focuses on Manufacturing Issues; BFA Law Notifies Investors of May 5 Court Deadline",
+    "description": "Eos Energy Securities Fraud Class Action Focuses on Manufacturing Issues; BFA Law Notifies Investors of May 5 Court Deadline...",
+    "source": "GlobeNewswire",
+    "topic": "stock market",
+    "signals": [
+      "Breaking news",
+      "Market-relevant: sec"
+    ],
+    "severity": "high",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271624/0/en/EOSE-Securities-Alert-Eos-Energy-Securities-Fraud-Class-Action-Focuses-on-Manufacturing-Issues-BFA-Law-Notifies-Investors-of-May-5-Court-Deadline.html",
+    "timestamp": "2026-04-10T10:18:00Z"
+  },
+  {
+    "type": "news",
+    "title": "View: America\u2019s demographic stagnation will make it poorer",
+    "description": "America faces a future of slower economic growth due to demographic stagnation. A declining birth rate and reduced immigration are shrinking the potential labour force. This trend will complicate the Federal Reserve's monetary policy decisions. A smaller work\u2026",
+    "source": "The Times of India",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/news/international/global-trends/view-americas-demographic-stagnation-will-make-it-poorer/articleshow/130166261.cms",
+    "timestamp": "2026-04-10T10:20:39Z"
+  },
+  {
+    "type": "news",
+    "title": "Morning Brief: A big day for inflation",
+    "description": "The Fed's preferred inflation gauge showed pricing pressures remained elevated for the month of February, even before the US and Israel began their military ...",
+    "source": "Yahoo Entertainment",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://finance.yahoo.com/news/morning-brief-a-big-day-for-inflation-100052155.html",
+    "timestamp": "2026-04-10T10:00:52Z"
+  },
+  {
+    "type": "news",
+    "title": "Analysis-Crypto giant Kraken's Fed payment account sparks concerns about risks",
+    "description": "Crypto giant Kraken's landmark Federal Reserve master account comes with restrictions aimed at mitigating risks, but it - and others likely to follow in its ...",
+    "source": "Yahoo Entertainment",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: fed"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://finance.yahoo.com/markets/crypto/articles/analysis-crypto-giant-krakens-fed-100319719.html",
+    "timestamp": "2026-04-10T10:03:19Z"
+  },
+  {
+    "type": "news",
+    "title": "ESA Launches 7 New Missions to Supercharge Space Data Transfer",
+    "description": "Space is getting crowded - and not just with satellites, but with the massive amounts of data they\u2019re generating. The amount of information being generated and passed through orbit is exploding. From high-resolution Earth observation images to global maritime\u2026",
+    "source": "Universe Today",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://www.universetoday.com/articles/esa-launches-7-new-missions-to-supercharge-space-data-transfer",
+    "timestamp": "2026-04-10T14:33:38Z"
+  },
+  {
+    "type": "news",
+    "title": "Data heist of the century? Hacker claims to steal top-secret files from China supercomputer - data up for sale",
+    "description": "The China supercomputer data breach is shaking global cybersecurity circles with one shocking number. More than 10 petabytes of allegedly stolen data. That equals roughly 10,000 terabytes. The scale alone makes the China supercomputer data breach one of the l\u2026",
+    "source": "The Times of India",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/news/international/us/data-heist-of-the-century-hacker-claims-to-steal-top-secret-files-from-china-supercomputer-data-up-for-sale/articleshow/130168900.cms",
+    "timestamp": "2026-04-10T14:23:10Z"
+  },
+  {
+    "type": "news",
+    "title": "Iceland to Cut Petrol Tax as Costlier Oil Risks Price Outlook",
+    "description": "Iceland will temporarily lower taxes on gasoline to help ease inflation after the war in Iran sent prices of fossil fuels soaring.",
+    "source": "Financial Post",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://financialpost.com/pmn/business-pmn/iceland-to-cut-petrol-tax-as-costlier-oil-risks-price-outlook",
+    "timestamp": "2026-04-10T14:17:03Z"
+  },
+  {
+    "type": "news",
+    "title": "Railway infra company Vishal Nirmiti gets Sebi nod for IPO",
+    "description": "Vishal Nirmiti has secured Securities and Exchange Board of India approval for its IPO, comprising a fresh issue and offer for sale, with proceeds aimed at working capital, debt reduction and supporting growth across railway and EPC infrastructure segments",
+    "source": "The Times of India",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: sec",
+      "Market-relevant: approval"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/markets/ipos/fpos/railway-infra-company-vishal-nirmiti-gets-sebi-nod-for-ipo/articleshow/130172891.cms",
+    "timestamp": "2026-04-10T14:36:17Z"
+  },
+  {
+    "type": "news",
+    "title": "Record Gold, Shrinking Supply: Funded Developers at the Threshold",
+    "description": "Issued on behalf of Lake Victoria Gold Ltd. VANCOUVER, British Columbia, April 10, 2026 (GLOBE NEWSWIRE) \u2014 USANewsGroup.com News Commentary \u2014 Central banks bought gold again in early 2026, and they show no signs of slowing down. The World Gold Council project\u2026",
+    "source": "Financial Post",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://financialpost.com/globe-newswire/record-gold-shrinking-supply-funded-developers-at-the-threshold",
+    "timestamp": "2026-04-10T14:31:45Z"
+  },
+  {
+    "type": "news",
+    "title": "CIGL Investors Have Opportunity to Lead Concorde International Group Ltd. Securities Fraud Lawsuit with the Schall Law Firm",
+    "description": "CIGL Investors Have Opportunity to Lead Concorde International Group Ltd. Securities Fraud Lawsuit with the Schall Law Firm...",
+    "source": "GlobeNewswire",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: sec",
+      "Market-relevant: lawsuit"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271809/0/en/CIGL-Investors-Have-Opportunity-to-Lead-Concorde-International-Group-Ltd-Securities-Fraud-Lawsuit-with-the-Schall-Law-Firm.html",
+    "timestamp": "2026-04-10T14:31:00Z"
+  },
+  {
+    "type": "news",
+    "title": "US consumer inflation surges 3.3% year-on-year as Iran war impact bites",
+    "description": "Consumer inflation in the United States rose sharply to 3.3 percent in March, government data showed Wednesday, as higher energy prices due to the war in the Middle East hit Americans hard. By comparison, the consumer price index (CPI) rose only 2.4 percent y\u2026",
+    "source": "The Times of India",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: inflation",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://economictimes.indiatimes.com/markets/us-stocks/news/us-consumer-inflation-surges-3-3-year-on-year-as-iran-war-impact-bites/articleshow/130172307.cms",
+    "timestamp": "2026-04-10T14:17:51Z"
+  },
+  {
+    "type": "news",
+    "title": "FixMold Deepens Its Presence Across Fort Lauderdale and Miami Beach, Bringing Certified Mold Inspection, Residential Detection, and Marine Mold Services Directly to Each Community",
+    "description": "South Florida's highest-rated mold remediation company announces dedicated service expansions in Fort Lauderdale, Miami Beach, North Miami Beach, and Miami Springs, with specialized teams now deployed for residential, commercial, and marine mold work South Fl\u2026",
+    "source": "GlobeNewswire",
+    "topic": "stock market",
+    "signals": [
+      "Market-relevant: rate",
+      "Market-relevant: expansion"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271796/0/en/FixMold-Deepens-Its-Presence-Across-Fort-Lauderdale-and-Miami-Beach-Bringing-Certified-Mold-Inspection-Residential-Detection-and-Marine-Mold-Services-Directly-to-Each-Community.html",
+    "timestamp": "2026-04-10T14:15:00Z"
+  },
+  {
+    "type": "news",
+    "title": "US inflation rose to 3.3% in March on Middle East energy shock",
+    "description": "Increase in prices highest since May 2024 as Iran conflict triggers historic surge in petrol prices",
+    "source": "The Irish Times",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.irishtimes.com/business/2026/04/10/us-inflation-rose-to-33-in-march-on-middle-east-energy-shock/",
+    "timestamp": "2026-04-10T14:02:35Z"
+  },
+  {
+    "type": "news",
+    "title": "US inflation soars to 3.3% in largest jump since 2021 \u2013 so why did Bitcoin barely move?",
+    "description": "March inflation has delivered a split result with one immediate consequence. US consumer prices accelerated hard enough to keep the Federal Reserve boxed in, while the softer core reading kept the next month alive as the real test. That tension reaches well b\u2026",
+    "source": "CryptoSlate",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: fed",
+      "Market-relevant: rate",
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://cryptoslate.com/us-inflation-soars-to-3-3-in-largest-jump-since-2021-so-did-bitcoin-barely-move/",
+    "timestamp": "2026-04-10T14:00:12Z"
+  },
+  {
+    "type": "news",
+    "title": "Soaring gas prices leads to biggest monthly inflation spike in four years in March",
+    "description": "It's the first read on inflation to capture the effects of the Iran war.",
+    "source": "PBS",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.pbs.org/newshour/economy/soaring-gas-prices-leads-to-biggest-monthly-inflation-spike-in-four-years-in-march",
+    "timestamp": "2026-04-10T13:55:15Z"
+  },
+  {
+    "type": "news",
+    "title": "TCS Q4 drags down IT stocks; Swiggy cofounder exits",
+    "description": "Shares of IT companies declined on Friday as TCS earnings failed to lift investor sentiment. This and more in today\u2019s ETtech Top 5.",
+    "source": "The Times of India",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: earnings"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://economictimes.indiatimes.com/tech/newsletters/tech-top-5/tcs-q4-drags-down-it-stocks-swiggy-cofounder-exits/articleshow/130171293.cms",
+    "timestamp": "2026-04-10T13:43:46Z"
+  },
+  {
+    "type": "news",
+    "title": "S&P 500 and Nasdaq Surge on Iran Ceasefire Relief Rally as Markets Eye Islamabad Talks",
+    "description": "NEW YORK \u2014 The S&P 500 climbed to 6,837.97 and the Nasdaq Composite reached 22,951.16 in early trading Friday, April 10, 2026, extending a powerful relief rally sparked by the U.S.-Iran ceasefire and hopes that weekend negotiations in Islamabad will stabilize\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: surge",
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/sp-500-nasdaq-surge-iran-ceasefire-relief-rally-markets-eye-islamabad-talks-1866074",
+    "timestamp": "2026-04-10T13:35:14Z"
+  },
+  {
+    "type": "news",
+    "title": "Dow Jones Surges Past 48,000 as Iran Ceasefire Sparks Massive Wall Street Rally",
+    "description": "NEW YORK \u2014 The Dow Jones Industrial Average blasted through the 48,000 milestone Friday morning, climbing more than 280 points in early trading on April 10, 2026, as investors cheered the fragile U.S.-Iran ceasefire and anticipated lower energy prices and red\u2026",
+    "source": "Ibtimes.com.au",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: surge",
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/dow-jones-surges-past-48000-iran-ceasefire-sparks-massive-wall-street-rally-1866072",
+    "timestamp": "2026-04-10T13:32:46Z"
+  },
+  {
+    "type": "news",
+    "title": "Energy prices that spiked due to war in Iran push inflation to the biggest increase in four years",
+    "description": "Energy prices that spiked due to war in Iran push inflation to the biggest increase in four yearsmercurynews.com",
+    "source": "The Mercury News",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.mercurynews.com/2026/04/09/war-in-iran-sends-inflation-soaring-and-the-mood-of-american-consumers-plunging/",
+    "timestamp": "2026-04-10T13:26:15Z"
+  },
+  {
+    "type": "news",
+    "title": "XRP Poised for Unforeseen 1,111% Surge as Analysts Highlight $17 Price Outcome",
+    "description": "XRP traded sideways on Friday following a volatile week marked by a broader downturn across the cryptocurrency market.",
+    "source": "ZyCrypto",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://zycrypto.com/xrp-poised-for-unforeseen-1111-surge-as-analysts-highlight-17-price-outcome/",
+    "timestamp": "2026-04-10T14:35:17Z"
+  },
+  {
+    "type": "news",
+    "title": "Standard Chartered\u2019s joint venture, HSBC Hong Kong first to secure HKMA stablecoin issuer licences",
+    "description": "Hong Kong's stablecoin licensing fosters innovation in digital finance, enhancing cross-border transactions while ensuring regulatory oversight.\nThe post Standard Chartered\u2019s joint venture, HSBC Hong Kong first to secure HKMA stablecoin issuer licences appear\u2026",
+    "source": "Crypto Briefing",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: sec"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://cryptobriefing.com/standard-chartered-venture-hsbc-hong-kong-first-secure-hkma-stablecoin-issuer-licences/",
+    "timestamp": "2026-04-10T14:33:06Z"
+  },
+  {
+    "type": "news",
+    "title": "Meow Technologies launches the first agentic banking platform for AI agents",
+    "description": "In short:\u00a0Meow Technologies has launched what it describes as the world\u2019s first agentic banking platform, enabling AI agents to open business bank accounts, issue cards, send payments, and manage day-to-day account activity on behalf of users, with no human r\u2026",
+    "source": "The Next Web",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: ban",
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://thenextweb.com/news/meow-technologies-agentic-banking-ai-agents/",
+    "timestamp": "2026-04-10T14:26:56Z"
+  },
+  {
+    "type": "news",
+    "title": "What's at stake ahead of crucial U.S-Iran peace talks as leaders meet in Pakistan",
+    "description": "Already, Tehran has accused Israel of violating the terms of the ceasefire, as the IDF continues to attack Hezbollah in Lebanon.",
+    "source": "CNBC",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.cnbc.com/2026/04/10/negotiating-points-hardest-us-iran-ceasefire-lebanon.html",
+    "timestamp": "2026-04-10T14:14:16Z"
+  },
+  {
+    "type": "news",
+    "title": "Solana Gains Tokenized Stock Push As Traders Watch $1,000 Talk",
+    "description": "Securitize is set to issue a Currenc Group equity as a digital token on a public blockchain, with the shares expected to launch on both Ethereum and Solana. Related Reading: South Korea Imposes 5-Minute Audit Rule On Crypto Platforms The move puts Solana back\u2026",
+    "source": "newsBTC",
+    "topic": "cryptocurrency",
+    "signals": [
+      "Market-relevant: sec",
+      "Market-relevant: launch"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "http://www.newsbtc.com/altcoin/solana-gains-tokenized-stock-push-as-traders-watch-1000-talk/",
+    "timestamp": "2026-04-10T14:00:01Z"
+  },
+  {
+    "type": "news",
+    "title": "Global Environmental Test Chambers Market Fueled by Automotive and Electronics Demand | Valuates Reports",
+    "description": "BANGALORE, India, April 10, 2026 /PRNewswire/ -- Global Environmental Test Chambers Market Research Report: There's a quiet arms race happening inside engineering labs around the world. It's not about who can build the fastest product \u2014 it's about who can val\u2026",
+    "source": "PR Newswire UK",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.prnewswire.co.uk/news-releases/global-environmental-test-chambers-market-fueled-by-automotive-and-electronics-demand--valuates-reports-302739298.html",
+    "timestamp": "2026-04-10T14:01:00Z"
+  },
+  {
+    "type": "news",
+    "title": "My Father Had an Office. I Have My Starlink-Equipped SUV and the Open Road",
+    "description": "I've built a life and a business untethered from a single employer, a static workspace, and a fragile corporate ideal. Thanks to the right technology, work travels with me instead of the other way around. Here's how I do it.\nIn 2022, I drove my motorcycle up \u2026",
+    "source": "PCMag.com",
+    "topic": "electric vehicles",
+    "signals": [
+      "Market-relevant: rate"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://me.pcmag.com/en/news/36492/my-father-had-an-office-i-have-my-starlink-equipped-suv-and-the-open-road",
+    "timestamp": "2026-04-10T13:10:51Z"
+  },
+  {
+    "type": "news",
+    "title": "Industrial Agitators Market worth $4.73 billion by 2032 - Exclusive Report by MarketsandMarkets\u2122",
+    "description": "DELRAY BEACH, Fla., April 10, 2026 /PRNewswire/ -- According to MarketsandMarkets\u2122, the industrial agitators market is projected to reach USD 4.73 billion by 2032 from USD 3.56 billion in 2026, at a CAGR of 4.9% during the forecast period. Browse 165 market d\u2026",
+    "source": "PR Newswire UK",
+    "topic": "semiconductor",
+    "signals": [
+      "Breaking news"
+    ],
+    "severity": "high",
+    "sentiment": "neutral",
+    "url": "https://www.prnewswire.co.uk/news-releases/industrial-agitators-market-worth-4-73-billion-by-2032---exclusive-report-by-marketsandmarkets-302739108.html",
+    "timestamp": "2026-04-10T14:01:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Astera Labs Stock Surges 10% as AI Connectivity Demand Fuels Rally Amid Explosive Growth Projections",
+    "description": "NEW YORK \u2014 Astera Labs Inc. shares jumped more than 10% in early trading Friday, climbing to around $142.62 as investors piled into the semiconductor company riding the AI infrastructure boom.",
+    "source": "Ibtimes.com.au",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: surge",
+      "Market-relevant: rally"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://www.ibtimes.com.au/astera-labs-stock-surges-10-ai-connectivity-demand-fuels-rally-amid-explosive-growth-projections-1866077",
+    "timestamp": "2026-04-10T13:43:15Z"
+  },
+  {
+    "type": "news",
+    "title": "Stocks Rise on In-Line CPI Ahead of US-Iran Talks: Markets Wrap",
+    "description": "The first inflation snapshot of the war-fueled spike in energy costs matched expectations, driving stocks higher ahead of this weekend\u2019s planned talks between the US and Iran.",
+    "source": "Financial Post",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://financialpost.com/pmn/business-pmn/stocks-rise-on-in-line-cpi-ahead-of-us-iran-talks-markets-wrap",
+    "timestamp": "2026-04-10T13:05:08Z"
+  },
+  {
+    "type": "news",
+    "title": "Silicon Motion Announces First Quarter 2026 Earnings Conference Call",
+    "description": "TAIPEI, Taiwan and MILPITAS, Calif., April 10, 2026 (GLOBE NEWSWIRE) -- Silicon Motion Technology Corporation (NasdaqGS: SIMO) (\u201cSilicon Motion\u201d or the \u201cCompany\u201d), a global leader in NAND flash controllers for solid state storage devices, plans to release its\u2026",
+    "source": "GlobeNewswire",
+    "topic": "semiconductor",
+    "signals": [
+      "Market-relevant: earnings"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.globenewswire.com/news-release/2026/04/10/3271691/9885/en/Silicon-Motion-Announces-First-Quarter-2026-Earnings-Conference-Call.html",
+    "timestamp": "2026-04-10T12:00:00Z"
+  },
+  {
+    "type": "news",
+    "title": "Anthropic\u2019s Mythos is changing everything we knew about AI \u2013 Alarm over cyberattacks, what banks and Wall Street fear",
+    "description": "The software managed to identify vulnerabilities that no one had found for decades in systems known for their security \u2013 An unprecedented risk of cyberattacks if it falls into the wrong hands\nThe post Anthropic\u2019s Mythos is changing everything we knew about AI\u2026",
+    "source": "Protothema.gr",
+    "topic": "artificial intelligence",
+    "signals": [
+      "Market-relevant: sec",
+      "Market-relevant: ban"
+    ],
+    "severity": "medium",
+    "sentiment": "negative",
+    "url": "https://en.protothema.gr/2026/04/10/anthropics-mythos-is-changing-everything-we-knew-about-ai-alarm-over-cyberattacks-what-banks-and-wall-street-fear/",
+    "timestamp": "2026-04-10T14:46:05Z"
+  },
+  {
+    "type": "news",
+    "title": "Here's the inflation breakdown for March 2026 \u2014 in one chart",
+    "description": "The Iran war has pushed up gasoline, airline fares and other prices for consumers.",
+    "source": "CNBC",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.cnbc.com/2026/04/10/cpi-inflation-march-2026-breakdown.html",
+    "timestamp": "2026-04-10T14:46:31Z"
+  },
+  {
+    "type": "news",
+    "title": "Kraken Reveals Fed Account Bars Interest and Emergency Lending",
+    "description": "Crypto exchange Kraken\u2019s limited purpose account granted by the Kansas City Fed has some restrictions designed to mitigate risk, Reuters reported Friday (April 10). Kraken can\u2019t earn interest on reserve balances held at the Fed, can\u2019t access emergency Fed len\u2026",
+    "source": "pymnts.com",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: fed"
+    ],
+    "severity": "medium",
+    "sentiment": "neutral",
+    "url": "https://www.pymnts.com/cryptocurrency/2026/kraken-reveals-fed-account-bars-interest-and-emergency-lending/",
+    "timestamp": "2026-04-10T14:45:36Z"
+  },
+  {
+    "type": "news",
+    "title": "Record surge in gasoline prices fuels US consumer inflation in March",
+    "description": "In March, American consumers were hit hard by a notable spike in prices. This surge, primarily fueled by soaring gasoline and diesel expenses linked to the conflict with Iran, has created significant challenges for President Donald Trump and his team. As the \u2026",
+    "source": "The Times of India",
+    "topic": "federal reserve",
+    "signals": [
+      "Market-relevant: inflation",
+      "Market-relevant: surge"
+    ],
+    "severity": "medium",
+    "sentiment": "positive",
+    "url": "https://economictimes.indiatimes.com/markets/us-stocks/news/record-surge-in-gasoline-prices-fuels-us-consumer-inflation-in-march/articleshow/130173051.cms",
+    "timestamp": "2026-04-10T14:41:21Z"
   }
 ]

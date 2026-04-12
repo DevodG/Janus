@@ -59,11 +59,16 @@ OPENAI_REASONER_MODEL = os.getenv("OPENAI_REASONER_MODEL", "gpt-4o")
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 # News APIs - multiple providers for redundancy
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY", "")
-NEWSDATA_API_KEY = os.getenv("NEWSDATA_API_KEY", "pub_cc1c7a4792ba4e9ab3db82d7eac4a487")
+NEWDATA_API_KEY = os.getenv("NEWDATA_API_KEY", "pub_cc1c7a4792ba4e9ab3db82d7eac4a487")
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "7fecc89c143490cfe47b4a67fcf43dc9")
 NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "92b805b134354c94ae31d9d0cc0a1814")
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "")
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
+
+# Financial data APIs
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
+FMP_API_KEY = os.getenv("FMP_API_KEY", "")
+EODHD_API_KEY = os.getenv("EODHD_API_KEY", "")
 
 MIROFISH_ENABLED = False  # Deprecated — using native simulation engine
 MIROFISH_API_BASE = ""
@@ -166,6 +171,21 @@ def validate_config():
     if not ALPHAVANTAGE_API_KEY:
         warnings.append(
             "ALPHAVANTAGE_API_KEY is missing - financial data functionality will be limited"
+        )
+
+    if not FINNHUB_API_KEY:
+        warnings.append(
+            "FINNHUB_API_KEY is missing - historical data fallback will be limited"
+        )
+
+    if not FMP_API_KEY:
+        warnings.append(
+            "FMP_API_KEY is missing - historical data fallback will be limited"
+        )
+
+    if not EODHD_API_KEY:
+        warnings.append(
+            "EODHD_API_KEY is missing - historical data fallback will be limited"
         )
 
     # Validate MiroFish configuration

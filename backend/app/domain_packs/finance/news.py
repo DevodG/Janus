@@ -20,6 +20,17 @@ logger = logging.getLogger(__name__)
 ACTUALLY_RELEVANT_API = "https://actually-relevant-api.onrender.com/api"
 
 
+def _news_query(symbol: str, company_name: str = "") -> str:
+    """Strip exchange suffix so news APIs can find the company."""
+    if company_name and len(company_name) > 3:
+        return company_name
+    s = symbol.upper()
+    for suffix in [".BSE", ".NSE", ".BO", ".NS", ".L", ".TO"]:
+        if s.endswith(suffix):
+            return s[: -len(suffix)]
+    return s
+
+
 def _normalize_actually_relevant(stories: list) -> List[Dict[str, Any]]:
     """Convert Actually Relevant stories to the standard article format."""
     articles = []
@@ -364,7 +375,7 @@ def get_company_news(
                 "%Y-%m-%d"
             )
             params = {
-                "q": company_name,
+                "q": _news_query(symbol or "", company_name),
                 "from": from_date,
                 "sortBy": "publishedAt",
                 "language": "en",
