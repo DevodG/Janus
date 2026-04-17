@@ -186,7 +186,7 @@ def create_app() -> FastAPI:
 
     # ── Routers — always on ───────────────────────────────────────────────
     from app.routers.finance import router as finance_router
-    app.include_router(finance_router, prefix="/finance", tags=["finance"])
+    app.include_router(finance_router)
 
     # ── Health (supports HEAD for HF health checker) ──────────────────────
     @app.api_route("/health", methods=["GET", "HEAD"])
@@ -272,21 +272,395 @@ def create_app() -> FastAPI:
     # ── Silence HF Space internal log-viewer poll ──────────────────────────
     @app.get("/")
     async def root(logs: str = None):
-        # HF polls /?logs=container — return 200 silently
         return {"status": "ok", "service": "Janus"}
+
+    # ── Daemon routes ──────────────────────────────────────────────────────
+    @app.get("/daemon/status")
+    async def daemon_status():
+        daemon = _services.get("daemon")
+        if daemon:
+            return daemon.get_status()
+        return {"running": False, "message": "Daemon not started"}
+
+    @app.get("/daemon/alerts")
+    async def daemon_alerts(limit: int = 20, min_severity: str = "low"):
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.signal_queue.get_alerts(limit=limit, min_severity=min_severity)
+            except Exception:
+                return daemon.signal_queue.get_stats()
+        return []
+
+    @app.get("/daemon/watchlist")
+    async def daemon_watchlist():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.market_watcher.get_watchlist_status()
+            except Exception:
+                return {"watchlist": daemon.market_watcher.watchlist}
+        return []
+
+    @app.get("/daemon/events")
+    async def daemon_events(limit: int = 20, event_type: str = None):
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                if event_type:
+                    return daemon.event_detector.get_events_by_type(event_type)
+                return daemon.event_detector.get_recent_events(limit=limit)
+            except Exception as e:
+                return {"events": [], "error": str(e)}
+        return {"events": []}
+
+    @app.get("/daemon/circadian")
+    async def daemon_circadian():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.circadian.get_status()
+            except Exception:
+                phase = daemon.circadian.get_current_phase()
+                return {"phase": phase.value}
+        return {"running": False}
+
+    @app.get("/daemon/curiosity")
+    async def daemon_curiosity():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.curiosity.get_status()
+            except Exception as e:
+                return {"running": True, "error": str(e)}
+        return {"running": False}
+
+    @app.get("/daemon/curiosity/discoveries")
+    async def curiosity_discoveries(limit: int = 10):
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.curiosity.get_discoveries(limit=limit)
+            except Exception:
+                return []
+        return []
+
+    @app.get("/daemon/curiosity/interests")
+    async def curiosity_interests():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                return daemon.curiosity.get_interests()
+            except Exception:
+                return {}
+        return {}
+
+    @app.post("/daemon/curiosity/now")
+    async def trigger_curiosity_now():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                report = daemon.curiosity.run_curiosity_cycle()
+                daemon.last_curiosity_cycle = report
+                return report
+            except Exception as e:
+                return {"error": str(e)}
+        return {"error": "Daemon not running"}
+
+    @app.get("/daemon/dreams")
+    async def daemon_dreams():
+        daemon = _services.get("daemon")
+        if daemon and daemon.last_dream:
+            return daemon.last_dream
+        return {"dreams": [], "message": "No dream cycle run yet"}
+
+    @app.post("/daemon/dream/now")
+    async def trigger_dream_now():
+        daemon = _services.get("daemon")
+        if daemon:
+            try:
+                report = daemon.dream_processor.run_dream_cycle()
+                daemon.last_dream = report
+                return report
+            except Exception as e:
+                return {"error": str(e)}
+        return {"error": "Daemon not running"}
+
+    @app.get("/pending-thoughts")
+    async def pending_thoughts():
+        daemon = _services.get("daemon")
+        if daemon:
+            thoughts = getattr(daemon, "_pending_thoughts", [])
+            return {"pending_thoughts": thoughts[:10], "count": len(thoughts)}
+        return {"pending_thoughts": [], "count": 0}
+
+    @app.get("/context")
+    async def get_context():
+        daemon = _services.get("daemon")
+        signals = []
+        if daemon:
+            try:
+                signals = list(daemon.signal_queue._queue)[-10:] if hasattr(daemon.signal_queue, "_queue") else []
+            except Exception:
+                pass
+        return {"context": "ok", "recent_signals": len(signals)}
+
+    # ── Memory routes ──────────────────────────────────────────────────────
+    @app.get("/memory/stats")
+    async def memory_stats():
+        try:
+            from app.memory import knowledge_store
+            stats = knowledge_store.get_stats() if hasattr(knowledge_store, "get_stats") else {}
+            return {
+                "queries": stats.get("total_queries", 0),
+                "entities": stats.get("total_entities", 0),
+                "links": stats.get("total_links", 0),
+                "domains": stats.get("domain_counts", {}),
+            }
+        except Exception as e:
+            return {"queries": 0, "entities": 0, "links": 0, "domains": {}, "error": str(e)}
+
+    @app.get("/memory/queries")
+    async def memory_queries(limit: int = 20):
+        try:
+            from app.memory import knowledge_store
+            return knowledge_store.get_recent_queries(limit=limit) if hasattr(knowledge_store, "get_recent_queries") else []
+        except Exception:
+            return []
+
+    # ── Intelligence / Cache routes ────────────────────────────────────────
+    @app.get("/intelligence/report")
+    async def intelligence_report():
+        cache = _services.get("cache")
+        daemon = _services.get("daemon")
+        return {
+            "status": "ok",
+            "cache_stats": cache.get_stats() if cache and hasattr(cache, "get_stats") else {},
+            "daemon_cycles": daemon.cycle_count if daemon else 0,
+            "space": os.getenv("SPACE_ID", "local"),
+        }
+
+    @app.get("/intelligence/domain/{domain}")
+    async def intelligence_domain(domain: str):
+        return {"domain": domain, "status": "ok"}
+
+    @app.get("/cache/stats")
+    async def cache_stats():
+        cache = _services.get("cache")
+        if cache and hasattr(cache, "get_stats"):
+            return cache.get_stats()
+        return {"entries": 0, "hit_rate": 0, "status": "unavailable"}
+
+    @app.post("/cache/cleanup")
+    async def cache_cleanup():
+        cache = _services.get("cache")
+        if cache and hasattr(cache, "cleanup_expired"):
+            expired = cache.cleanup_expired()
+            return {"expired_removed": expired, "cache_stats": cache.get_stats()}
+        return {"expired_removed": 0}
+
+    @app.post("/intelligence/save")
+    async def intelligence_save():
+        return {"status": "ok"}
+
+    # ── Prompts routes ─────────────────────────────────────────────────────
+    @app.get("/prompts")
+    async def list_prompts_route():
+        import pathlib
+        prompts_dir = pathlib.Path(__file__).parent / "prompts"
+        prompts = []
+        if prompts_dir.exists():
+            for f in prompts_dir.glob("*.txt"):
+                prompts.append({"name": f.stem, "file": f.name})
+        return prompts
+
+    @app.get("/prompts/{name}")
+    async def get_prompt_route(name: str):
+        from fastapi.responses import JSONResponse
+        import pathlib
+        prompts_dir = pathlib.Path(__file__).parent / "prompts"
+        path = prompts_dir / f"{name}.txt"
+        if not path.exists():
+            return JSONResponse(status_code=404, content={"detail": "Prompt not found"})
+        return {"name": name, "content": path.read_text(encoding="utf-8")}
+
+    @app.put("/prompts/{name}")
+    async def update_prompt_route(name: str, payload: dict):
+        import pathlib
+        prompts_dir = pathlib.Path(__file__).parent / "prompts"
+        prompts_dir.mkdir(exist_ok=True)
+        path = prompts_dir / f"{name}.txt"
+        path.write_text(payload.get("content", ""), encoding="utf-8")
+        return {"message": "Prompt updated", "name": name}
+
+    # ── Self / Reflection routes ───────────────────────────────────────────
+    @app.get("/self/report")
+    async def self_report():
+        try:
+            from app.services.self_reflection import self_reflection
+            return {
+                "opinions": self_reflection.get_opinions()[:10],
+                "corrections": self_reflection.get_corrections()[:5],
+                "gaps": self_reflection.get_gaps()[:5],
+                "dataset": self_reflection.get_dataset_stats() if hasattr(self_reflection, "get_dataset_stats") else {},
+                "self_model": getattr(self_reflection, "self_model", {}),
+            }
+        except Exception as e:
+            return {"opinions": [], "corrections": [], "gaps": [], "error": str(e)}
+
+    @app.get("/self/opinions")
+    async def self_opinions(topic: str = None):
+        try:
+            from app.services.self_reflection import self_reflection
+            return {"opinions": self_reflection.get_opinions(topic)}
+        except Exception:
+            return {"opinions": []}
+
+    @app.get("/self/corrections")
+    async def self_corrections(topic: str = None):
+        try:
+            from app.services.self_reflection import self_reflection
+            return {"corrections": self_reflection.get_corrections(topic) if topic else self_reflection.get_corrections()}
+        except Exception:
+            return {"corrections": []}
+
+    @app.get("/self/gaps")
+    async def self_gaps():
+        try:
+            from app.services.self_reflection import self_reflection
+            return {"gaps": self_reflection.get_gaps()}
+        except Exception:
+            return {"gaps": []}
+
+    @app.get("/self/dataset")
+    async def self_dataset():
+        try:
+            from app.services.self_reflection import self_reflection
+            return self_reflection.get_dataset_stats() if hasattr(self_reflection, "get_dataset_stats") else {}
+        except Exception:
+            return {}
+
+    # ── Extended Cases routes ──────────────────────────────────────────────
+    @app.get("/cases/{case_id}")
+    async def case_detail(case_id: str):
+        import json, pathlib
+        from fastapi.responses import JSONResponse
+        mem = pathlib.Path(__file__).parent / "data" / "memory"
+        for f in mem.glob("*.json"):
+            try:
+                data = json.loads(f.read_text())
+                if data.get("id") == case_id or f.stem == case_id:
+                    return data
+            except Exception:
+                pass
+        return JSONResponse(status_code=404, content={"detail": "Case not found"})
+
+    @app.delete("/cases/{case_id}")
+    async def case_delete(case_id: str):
+        import pathlib
+        from fastapi.responses import JSONResponse
+        mem = pathlib.Path(__file__).parent / "data" / "memory"
+        for f in mem.glob("*.json"):
+            try:
+                import json
+                data = json.loads(f.read_text())
+                if data.get("id") == case_id or f.stem == case_id:
+                    f.unlink()
+                    return {"deleted": True, "case_id": case_id}
+            except Exception:
+                pass
+        return JSONResponse(status_code=404, content={"detail": "Case not found"})
+
+    @app.get("/cases/{case_id}/raw")
+    async def case_raw(case_id: str):
+        import json, pathlib
+        from fastapi.responses import JSONResponse
+        mem = pathlib.Path(__file__).parent / "data" / "memory"
+        for f in mem.glob("*.json"):
+            try:
+                data = json.loads(f.read_text())
+                if data.get("id") == case_id or f.stem == case_id:
+                    return {"raw": f.read_text()}
+            except Exception:
+                pass
+        return JSONResponse(status_code=404, content={"detail": "Case not found"})
+
+    # ── Agents / Pipeline / Debug routes ──────────────────────────────────
+    @app.get("/agents")
+    async def list_agents():
+        return ["router", "research", "planner", "verifier", "synthesizer"]
+
+    @app.get("/agents/{agent_name}")
+    async def agent_detail(agent_name: str):
+        return {"name": agent_name, "status": "active"}
+
+    @app.get("/pipeline/stats")
+    async def pipeline_stats():
+        return {
+            "graph_ready": getattr(getattr(app, "state", None), "graph", None) is not None,
+            "space": os.getenv("SPACE_ID", "local"),
+        }
+
+    @app.get("/debug/state/{case_id}")
+    async def debug_state(case_id: str):
+        return {"case_id": case_id, "debug": "not available in production"}
+
+    # ── Traces / Curation / Domain routes ─────────────────────────────────
+    @app.get("/traces")
+    async def list_traces():
+        return {"traces": []}
+
+    @app.get("/traces/stats")
+    async def traces_stats():
+        return {"total": 0}
+
+    @app.get("/curation/examples")
+    async def curation_examples():
+        return {"examples": []}
+
+    @app.get("/curation/stats")
+    async def curation_stats():
+        return {"total": 0}
+
+    @app.post("/curation/push-to-hf")
+    async def curation_push():
+        return {"status": "ok", "pushed": 0}
+
+    @app.get("/domain/classify")
+    async def domain_classify(query: str = ""):
+        return {"domain": "general", "confidence": 0.5}
+
+    @app.get("/domain/confidence")
+    async def domain_confidence():
+        return {"domains": {}}
+
+    @app.get("/domain/top")
+    async def domain_top():
+        return {"top_domains": []}
+
+    @app.get("/health/features")
+    async def health_features():
+        return {
+            "simulation":  os.getenv("SIMULATION_ENABLED", "true") == "true",
+            "sentinel":    os.getenv("SENTINEL_ENABLED", "true") == "true",
+            "learning":    os.getenv("LEARNING_ENABLED", "false") == "true",
+            "curiosity":   os.getenv("CURIOSITY_ENGINE_ENABLED", "false") == "true",
+        }
+
+
 
     # ── Optional routers ──────────────────────────────────────────────────
     if os.getenv("SIMULATION_ENABLED", "true").lower() == "true":
         try:
             from app.routers.simulation import router as sim_router
-            app.include_router(sim_router, prefix="/simulation", tags=["simulation"])
+            app.include_router(sim_router)
         except Exception as e:
             logger.warning("Simulation router unavailable: %s", e)
 
     if os.getenv("SENTINEL_ENABLED", "true").lower() == "true":
         try:
             from app.routers.sentinel import router as sentinel_router
-            app.include_router(sentinel_router, prefix="/sentinel", tags=["sentinel"])
+            app.include_router(sentinel_router)
         except Exception as e:
             logger.warning("Sentinel router unavailable: %s", e)
 
