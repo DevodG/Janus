@@ -217,7 +217,7 @@ def create_app() -> FastAPI:
                 "fmp":          bool(os.getenv("FMP_API_KEY")),
                 "eodhd":        bool(os.getenv("EODHD_API_KEY")),
                 "tavily":       bool(os.getenv("TAVILY_API_KEY")),
-                "newsapi":      bool(os.getenv("NEWSAPI_KEY") or os.getenv("NEWSAPI_API_KEY")),
+                "newsapi":      bool(os.getenv("NEWS_API_KEY") or os.getenv("NEWSAPI_KEY")),
             },
             "persistence": {
                 "hf_store": bool(os.getenv("HF_STORE_REPO")),

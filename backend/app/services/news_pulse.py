@@ -20,7 +20,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 class NewsPulse:
     def __init__(self, topics: List[str] = None):
-        self.api_key = os.getenv("NEWSAPI_KEY", "")
+        self.api_key = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
         self.topics = topics or [
             "artificial intelligence",
             "stock market",
