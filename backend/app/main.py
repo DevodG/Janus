@@ -269,6 +269,12 @@ def create_app() -> FastAPI:
             "persistent_store": bool(os.getenv("HF_STORE_REPO")),
         }
 
+    # ── Silence HF Space internal log-viewer poll ──────────────────────────
+    @app.get("/")
+    async def root(logs: str = None):
+        # HF polls /?logs=container — return 200 silently
+        return {"status": "ok", "service": "Janus"}
+
     # ── Optional routers ──────────────────────────────────────────────────
     if os.getenv("SIMULATION_ENABLED", "true").lower() == "true":
         try:
