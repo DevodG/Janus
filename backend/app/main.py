@@ -62,11 +62,15 @@ async def lifespan(app: FastAPI):
         _started = True
         try:
             from app.services.daemon import JanusDaemon
+            import concurrent.futures
             daemon = JanusDaemon()
-            task = asyncio.create_task(daemon.run_forever())
-            _services["daemon_task"] = task
+            loop = asyncio.get_event_loop()
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="daemon")
+            future = loop.run_in_executor(executor, daemon.run)
+            _services["daemon_future"] = future
+            _services["daemon_executor"] = executor
             _services["daemon"] = daemon
-            logger.info("Daemon task started")
+            logger.info("Daemon thread started")
         except Exception as e:
             logger.error("Daemon failed to start: %s", e)
 
