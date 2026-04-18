@@ -35,14 +35,10 @@ def run(state: dict) -> dict:
     """
     user_input = state.get("user_input", "")
     prompt = load_prompt("switchboard")
-    parser = PydanticOutputParser(pydantic_object=RouteDecision)
 
     messages = [
         {"role": "system", "content": prompt},
-        {
-            "role": "user",
-            "content": user_input + "\n\n" + parser.get_format_instructions(),
-        },
+        {"role": "user", "content": user_input},
     ]
 
     try:
@@ -62,12 +58,10 @@ def run(state: dict) -> dict:
         }
 
     if raw_response:
-        try:
-            parsed = parser.invoke(raw_response)
-            result = parsed.dict()
-        except OutputParserException as e:
-            logger.warning(f"[AGENT PARSE FALLBACK] switchboard: {e}")
-            result = safe_parse(raw_response)
+        result = safe_parse(raw_response)
+        if "error" in result:
+            logger.warning(f"[AGENT PARSE FALLBACK] switchboard: parse failed, using defaults")
+            result = None
 
     # Ensure all required fields exist with defaults
     if result is None:

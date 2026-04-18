@@ -40,7 +40,6 @@ def run(state: dict) -> dict:
     verifier = state.get("verifier", {})
 
     prompt = load_prompt("planner")
-    parser = PydanticOutputParser(pydantic_object=PlannerOutput)
 
     # Build context with all available upstream data
     context_parts = [
@@ -61,8 +60,6 @@ def run(state: dict) -> dict:
             "content": (
                 f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
                 + "\n\n".join(context_parts)
-                + "\n\n"
-                + parser.get_format_instructions()
             ),
         },
     ]
@@ -78,14 +75,10 @@ def run(state: dict) -> dict:
         result = {"status": "error", "reason": str(e), "error": "model_failed"}
 
     if raw_response:
-        try:
-            parsed = parser.invoke(raw_response)
-            result = parsed.dict()
-        except OutputParserException as e:
-            logger.warning(
-                f"[AGENT PARSE FALLBACK] planner: using safe_parse due to error: {e}"
-            )
-            result = safe_parse(raw_response)
+        result = safe_parse(raw_response)
+        if "error" in result:
+            logger.warning(f"[AGENT PARSE FALLBACK] planner: using safe_parse fallback")
+            result = None
 
     if result is None:
         result = {
