@@ -73,7 +73,6 @@ def run(state: dict) -> dict:
     context = state.get("context", {})
 
     prompt = load_prompt("synthesizer")
-    parser = PydanticOutputParser(pydantic_object=SynthesizerOutput)
 
     # Build comprehensive context
     context_parts = [
@@ -152,8 +151,6 @@ def run(state: dict) -> dict:
                 f"User request: {state.get('user_input', route.get('intent', ''))}\n\n"
                 + "\n\n".join(context_parts)
                 + (f"\n\n{system_context}" if system_context else "")
-                + "\n\n"
-                + parser.get_format_instructions()
             ),
         },
     ]
@@ -169,32 +166,24 @@ def run(state: dict) -> dict:
         result = {"status": "error", "reason": str(e), "error": "model_failed"}
 
     if raw_response:
-        # Try Pydantic parser first
-        try:
-            parsed = parser.invoke(raw_response)
-            result = parsed.dict()
-        except OutputParserException:
-            # Try manual JSON extraction
-            extracted = _extract_json_from_text(raw_response)
-            if extracted and "response" in extracted:
-                result = extracted
-                # Ensure required fields
-                result.setdefault("confidence", 0.5)
-                result.setdefault("data_sources", [])
-                result.setdefault("caveats", [])
-                result.setdefault("next_steps", [])
-            else:
-                # Last resort: use raw text as the response
-                logger.warning(
-                    f"[AGENT PARSE FALLBACK] synthesizer: using raw text as response"
-                )
-                result = {
-                    "response": raw_response,
-                    "confidence": 0.5,
-                    "data_sources": [],
-                    "caveats": ["response format could not be parsed"],
-                    "next_steps": ["retry for formatted response"],
-                }
+        # Try manual JSON extraction (prompt already defines the schema)
+        extracted = _extract_json_from_text(raw_response)
+        if extracted and "response" in extracted:
+            result = extracted
+            result.setdefault("confidence", 0.5)
+            result.setdefault("data_sources", [])
+            result.setdefault("caveats", [])
+            result.setdefault("next_steps", [])
+        else:
+            # Last resort: use raw text as the response
+            logger.warning("[AGENT PARSE FALLBACK] synthesizer: using raw text as response")
+            result = {
+                "response": raw_response,
+                "confidence": 0.5,
+                "data_sources": [],
+                "caveats": ["response format could not be parsed"],
+                "next_steps": ["retry for formatted response"],
+            }
 
     if result is None:
         result = {
