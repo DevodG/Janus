@@ -10,7 +10,7 @@ export default function WorkspacePage() {
   const [triggering, setTriggering] = useState(false);
 
   const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       const res = await fetch(`${baseUrl}/daemon/curiosity`);
       if (res.ok) setCuriosity(await res.json());
@@ -22,7 +22,7 @@ export default function WorkspacePage() {
 
   const triggerCuriosity = async () => {
     setTriggering(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       const res = await fetch(`${baseUrl}/daemon/curiosity/now`, { method: 'POST' });
       if (res.ok) {

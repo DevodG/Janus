@@ -218,7 +218,7 @@ export default function SentinelPage() {
   };
 
   const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       const [statusRes, alertsRes, capRes, intelRes, cacheRes] = await Promise.all([
         apiClient.getSentinelStatus(),
@@ -247,7 +247,7 @@ export default function SentinelPage() {
 
   const runCycleNow = async () => {
     setRunningCycle(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       await fetch(`${baseUrl}/sentinel/run-now`, { method: 'POST' });
       await fetchData();

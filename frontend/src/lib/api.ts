@@ -12,7 +12,7 @@ import type {
 export class MiroOrgClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:8000') {
+  constructor(baseUrl: string = 'http://localhost:7860') {
     this.baseUrl = baseUrl;
   }
 
@@ -40,7 +40,7 @@ export class MiroOrgClient {
     const response = await fetch(`${this.baseUrl}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ...request, query: request.user_input }),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -53,7 +53,8 @@ export class MiroOrgClient {
   async getCases(): Promise<CaseRecord[]> {
     const response = await fetch(`${this.baseUrl}/cases`);
     if (!response.ok) throw new Error('Failed to fetch cases');
-    return response.json();
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.cases ?? []);
   }
 
   async getCase(caseId: string): Promise<CaseRecord> {
@@ -173,13 +174,13 @@ export class MiroOrgClient {
 
 // Export singleton instance
 export const apiClient = new MiroOrgClient(
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
 );
 
 // Finance Intelligence endpoints
 export class FinanceClient {
   private baseUrl: string;
-  constructor(baseUrl: string = 'http://localhost:8000') {
+  constructor(baseUrl: string = 'http://localhost:7860') {
     this.baseUrl = baseUrl;
   }
 
@@ -223,5 +224,5 @@ export class FinanceClient {
 }
 
 export const financeClient = new FinanceClient(
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
 );

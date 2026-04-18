@@ -5,6 +5,7 @@ to gather context before calling the LLM for structured analysis.
 """
 
 import os, json, re, logging
+from urllib.parse import quote_plus
 import httpx
 from app.agents._model import call_model
 from app.agents.api_discovery import discover_apis, call_discovered_api
@@ -48,7 +49,7 @@ def _duckduckgo_urls(query: str, max_results: int = 5) -> list[str]:
     """Get URLs from DuckDuckGo HTML search (no API key)."""
     urls = []
     try:
-        search_url = f"https://html.duckduckgo.com/html/?q={httpx.quote(query)}"
+        search_url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
         with httpx.Client(timeout=15) as client:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"

@@ -35,7 +35,7 @@ const TIMEFRAME_DAYS: Record<Timeframe, number> = {
   '1Y': 365,
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:7860';
 
 export default function LineChart({ symbol, companyName, isPositive = true, height = 280 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -104,7 +104,7 @@ export default function LineChart({ symbol, companyName, isPositive = true, heig
     const data = filteredData();
 
     // Lazy-load lightweight-charts
-    import('lightweight-charts').then(({ createChart, LineStyle }) => {
+    import('lightweight-charts').then(({ AreaSeries, LineSeries, LineStyle, createChart }) => {
       // Destroy previous chart
       if (chartRef.current) {
         (chartRef.current as { remove(): void }).remove();
@@ -144,7 +144,7 @@ export default function LineChart({ symbol, companyName, isPositive = true, heig
 
       const color = isPositive ? '#10b981' : '#ef4444';
 
-      const series = chart.addLineSeries({
+      const series = chart.addSeries(LineSeries, {
         color,
         lineWidth:     2,
         crosshairMarkerVisible: true,
@@ -160,7 +160,7 @@ export default function LineChart({ symbol, companyName, isPositive = true, heig
       series.setData(chartData);
 
       // Area fill
-      const areaSeries = chart.addAreaSeries({
+      const areaSeries = chart.addSeries(AreaSeries, {
         topColor:    isPositive ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
         bottomColor: 'rgba(0,0,0,0)',
         lineColor:   'transparent',

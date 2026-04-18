@@ -58,7 +58,7 @@ export default function PulsePage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       const [statusRes, alertsRes, memoryRes] = await Promise.all([
         fetch(`${baseUrl}/daemon/status`).then(r => r.ok ? r.json() : null),

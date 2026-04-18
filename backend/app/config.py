@@ -32,7 +32,7 @@ PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "huggingface").lower()
 FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "openrouter").lower()
 
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
-HUGGINGFACE_MODEL = os.getenv("HUGGINGFACE_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+HUGGINGFACE_MODEL = os.getenv("HUGGINGFACE_MODEL", "openai/gpt-oss-120b")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
@@ -58,7 +58,9 @@ OPENAI_REASONER_MODEL = os.getenv("OPENAI_REASONER_MODEL", "gpt-4o")
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 # News APIs - multiple providers for redundancy
-NEWSAPI_KEY = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))  # primary: NEWS_API_KEY
+NEWSAPI_KEY = os.getenv(
+    "NEWS_API_KEY", os.getenv("NEWSAPI_KEY", "")
+)  # primary: NEWS_API_KEY
 NEWDATA_API_KEY = os.getenv("NEWDATA_API_KEY", "pub_cc1c7a4792ba4e9ab3db82d7eac4a487")
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "7fecc89c143490cfe47b4a67fcf43dc9")
 NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "92b805b134354c94ae31d9d0cc0a1814")

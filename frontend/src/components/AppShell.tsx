@@ -57,7 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [daemonStatus, setDaemonStatus] = useState<any>(null);
 
   const fetchStatus = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
     try {
       const r = await fetch(`${baseUrl}/daemon/status`);
       if (r.ok) setDaemonStatus(await r.json());

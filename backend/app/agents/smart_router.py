@@ -5,11 +5,12 @@ Unified router across multiple free providers with rate limit tracking,
 automatic failover, and daily quota management.
 
 Provider priority:
-1. Google Gemini (best free quality, 1500 req/day)
-2. Groq (fastest, Llama 3.3 70B, 14400 req/day)
-3. OpenRouter (free models — fixed model list)
-4. Cloudflare Workers AI (10k req/day)
-5. Ollama (local, unlimited)
+1. Hugging Face Router (when configured)
+2. Google Gemini (best free quality, 1500 req/day)
+3. Groq (fastest, Llama 3.3 70B, 14400 req/day)
+4. OpenRouter (free models — fixed model list)
+5. Cloudflare Workers AI (10k req/day)
+6. Ollama (local, unlimited)
 
 FIXES vs previous version:
   - OpenRouter free_models list updated to working models (old ones all 400)
@@ -33,8 +34,11 @@ _RATE_STATE: dict = {}
 
 def _midnight_ts() -> int:
     from datetime import datetime, timezone, timedelta
+
     now = datetime.now(timezone.utc)
-    tomorrow = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    tomorrow = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(
+        days=1
+    )
     return int(tomorrow.timestamp())
 
 
@@ -67,12 +71,23 @@ def _record_usage(provider: str):
 
 
 # ── Provider credentials ────────────────────────────────────────────────────
-GEMINI_KEY      = os.getenv("GEMINI_API_KEY", "")
-GROQ_KEY        = os.getenv("GROQ_API_KEY", "")
-OPENROUTER_KEY  = os.getenv("OPENROUTER_API_KEY", "")
-CF_ACCOUNT_ID   = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
-CF_TOKEN        = os.getenv("CLOUDFLARE_API_TOKEN", "")
-TIMEOUT         = 90
+GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
+GROQ_KEY = os.getenv("GROQ_API_KEY", "")
+OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY", "")
+HUGGINGFACE_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
+CF_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
+CF_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
+TIMEOUT = 90
+
+
+def _call_huggingface(messages: List[Dict[str, str]], **kwargs) -> str:
+    """Hugging Face Router via the dedicated client."""
+    if not HUGGINGFACE_KEY:
+        raise ValueError("HUGGINGFACE_API_KEY not set")
+
+    from app.agents.huggingface import hf_client
+
+    return hf_client.chat(messages, **kwargs)
 
 
 def _call_gemini(messages: List[Dict[str, str]], **kwargs) -> str:
@@ -147,7 +162,10 @@ def _call_groq(messages: List[Dict[str, str]], **kwargs) -> str:
     with httpx.Client(timeout=TIMEOUT) as client:
         r = client.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {GROQ_KEY}",
+                "Content-Type": "application/json",
+            },
             json=body,
         )
         r.raise_for_status()
@@ -206,7 +224,10 @@ def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
     with httpx.Client(timeout=TIMEOUT) as client:
         r = client.post(
             f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-            headers={"Authorization": f"Bearer {CF_TOKEN}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {CF_TOKEN}",
+                "Content-Type": "application/json",
+            },
             json=body,
         )
         r.raise_for_status()
@@ -228,16 +249,53 @@ def _call_ollama(messages: List[Dict[str, str]], **kwargs) -> str:
 
 # ── Provider registry ───────────────────────────────────────────────────────
 PROVIDERS = [
-    {"name": "groq",        "daily_limit": 14400,  "rpm_limit": 1000, "call": _call_groq,       "enabled": bool(GROQ_KEY)},
-    {"name": "gemini",      "daily_limit": 1500,   "rpm_limit": 15,   "call": _call_gemini,     "enabled": bool(GEMINI_KEY)},
-    {"name": "openrouter",  "daily_limit": 999999, "rpm_limit": 20,   "call": _call_openrouter, "enabled": bool(OPENROUTER_KEY)},
-    {"name": "cloudflare",  "daily_limit": 10000,  "rpm_limit": 60,   "call": _call_cloudflare, "enabled": bool(CF_ACCOUNT_ID and CF_TOKEN)},
-    {"name": "ollama",      "daily_limit": 999999, "rpm_limit": 999,  "call": _call_ollama,     "enabled": True},
+    {
+        "name": "huggingface",
+        "daily_limit": 999999,
+        "rpm_limit": 60,
+        "call": _call_huggingface,
+        "enabled": bool(HUGGINGFACE_KEY),
+    },
+    {
+        "name": "groq",
+        "daily_limit": 14400,
+        "rpm_limit": 1000,
+        "call": _call_groq,
+        "enabled": bool(GROQ_KEY),
+    },
+    {
+        "name": "gemini",
+        "daily_limit": 1500,
+        "rpm_limit": 15,
+        "call": _call_gemini,
+        "enabled": bool(GEMINI_KEY),
+    },
+    {
+        "name": "openrouter",
+        "daily_limit": 999999,
+        "rpm_limit": 20,
+        "call": _call_openrouter,
+        "enabled": bool(OPENROUTER_KEY),
+    },
+    {
+        "name": "cloudflare",
+        "daily_limit": 10000,
+        "rpm_limit": 60,
+        "call": _call_cloudflare,
+        "enabled": bool(CF_ACCOUNT_ID and CF_TOKEN),
+    },
+    {
+        "name": "ollama",
+        "daily_limit": 999999,
+        "rpm_limit": 999,
+        "call": _call_ollama,
+        "enabled": True,
+    },
 ]
 
 # Consecutive failure tracking — skip provider after 3 failures until cooldown passes
-_FAILURES:   Dict[str, int]   = {}
-_LAST_FAIL:  Dict[str, float] = {}
+_FAILURES: Dict[str, int] = {}
+_LAST_FAIL: Dict[str, float] = {}
 COOLDOWN_SEC = 300  # 5 min cooldown after 3 consecutive failures
 
 
@@ -286,6 +344,7 @@ def call_model(messages: List[Dict[str, str]], **kwargs) -> str:
 def safe_parse(text: str) -> dict:
     """Strip markdown fences, attempt JSON parse."""
     import re
+
     cleaned = re.sub(r"```(?:json)?|```", "", text).strip()
     try:
         return json.loads(cleaned)

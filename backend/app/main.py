@@ -9,9 +9,11 @@ Key differences from local dev:
   5. Lifespan has singleton guard so --reload doesn't double-start services
   6. /health supports HEAD (HF health checker uses HEAD)
 """
+
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -41,6 +43,7 @@ async def lifespan(app: FastAPI):
     # 3. Response cache (always on)
     try:
         from app.services.response_cache import ResponseCache
+
         _services["cache"] = ResponseCache()
         app.state.cache = _services["cache"]
         logger.info("ResponseCache ready")
@@ -52,6 +55,7 @@ async def lifespan(app: FastAPI):
     app.state.graph = None
     try:
         from app.graph import build_graph
+
         app.state.graph = build_graph()
         logger.info("LangGraph pipeline compiled OK")
     except Exception as e:
@@ -63,9 +67,12 @@ async def lifespan(app: FastAPI):
         try:
             from app.services.daemon import JanusDaemon
             import concurrent.futures
+
             daemon = JanusDaemon()
             loop = asyncio.get_event_loop()
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="daemon")
+            executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=1, thread_name_prefix="daemon"
+            )
             future = loop.run_in_executor(executor, daemon.run)
             _services["daemon_future"] = future
             _services["daemon_executor"] = executor
@@ -79,6 +86,7 @@ async def lifespan(app: FastAPI):
     if os.getenv("ADAPTIVE_INTELLIGENCE_ENABLED", "false").lower() == "true":
         try:
             from app.services.adaptive_intelligence import AdaptiveIntelligence
+
             app.state.adaptive = AdaptiveIntelligence()
             logger.info("AdaptiveIntelligence ready")
         except Exception as e:
@@ -103,41 +111,74 @@ async def lifespan(app: FastAPI):
 def _ensure_dirs():
     """Create runtime data dirs — called at every startup since HF FS is ephemeral."""
     import pathlib
+
     base = pathlib.Path(__file__).parent / "data"
     for d in [
-        "memory", "simulations", "logs", "knowledge",
-        "skills", "prompt_versions", "learning", "adaptive",
-        "cache", "sentinel", "sentinel/pending_patches",
+        "memory",
+        "simulations",
+        "logs",
+        "knowledge",
+        "skills",
+        "prompt_versions",
+        "learning",
+        "adaptive",
+        "cache",
+        "sentinel",
+        "sentinel/pending_patches",
     ]:
         (base / d).mkdir(parents=True, exist_ok=True)
 
 
 def _log_config_warnings():
     """Warn about missing keys — useful in HF Space logs."""
-    provider = os.getenv("PRIMARY_PROVIDER", "openrouter")
+    provider = os.getenv("PRIMARY_PROVIDER", "huggingface")
     key_map = {
+        "huggingface": "HUGGINGFACE_API_KEY",
         "openrouter": "OPENROUTER_API_KEY",
-        "openai":     "OPENAI_API_KEY",
-        "groq":       "GROQ_API_KEY",
-        "gemini":     "GEMINI_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "gemini": "GEMINI_API_KEY",
     }
-    key_name = key_map.get(provider, "OPENROUTER_API_KEY")
+    key_name = key_map.get(provider, "HUGGINGFACE_API_KEY")
     if not os.getenv(key_name):
-        logger.warning("⚠ %s is not set in Space Secrets — LLM calls will fail", key_name)
+        logger.warning(
+            "⚠ %s is not set in Space Secrets — LLM calls will fail", key_name
+        )
     if not os.getenv("TAVILY_API_KEY"):
         logger.warning("⚠ TAVILY_API_KEY not set — web search disabled")
-    if not any([
-        os.getenv("ALPHAVANTAGE_API_KEY"),
-        os.getenv("FINNHUB_API_KEY"),
-        os.getenv("FMP_API_KEY"),
-    ]):
-        logger.warning("⚠ No market data API key set — historical charts will use yfinance only")
+    if not any(
+        [
+            os.getenv("ALPHAVANTAGE_API_KEY"),
+            os.getenv("FINNHUB_API_KEY"),
+            os.getenv("FMP_API_KEY"),
+        ]
+    ):
+        logger.warning(
+            "⚠ No market data API key set — historical charts will use yfinance only"
+        )
     if os.getenv("SPACE_ID") and not os.getenv("HF_STORE_REPO"):
         logger.warning(
             "⚠ Running on HF Space but HF_STORE_REPO not set. "
             "All memory/cases/skills will be LOST on every restart. "
             "Create a private dataset repo and add HF_STORE_REPO=username/janus-memory to Secrets."
         )
+
+
+def _normalize_route(route: dict | None) -> dict:
+    normalized = dict(route or {})
+    domain = normalized.get("domain_pack") or normalized.get("domain") or "general"
+    normalized.setdefault("domain", domain)
+    normalized.setdefault("domain_pack", domain)
+
+    if "execution_mode" not in normalized:
+        if normalized.get("requires_simulation"):
+            normalized["execution_mode"] = "simulation"
+        elif normalized.get("requires_finance_data"):
+            normalized["execution_mode"] = "finance"
+        else:
+            normalized["execution_mode"] = "standard"
+
+    return normalized
 
 
 def create_app() -> FastAPI:
@@ -160,17 +201,21 @@ def create_app() -> FastAPI:
     if hf_space_id:
         # HF Space URLs follow pattern: https://{owner}-{space-name}.hf.space
         owner = hf_space_id.split("/")[0] if "/" in hf_space_id else hf_space_id
-        allowed_origins.extend([
-            f"https://{owner.lower()}-*.hf.space",   # wildcard for all spaces from same owner
-            f"https://huggingface.co",
-        ])
+        allowed_origins.extend(
+            [
+                f"https://{owner.lower()}-*.hf.space",  # wildcard for all spaces from same owner
+                f"https://huggingface.co",
+            ]
+        )
 
     # Always allow localhost for local dev/testing
-    allowed_origins.extend([
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-    ])
+    allowed_origins.extend(
+        [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+        ]
+    )
 
     # If no specific origins configured, allow all (appropriate for public APIs)
     if not allowed_origins or os.getenv("CORS_ALLOW_ALL", "false").lower() == "true":
@@ -186,17 +231,19 @@ def create_app() -> FastAPI:
 
     # ── Routers — always on ───────────────────────────────────────────────
     from app.routers.finance import router as finance_router
+
     app.include_router(finance_router)
 
     # ── Health (supports HEAD for HF health checker) ──────────────────────
     @app.api_route("/health", methods=["GET", "HEAD"])
     async def health(request=None):
         from fastapi import Request
+
         graph_ok = getattr(getattr(app, "state", None), "graph", None) is not None
         return {
-            "status":  "ok" if graph_ok else "degraded",
-            "graph":   "ready" if graph_ok else "failed",
-            "space":   os.getenv("SPACE_ID", "local"),
+            "status": "ok" if graph_ok else "degraded",
+            "graph": "ready" if graph_ok else "failed",
+            "space": os.getenv("SPACE_ID", "local"),
             "version": "1.0.0",
         }
 
@@ -205,67 +252,81 @@ def create_app() -> FastAPI:
         graph_ok = getattr(getattr(app, "state", None), "graph", None) is not None
         return {
             "status": "ok" if graph_ok else "degraded",
-            "space":  os.getenv("SPACE_ID", "local"),
+            "space": os.getenv("SPACE_ID", "local"),
             "features": {
-                "simulation":  os.getenv("SIMULATION_ENABLED",    "true") == "true",
-                "sentinel":    os.getenv("SENTINEL_ENABLED",       "true") == "true",
-                "learning":    os.getenv("LEARNING_ENABLED",       "false") == "true",
-                "adaptive":    os.getenv("ADAPTIVE_INTELLIGENCE_ENABLED", "false") == "true",
-                "training":    os.getenv("CONTINUOUS_TRAINING_ENABLED",   "false") == "true",
-                "curiosity":   os.getenv("CURIOSITY_ENGINE_ENABLED",      "false") == "true",
+                "simulation": os.getenv("SIMULATION_ENABLED", "true") == "true",
+                "sentinel": os.getenv("SENTINEL_ENABLED", "true") == "true",
+                "learning": os.getenv("LEARNING_ENABLED", "false") == "true",
+                "adaptive": os.getenv("ADAPTIVE_INTELLIGENCE_ENABLED", "false")
+                == "true",
+                "training": os.getenv("CONTINUOUS_TRAINING_ENABLED", "false") == "true",
+                "curiosity": os.getenv("CURIOSITY_ENGINE_ENABLED", "false") == "true",
             },
             "data_sources": {
-                "yfinance":     True,   # always available, no key needed
+                "yfinance": True,  # always available, no key needed
                 "alphavantage": bool(os.getenv("ALPHAVANTAGE_API_KEY")),
-                "finnhub":      bool(os.getenv("FINNHUB_API_KEY")),
-                "fmp":          bool(os.getenv("FMP_API_KEY")),
-                "eodhd":        bool(os.getenv("EODHD_API_KEY")),
-                "tavily":       bool(os.getenv("TAVILY_API_KEY")),
-                "newsapi":      bool(os.getenv("NEWS_API_KEY") or os.getenv("NEWSAPI_KEY")),
+                "finnhub": bool(os.getenv("FINNHUB_API_KEY")),
+                "fmp": bool(os.getenv("FMP_API_KEY")),
+                "eodhd": bool(os.getenv("EODHD_API_KEY")),
+                "tavily": bool(os.getenv("TAVILY_API_KEY")),
+                "newsapi": bool(os.getenv("NEWS_API_KEY") or os.getenv("NEWSAPI_KEY")),
             },
             "persistence": {
                 "hf_store": bool(os.getenv("HF_STORE_REPO")),
-                "ephemeral": os.getenv("SPACE_ID", "") != "" and not os.getenv("HF_STORE_REPO"),
+                "ephemeral": os.getenv("SPACE_ID", "") != ""
+                and not os.getenv("HF_STORE_REPO"),
             },
         }
 
     @app.post("/run")
     async def run_query(body: dict, background_tasks=None):
-        from fastapi import BackgroundTasks
         from fastapi.responses import JSONResponse
-        if getattr(getattr(app, "state", None), "graph", None) is None:
+        from app.graph import run_case
+        from app.memory import save_case
+
+        user_input = (body.get("user_input") or body.get("query") or "").strip()
+        if not user_input:
             return JSONResponse(
-                status_code=503,
-                content={"error": "Agent pipeline unavailable", "check": "/health/deep"}
+                status_code=400, content={"error": "Missing user_input"}
             )
+
+        started_at = time.perf_counter()
         try:
-            result = await app.state.graph.ainvoke({
-                "query": body.get("query", ""),
-                "mode":  body.get("mode", "standard"),
-            })
-            return result
+            result = await asyncio.to_thread(run_case, user_input, body.get("context"))
+
+            final = result.get("final", {})
+            response = {
+                "case_id": result.get("case_id"),
+                "user_input": user_input,
+                "route": _normalize_route(result.get("route")),
+                "research": result.get("research", {}),
+                "simulation": result.get("simulation"),
+                "finance": result.get("finance"),
+                "final": final,
+                "final_answer": final.get("response") or final.get("summary") or "",
+                "elapsed_seconds": round(time.perf_counter() - started_at, 1),
+            }
+
+            if response.get("case_id"):
+                save_case(response["case_id"], response)
+
+            return response
         except Exception as e:
             logger.error("Pipeline error: %s", e)
             return JSONResponse(status_code=500, content={"error": str(e)})
 
     @app.get("/cases")
     async def list_cases():
-        import json, pathlib
-        mem = pathlib.Path(__file__).parent / "data" / "memory"
-        cases = []
-        if mem.exists():
-            for f in sorted(mem.glob("*.json"), reverse=True)[:50]:
-                try:
-                    cases.append(json.loads(f.read_text()))
-                except Exception:
-                    pass
+        from app.services.case_store import list_cases as list_saved_cases
+
+        cases = list_saved_cases(limit=50)
         return {"cases": cases, "count": len(cases)}
 
     @app.get("/config/status")
     async def config_status():
         return {
-            "primary_provider": os.getenv("PRIMARY_PROVIDER", "openrouter"),
-            "space_id":         os.getenv("SPACE_ID", "local"),
+            "primary_provider": os.getenv("PRIMARY_PROVIDER", "huggingface"),
+            "space_id": os.getenv("SPACE_ID", "local"),
             "persistent_store": bool(os.getenv("HF_STORE_REPO")),
         }
 
@@ -287,7 +348,9 @@ def create_app() -> FastAPI:
         daemon = _services.get("daemon")
         if daemon:
             try:
-                return daemon.signal_queue.get_alerts(limit=limit, min_severity=min_severity)
+                return daemon.signal_queue.get_alerts(
+                    limit=limit, min_severity=min_severity
+                )
             except Exception:
                 return daemon.signal_queue.get_stats()
         return []
@@ -400,7 +463,11 @@ def create_app() -> FastAPI:
         signals = []
         if daemon:
             try:
-                signals = list(daemon.signal_queue._queue)[-10:] if hasattr(daemon.signal_queue, "_queue") else []
+                signals = (
+                    list(daemon.signal_queue._queue)[-10:]
+                    if hasattr(daemon.signal_queue, "_queue")
+                    else []
+                )
             except Exception:
                 pass
         return {"context": "ok", "recent_signals": len(signals)}
@@ -410,21 +477,45 @@ def create_app() -> FastAPI:
     async def memory_stats():
         try:
             from app.memory import knowledge_store
-            stats = knowledge_store.get_stats() if hasattr(knowledge_store, "get_stats") else {}
+            from app.services.case_store import memory_stats as get_case_memory_stats
+
+            stats = (
+                knowledge_store.get_stats()
+                if hasattr(knowledge_store, "get_stats")
+                else {}
+            )
+            case_stats = get_case_memory_stats()
             return {
                 "queries": stats.get("total_queries", 0),
                 "entities": stats.get("total_entities", 0),
                 "links": stats.get("total_links", 0),
+                "insights": stats.get("total_links", 0),
                 "domains": stats.get("domain_counts", {}),
+                "total_cases": case_stats.get("total_cases", 0),
+                "latest_case_id": case_stats.get("latest_case_id"),
+                "disk_bytes": case_stats.get("disk_bytes", 0),
             }
         except Exception as e:
-            return {"queries": 0, "entities": 0, "links": 0, "domains": {}, "error": str(e)}
+            return {
+                "queries": 0,
+                "entities": 0,
+                "links": 0,
+                "insights": 0,
+                "domains": {},
+                "total_cases": 0,
+                "error": str(e),
+            }
 
     @app.get("/memory/queries")
     async def memory_queries(limit: int = 20):
         try:
             from app.memory import knowledge_store
-            return knowledge_store.get_recent_queries(limit=limit) if hasattr(knowledge_store, "get_recent_queries") else []
+
+            return (
+                knowledge_store.get_recent_queries(limit=limit)
+                if hasattr(knowledge_store, "get_recent_queries")
+                else []
+            )
         except Exception:
             return []
 
@@ -435,7 +526,9 @@ def create_app() -> FastAPI:
         daemon = _services.get("daemon")
         return {
             "status": "ok",
-            "cache_stats": cache.get_stats() if cache and hasattr(cache, "get_stats") else {},
+            "cache_stats": cache.get_stats()
+            if cache and hasattr(cache, "get_stats")
+            else {},
             "daemon_cycles": daemon.cycle_count if daemon else 0,
             "space": os.getenv("SPACE_ID", "local"),
         }
@@ -467,6 +560,7 @@ def create_app() -> FastAPI:
     @app.get("/prompts")
     async def list_prompts_route():
         import pathlib
+
         prompts_dir = pathlib.Path(__file__).parent / "prompts"
         prompts = []
         if prompts_dir.exists():
@@ -478,6 +572,7 @@ def create_app() -> FastAPI:
     async def get_prompt_route(name: str):
         from fastapi.responses import JSONResponse
         import pathlib
+
         prompts_dir = pathlib.Path(__file__).parent / "prompts"
         path = prompts_dir / f"{name}.txt"
         if not path.exists():
@@ -487,6 +582,7 @@ def create_app() -> FastAPI:
     @app.put("/prompts/{name}")
     async def update_prompt_route(name: str, payload: dict):
         import pathlib
+
         prompts_dir = pathlib.Path(__file__).parent / "prompts"
         prompts_dir.mkdir(exist_ok=True)
         path = prompts_dir / f"{name}.txt"
@@ -498,11 +594,14 @@ def create_app() -> FastAPI:
     async def self_report():
         try:
             from app.services.self_reflection import self_reflection
+
             return {
                 "opinions": self_reflection.get_opinions()[:10],
                 "corrections": self_reflection.get_corrections()[:5],
                 "gaps": self_reflection.get_gaps()[:5],
-                "dataset": self_reflection.get_dataset_stats() if hasattr(self_reflection, "get_dataset_stats") else {},
+                "dataset": self_reflection.get_dataset_stats()
+                if hasattr(self_reflection, "get_dataset_stats")
+                else {},
                 "self_model": getattr(self_reflection, "self_model", {}),
             }
         except Exception as e:
@@ -512,6 +611,7 @@ def create_app() -> FastAPI:
     async def self_opinions(topic: str = None):
         try:
             from app.services.self_reflection import self_reflection
+
             return {"opinions": self_reflection.get_opinions(topic)}
         except Exception:
             return {"opinions": []}
@@ -520,7 +620,12 @@ def create_app() -> FastAPI:
     async def self_corrections(topic: str = None):
         try:
             from app.services.self_reflection import self_reflection
-            return {"corrections": self_reflection.get_corrections(topic) if topic else self_reflection.get_corrections()}
+
+            return {
+                "corrections": self_reflection.get_corrections(topic)
+                if topic
+                else self_reflection.get_corrections()
+            }
         except Exception:
             return {"corrections": []}
 
@@ -528,6 +633,7 @@ def create_app() -> FastAPI:
     async def self_gaps():
         try:
             from app.services.self_reflection import self_reflection
+
             return {"gaps": self_reflection.get_gaps()}
         except Exception:
             return {"gaps": []}
@@ -536,53 +642,45 @@ def create_app() -> FastAPI:
     async def self_dataset():
         try:
             from app.services.self_reflection import self_reflection
-            return self_reflection.get_dataset_stats() if hasattr(self_reflection, "get_dataset_stats") else {}
+
+            return (
+                self_reflection.get_dataset_stats()
+                if hasattr(self_reflection, "get_dataset_stats")
+                else {}
+            )
         except Exception:
             return {}
 
     # ── Extended Cases routes ──────────────────────────────────────────────
     @app.get("/cases/{case_id}")
     async def case_detail(case_id: str):
-        import json, pathlib
         from fastapi.responses import JSONResponse
-        mem = pathlib.Path(__file__).parent / "data" / "memory"
-        for f in mem.glob("*.json"):
-            try:
-                data = json.loads(f.read_text())
-                if data.get("id") == case_id or f.stem == case_id:
-                    return data
-            except Exception:
-                pass
+        from app.services.case_store import get_case
+
+        data = get_case(case_id)
+        if data:
+            return data
         return JSONResponse(status_code=404, content={"detail": "Case not found"})
 
     @app.delete("/cases/{case_id}")
     async def case_delete(case_id: str):
-        import pathlib
         from fastapi.responses import JSONResponse
-        mem = pathlib.Path(__file__).parent / "data" / "memory"
-        for f in mem.glob("*.json"):
-            try:
-                import json
-                data = json.loads(f.read_text())
-                if data.get("id") == case_id or f.stem == case_id:
-                    f.unlink()
-                    return {"deleted": True, "case_id": case_id}
-            except Exception:
-                pass
+        from app.services.case_store import delete_case
+
+        if delete_case(case_id):
+            return {"deleted": True, "case_id": case_id}
         return JSONResponse(status_code=404, content={"detail": "Case not found"})
 
     @app.get("/cases/{case_id}/raw")
     async def case_raw(case_id: str):
-        import json, pathlib
         from fastapi.responses import JSONResponse
-        mem = pathlib.Path(__file__).parent / "data" / "memory"
-        for f in mem.glob("*.json"):
-            try:
-                data = json.loads(f.read_text())
-                if data.get("id") == case_id or f.stem == case_id:
-                    return {"raw": f.read_text()}
-            except Exception:
-                pass
+        from app.services.case_store import get_case
+
+        data = get_case(case_id)
+        if data:
+            import json
+
+            return {"raw": json.dumps(data, indent=2, ensure_ascii=False)}
         return JSONResponse(status_code=404, content={"detail": "Case not found"})
 
     # ── Agents / Pipeline / Debug routes ──────────────────────────────────
@@ -597,7 +695,8 @@ def create_app() -> FastAPI:
     @app.get("/pipeline/stats")
     async def pipeline_stats():
         return {
-            "graph_ready": getattr(getattr(app, "state", None), "graph", None) is not None,
+            "graph_ready": getattr(getattr(app, "state", None), "graph", None)
+            is not None,
             "space": os.getenv("SPACE_ID", "local"),
         }
 
@@ -641,18 +740,17 @@ def create_app() -> FastAPI:
     @app.get("/health/features")
     async def health_features():
         return {
-            "simulation":  os.getenv("SIMULATION_ENABLED", "true") == "true",
-            "sentinel":    os.getenv("SENTINEL_ENABLED", "true") == "true",
-            "learning":    os.getenv("LEARNING_ENABLED", "false") == "true",
-            "curiosity":   os.getenv("CURIOSITY_ENGINE_ENABLED", "false") == "true",
+            "simulation": os.getenv("SIMULATION_ENABLED", "true") == "true",
+            "sentinel": os.getenv("SENTINEL_ENABLED", "true") == "true",
+            "learning": os.getenv("LEARNING_ENABLED", "false") == "true",
+            "curiosity": os.getenv("CURIOSITY_ENGINE_ENABLED", "false") == "true",
         }
-
-
 
     # ── Optional routers ──────────────────────────────────────────────────
     if os.getenv("SIMULATION_ENABLED", "true").lower() == "true":
         try:
             from app.routers.simulation import router as sim_router
+
             app.include_router(sim_router)
         except Exception as e:
             logger.warning("Simulation router unavailable: %s", e)
@@ -660,6 +758,7 @@ def create_app() -> FastAPI:
     if os.getenv("SENTINEL_ENABLED", "true").lower() == "true":
         try:
             from app.routers.sentinel import router as sentinel_router
+
             app.include_router(sentinel_router)
         except Exception as e:
             logger.warning("Sentinel router unavailable: %s", e)
@@ -667,6 +766,7 @@ def create_app() -> FastAPI:
     if os.getenv("LEARNING_ENABLED", "false").lower() == "true":
         try:
             from app.routers.learning import router as learning_router
+
             app.include_router(learning_router, tags=["learning"])
         except Exception as e:
             logger.warning("Learning router unavailable: %s", e)
@@ -674,6 +774,7 @@ def create_app() -> FastAPI:
     # ── Prometheus metrics (optional but useful for HF Space monitoring) ──
     try:
         from prometheus_fastapi_instrumentator import Instrumentator
+
         Instrumentator().instrument(app).expose(app)
     except ImportError:
         pass
@@ -687,12 +788,13 @@ app = create_app()
 # HF Spaces expects the server to bind on 0.0.0.0:7860
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", "7860"))
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=port,
         log_level="info",
-        reload=False,   # Never reload in production/HF Space
-        workers=1,      # Single worker — HF free tier has limited RAM
+        reload=False,  # Never reload in production/HF Space
+        workers=1,  # Single worker — HF free tier has limited RAM
     )
