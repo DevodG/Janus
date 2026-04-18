@@ -38,6 +38,29 @@ class JanusDaemon:
         self.last_dream = None
         self.last_curiosity_cycle = None
         self._pending_thoughts = self._load_pending_thoughts()
+        self._clear_stale_pending_thoughts()
+
+    def _clear_stale_pending_thoughts(self):
+        """Clear pending thoughts older than 24h and deduplicate on boot."""
+        try:
+            now = time.time()
+            fresh = [
+                t for t in self._pending_thoughts
+                if (now - t.get("created_at", now)) < 86400
+            ]
+            seen = set()
+            deduped = []
+            for t in fresh:
+                text = t.get("thought", "").strip()
+                if text and text not in seen:
+                    seen.add(text)
+                    deduped.append(t)
+            kept = len(deduped)
+            self._pending_thoughts = deduped[:20]
+            self._save_pending_thoughts()
+            logger.info(f"[DAEMON] Boot: kept {kept} fresh pending thoughts (deduplicated)")
+        except Exception as e:
+            logger.warning(f"[DAEMON] Failed to clear stale thoughts: {e}")
 
     def _load_pending_thoughts(self) -> list:
         if PENDING_THOUGHTS_FILE.exists():
@@ -171,17 +194,27 @@ class JanusDaemon:
                     )
 
                 if phase.value == "night":
-                    dream_report = self.dream_processor.run_dream_cycle()
-                    self.last_dream = dream_report
-                    logger.info(
-                        f"[DAEMON] Dream cycle: {len(dream_report.get('insights', []))} insights, {len(dream_report.get('hypotheses', []))} hypotheses"
-                    )
+                    try:
+                        dream_report = self.dream_processor.run_dream_cycle()
+                        self.last_dream = dream_report
+                        logger.info(
+                            f"[DAEMON] Dream cycle: {dream_report.get('duration_seconds', 0):.1f}s — "
+                            f"{len(dream_report.get('insights', []))} insights, "
+                            f"{len(dream_report.get('hypotheses', []))} hypotheses"
+                        )
+                    except Exception as e:
+                        logger.error(f"[DAEMON] Dream cycle FAILED: {e}", exc_info=True)
 
-                    curiosity_report = self.curiosity.run_curiosity_cycle()
-                    self.last_curiosity_cycle = curiosity_report
-                    logger.info(
-                        f"[DAEMON] Curiosity cycle: {curiosity_report.get('total_discoveries', 0)} discoveries, {curiosity_report.get('total_interests', 0)} interests"
-                    )
+                    try:
+                        curiosity_report = self.curiosity.run_curiosity_cycle()
+                        self.last_curiosity_cycle = curiosity_report
+                        logger.info(
+                            f"[DAEMON] Curiosity cycle: {curiosity_report.get('duration_seconds', 0):.1f}s — "
+                            f"{curiosity_report.get('total_discoveries', 0)} discoveries, "
+                            f"{curiosity_report.get('total_interests', 0)} interests"
+                        )
+                    except Exception as e:
+                        logger.error(f"[DAEMON] Curiosity cycle FAILED: {e}", exc_info=True)
 
                     # Self-reflection: analyze own performance, form opinions
                     try:
