@@ -1838,10 +1838,10 @@ def create_app() -> FastAPI:
         try:
             return await _execute_case_request(app, body)
         except HTTPException as e:
-            return JSONResponse(status_code=e.status_code, content={"error": e.detail})
+            return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
         except Exception as e:
             logger.error("Pipeline error: %s", e)
-            return JSONResponse(status_code=500, content={"error": str(e)})
+            return JSONResponse(status_code=500, content={"detail": str(e)})
 
     @app.get("/v1/models")
     async def provider_models(request: Request):
