@@ -62,9 +62,8 @@ OPENAI_REASONER_MODEL = os.getenv("OPENAI_REASONER_MODEL", "gpt-4o")
 
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 # News APIs - multiple providers for redundancy
-NEWSAPI_KEY = os.getenv(
-    "NEWS_API_KEY", os.getenv("NEWSAPI_KEY", "")
-)  # primary: NEWS_API_KEY
+NEWS_API_KEY = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
+NEWSAPI_KEY = NEWS_API_KEY
 NEWDATA_API_KEY = os.getenv("NEWDATA_API_KEY", "")
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "")
 NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "")

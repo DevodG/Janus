@@ -193,28 +193,31 @@ class JanusDaemon:
                         f"[DAEMON] Generated {len(new_thoughts)} pending thoughts"
                     )
 
-                if phase.value == "night":
+                if phase.value == "night" or getattr(self, '_force_cycles', False):
+                    force = getattr(self, '_force_cycles', False)
                     try:
-                        dream_report = self.dream_processor.run_dream_cycle()
+                        dream_report = self.dream_processor.run_dream_cycle(force=force)
                         self.last_dream = dream_report
                         logger.info(
                             f"[DAEMON] Dream cycle: {dream_report.get('duration_seconds', 0):.1f}s — "
-                            f"{len(dream_report.get('insights', []))} insights, "
-                            f"{len(dream_report.get('hypotheses', []))} hypotheses"
+                            f"{len(dream_report.get('insights', []))} insights"
                         )
                     except Exception as e:
-                        logger.error(f"[DAEMON] Dream cycle FAILED: {e}", exc_info=True)
+                        logger.error(f"[DAEMON] Dream cycle FAILED: {e}")
 
                     try:
-                        curiosity_report = self.curiosity.run_curiosity_cycle()
+                        curiosity_report = self.curiosity.run_curiosity_cycle(force=force)
                         self.last_curiosity_cycle = curiosity_report
                         logger.info(
                             f"[DAEMON] Curiosity cycle: {curiosity_report.get('duration_seconds', 0):.1f}s — "
-                            f"{curiosity_report.get('total_discoveries', 0)} discoveries, "
-                            f"{curiosity_report.get('total_interests', 0)} interests"
+                            f"{curiosity_report.get('total_discoveries', 0)} discoveries"
                         )
                     except Exception as e:
-                        logger.error(f"[DAEMON] Curiosity cycle FAILED: {e}", exc_info=True)
+                        logger.error(f"[DAEMON] Curiosity cycle FAILED: {e}")
+                    
+                    # Reset force flag after one run
+                    if force:
+                        self._force_cycles = False
 
                     # Self-reflection: analyze own performance, form opinions
                     try:

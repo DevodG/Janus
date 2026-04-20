@@ -11,13 +11,9 @@ import httpx
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+from app.config import DATA_DIR as BASE_DATA_DIR, NEWS_API_KEY
 
 logger = logging.getLogger(__name__)
-
-try:
-    from app.config import DATA_DIR as BASE_DATA_DIR
-except ImportError:
-    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 DATA_DIR = Path(BASE_DATA_DIR) / "daemon"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -25,7 +21,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 class NewsPulse:
     def __init__(self, topics: List[str] = None):
-        self.api_key = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
+        self.api_key = NEWS_API_KEY
         self.topics = topics or [
             "artificial intelligence",
             "global equities",

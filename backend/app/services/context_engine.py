@@ -37,6 +37,7 @@ _TOPIC_STOPWORDS = {
     "hi", "hey", "hello", "howdy", "greetings", "yo", "sup",
     "use", "conversation", "below", "context", "answer", "latest",
     "message", "messages", "assistant", "system", "user",
+    "simulate", "happens", "happening", "did", "does", "whats", "what's", "it's",
 }
 
 MAX_PENDING_THOUGHTS = 20  # hard cap — was unbounded
@@ -147,15 +148,15 @@ class ContextEngine:
         # Enforce cap
         return clean[:MAX_PENDING_THOUGHTS]
 
-    def add_pending_thought(self, thought: str, priority: float = 0.5, source: str = "system"):
+    def add_pending_thought(self, thought: str, priority: float = 0.5, source: str = "system", force: bool = False):
         """Add a thought to the pending queue — with dedup and cap enforcement."""
         thought = thought.strip()
         if not thought or len(thought) < 15:
             return
 
-        # NEW: rate-limit daemon sources to 1 thought per hour
+        # NEW: rate-limit daemon sources to 1 thought per hour (unless forced)
         now = time.time()
-        if source in {"dream", "curiosity", "daemon"}:
+        if source in {"dream", "curiosity", "daemon"} and not force:
             last = getattr(self, '_last_daemon_thought', 0)
             if now - last < 3600:
                 return

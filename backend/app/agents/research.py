@@ -12,14 +12,12 @@ from urllib.parse import quote_plus
 import httpx
 from app.agents._model import call_model
 from app.agents.api_discovery import discover_apis, call_discovered_api
-from app.config import load_prompt, CRAWLER_ENABLED
+from app.config import load_prompt, CRAWLER_ENABLED, NEWS_API_KEY, TAVILY_API_KEY
 from app.memory import knowledge_store
 from app.services.external_sources import deep_web_research_bundle
 
 logger = logging.getLogger(__name__)
 
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
-NEWS_API_KEY = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/")
 
 

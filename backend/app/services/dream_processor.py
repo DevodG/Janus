@@ -104,7 +104,7 @@ class DreamCycleProcessor:
                     pass
         return discoveries
 
-    def run_dream_cycle(self, memory_graph=None, adaptive_intelligence=None) -> dict:
+    def run_dream_cycle(self, memory_graph=None, adaptive_intelligence=None, force: bool = False) -> dict:
         """
         Run one complete dream cycle.
         FIXED: always attempts LLM calls regardless of whether local data exists.

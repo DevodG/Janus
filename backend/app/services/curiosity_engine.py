@@ -136,7 +136,7 @@ class CuriosityEngine:
         except Exception as e:
             logger.warning(f"CuriosityEngine: save_discovery failed: {e}")
 
-    def run_curiosity_cycle(self) -> dict:
+    def run_curiosity_cycle(self, force: bool = False) -> dict:
         """
         Run one curiosity exploration cycle.
         FIXED: always explores something, even after fresh start.
