@@ -48,24 +48,25 @@ COMPANY_TO_TICKER = {v: k for k, v in KNOWN_TICKERS.items()}
 def extract_tickers(text: str) -> List[str]:
     """
     Extract stock ticker symbols from text.
-    
-    Args:
-        text: Input text
-        
-    Returns:
-        List of ticker symbols found
     """
     tickers = []
     
-    # Find $SYMBOL patterns
-    dollar_tickers = TICKER_PATTERN.findall(text)
-    tickers.extend(dollar_tickers)
+    # 1. Find $SYMBOL patterns (case-insensitive for the find, but norm to upper)
+    dollar_tickers = re.findall(r'\$([A-Za-z]{1,5})\b', text)
+    tickers.extend([t.upper() for t in dollar_tickers])
     
-    # Find standalone uppercase symbols (more conservative)
-    # Only if they're known tickers to avoid false positives
+    # 2. Split text into words and check if any word (case-insensitive) matches KNOWN_TICKERS
+    # This handles "Reliance" -> "RELIANCE"
+    words = re.findall(r'\b[A-Za-z]{2,10}\b', text)
+    for word in words:
+        u_word = word.upper()
+        if u_word in KNOWN_TICKERS:
+            tickers.append(u_word)
+    
+    # 3. Check for standalone uppercase symbols
     standalone = STANDALONE_TICKER_PATTERN.findall(text)
     for symbol in standalone:
-        if symbol in KNOWN_TICKERS:
+        if symbol in KNOWN_TICKERS and symbol not in tickers:
             tickers.append(symbol)
     
     # Remove duplicates while preserving order
@@ -76,23 +77,12 @@ def extract_tickers(text: str) -> List[str]:
             unique_tickers.append(ticker)
             seen.add(ticker)
     
-    logger.info(f"Extracted {len(unique_tickers)} tickers from text: {unique_tickers}")
     return unique_tickers
 
 
 def resolve_ticker(ticker: str) -> Optional[Dict[str, Any]]:
-    """
-    Resolve ticker symbol to company information.
-    
-    Args:
-        ticker: Stock ticker symbol
-        
-    Returns:
-        Dictionary with company information or None
-    """
+    """Resolve ticker symbol to company information."""
     ticker = ticker.upper()
-    
-    # Check known tickers first
     if ticker in KNOWN_TICKERS:
         return {
             "ticker": ticker,
@@ -100,52 +90,35 @@ def resolve_ticker(ticker: str) -> Optional[Dict[str, Any]]:
             "source": "known_mapping",
             "confidence": 1.0,
         }
-    
-    # Try Alpha Vantage search
-    try:
-        results = search_symbol(ticker)
-        if results:
-            best_match = results[0]
-            return {
-                "ticker": best_match.get("1. symbol", ticker),
-                "company_name": best_match.get("2. name", "Unknown"),
-                "region": best_match.get("4. region", "Unknown"),
-                "currency": best_match.get("8. currency", "Unknown"),
-                "source": "alpha_vantage",
-                "confidence": 0.8,
-            }
-    except Exception as e:
-        logger.error(f"Error resolving ticker {ticker}: {e}")
-    
     return None
 
 
 def resolve_company_to_ticker(company_name: str) -> Optional[str]:
-    """
-    Resolve company name to ticker symbol.
-    
-    Args:
-        company_name: Company name
+    """Resolve company name to ticker symbol."""
+    if not company_name:
+        return None
         
-    Returns:
-        Ticker symbol or None
-    """
     # Check known mappings first
-    if company_name in COMPANY_TO_TICKER:
-        ticker = COMPANY_TO_TICKER[company_name]
-        logger.info(f"Resolved '{company_name}' to ticker {ticker}")
-        return ticker
+    name_clean = company_name.upper().strip()
     
-    # Try Alpha Vantage search
-    try:
-        results = search_symbol(company_name)
-        if results:
-            best_match = results[0]
-            ticker = best_match.get("1. symbol")
-            logger.info(f"Resolved '{company_name}' to ticker {ticker} via Alpha Vantage")
+    # Direct match on ticker key
+    if name_clean in KNOWN_TICKERS:
+        return name_clean
+        
+    # Match on company name expansion
+    for ticker, name in KNOWN_TICKERS.items():
+        if name_clean in name.upper() or name.upper() in name_clean:
             return ticker
-    except Exception as e:
-        logger.error(f"Error resolving company '{company_name}' to ticker: {e}")
+    
+    # Try Alpha Vantage search only if key exists
+    from app.config import ALPHAVANTAGE_API_KEY
+    if ALPHAVANTAGE_API_KEY:
+        try:
+            results = search_symbol(company_name)
+            if results:
+                return results[0].get("1. symbol")
+        except Exception as e:
+            logger.debug(f"Search resolution failed: {e}")
     
     return None
 
