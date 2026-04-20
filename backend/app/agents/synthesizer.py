@@ -221,7 +221,8 @@ def _deterministic_fallback_response(state: dict) -> dict:
                 finance_lines.append(f"- PE ratio: {pe_ratio}")
             if sector:
                 finance_lines.append(f"- Sector: {sector}")
-            sections.append(f"## Market Data\n{'\n'.join(finance_lines)}")
+            finance_str = '\n'.join(finance_lines)
+            sections.append(f"## Market Data\n{finance_str}")
 
     synthesis = simulation.get("synthesis", {}) if isinstance(simulation, dict) else {}
     if synthesis.get("most_likely"):
