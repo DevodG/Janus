@@ -4,6 +4,7 @@ Fetches market data, fundamentals, sentiment, and economic indicators.
 No chart rendering — raw structured data only.
 """
 
+from typing import List, Dict, Any, Optional
 import json, httpx, os, re, logging
 from app.agents._model import call_model, safe_parse
 from app.config import load_prompt
