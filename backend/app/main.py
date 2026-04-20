@@ -103,12 +103,15 @@ async def lifespan(app: FastAPI):
 
     # 4. Compile LangGraph — degrade to 503 on /run rather than crash
     app.state.graph = None
+    app.state.graph_error = "none"
     try:
         from app.graph import get_compiled_graph
 
         app.state.graph = get_compiled_graph()
         logger.info("LangGraph pipeline compiled OK")
     except Exception as e:
+        import traceback
+        app.state.graph_error = f"{e}\n{traceback.format_exc()}"
         logger.error("LangGraph build FAILED: %s — /run will 503", e)
 
     # 4b. Core cognition services used by the live request path
@@ -1789,7 +1792,13 @@ def create_app() -> FastAPI:
             "graph": "ready" if graph_ok else "failed",
             "space": os.getenv("SPACE_ID", "local"),
             "version": "1.0.0",
+            "error_detail": getattr(getattr(app, "state", None), "graph_error", "none"),
         }
+
+    @app.get("/health/graph_error")
+    async def health_graph_error():
+        from app.graph import graph_status
+        return graph_status()
 
     @app.get("/health/deep")
     async def health_deep():
