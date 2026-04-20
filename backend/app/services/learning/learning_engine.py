@@ -115,7 +115,7 @@ class LearningEngine:
         logger.info(f"Learning from case {case_id}")
 
         route = case_data.get("route", {})
-        outputs = case_data.get("outputs", [])
+        outputs = case_data.get("outputs") or self._derive_outputs(case_data)
 
         # 1. Track route effectiveness
         route_key = f"{route.get('domain_pack', 'general')}:{route.get('execution_mode', 'standard')}"
@@ -165,6 +165,34 @@ class LearningEngine:
 
         logger.info(f"Learned from case {case_id}: route={route_key}, agents={agents_used}")
         return learning
+
+    def _derive_outputs(self, case_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Backfill agent outputs from the current case shape."""
+        outputs: List[Dict[str, Any]] = []
+
+        def _append(agent: str, details: Dict[str, Any]) -> None:
+            if not isinstance(details, dict) or not details:
+                return
+            summary = (
+                details.get("summary")
+                or details.get("response")
+                or details.get("estimated_output")
+                or ""
+            )
+            outputs.append(
+                {
+                    "agent": agent,
+                    "summary": str(summary),
+                    "confidence": float(details.get("confidence", 0.0) or 0.0),
+                    "details": details,
+                }
+            )
+
+        _append("research", case_data.get("research", {}))
+        _append("planner", case_data.get("planner", {}))
+        _append("verifier", case_data.get("verifier", {}))
+        _append("synthesizer", case_data.get("final", {}))
+        return outputs
 
     def detect_patterns(self, min_frequency: int = 3) -> List[Dict[str, Any]]:
         """

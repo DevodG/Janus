@@ -55,7 +55,13 @@ class JanusCrawler:
                         error=f"HTTP {response.status}",
                     )
 
-                await page.wait_for_load_state("networkidle", timeout=10000)
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=10000)
+                except Exception:
+                    logger.debug(
+                        "Crawler networkidle timeout for %s; proceeding with loaded DOM",
+                        url,
+                    )
 
                 html = await page.content()
                 title = await page.title()

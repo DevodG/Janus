@@ -12,7 +12,10 @@ try:
 except ImportError:
     pass
 PROMPTS_DIR = BASE_DIR / "prompts"
-DATA_DIR = BASE_DIR / "data"
+
+# Runtime state directory.
+# Override with JANUS_DATA_DIR when you want state on a persistent volume.
+DATA_DIR = Path(os.getenv("JANUS_DATA_DIR", str(BASE_DIR / "data"))).expanduser()
 MEMORY_DIR = DATA_DIR / "memory"
 SIMULATION_DIR = DATA_DIR / "simulations"
 
@@ -61,9 +64,9 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 NEWSAPI_KEY = os.getenv(
     "NEWS_API_KEY", os.getenv("NEWSAPI_KEY", "")
 )  # primary: NEWS_API_KEY
-NEWDATA_API_KEY = os.getenv("NEWDATA_API_KEY", "pub_cc1c7a4792ba4e9ab3db82d7eac4a487")
-GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "7fecc89c143490cfe47b4a67fcf43dc9")
-NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "92b805b134354c94ae31d9d0cc0a1814")
+NEWDATA_API_KEY = os.getenv("NEWDATA_API_KEY", "")
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "")
+NEWSAPI_ORG_KEY = os.getenv("NEWSAPI_ORG_KEY", "")
 ALPHAVANTAGE_API_KEY = os.getenv("ALPHAVANTAGE_API_KEY", "")
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/http://")
 
@@ -242,6 +245,9 @@ ALL_DATA_DIRS = [
     DATA_DIR / "dreams",
     DATA_DIR / "memory_graph",
     DATA_DIR / "router_state",
+    DATA_DIR / "curation",
+    DATA_DIR / "workflows",
+    DATA_DIR / "api_metadata",
 ]
 
 
@@ -287,7 +293,7 @@ LEARNING_TOPICS = [
     item.strip()
     for item in os.getenv(
         "LEARNING_TOPICS",
-        "finance,markets,technology,policy",
+        "finance,markets,global equities,top companies,central banks,semiconductors,energy,technology,policy,india markets,china economy",
     ).split(",")
     if item.strip()
 ]

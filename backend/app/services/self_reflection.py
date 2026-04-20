@@ -42,6 +42,9 @@ _STOPWORDS = {
     "some", "any", "all", "more", "most", "much", "many", "few", "little",
     "of", "in", "on", "at", "to", "for", "by", "from", "with", "and",
     "or", "but", "not", "no", "if", "than", "then", "so", "yet", "up",
+    "hi", "hey", "hello", "howdy", "greetings", "yo", "sup",
+    "use", "conversation", "below", "context", "answer", "latest",
+    "message", "messages", "assistant", "system", "user",
 }
 
 
@@ -238,9 +241,15 @@ class SelfReflection:
         for case in recent_cases:
             user_input  = case.get("user_input", case.get("query", ""))
             final       = case.get("final", {})
-            response    = str(final.get("answer", final.get("synthesis", "")))
+            response    = str(
+                final.get("response")
+                or final.get("answer")
+                or final.get("synthesis", "")
+            )
             confidence  = float(final.get("confidence", 0.5))
-            elapsed     = float(case.get("elapsed", 0))
+            elapsed     = float(
+                case.get("elapsed") or case.get("elapsed_seconds") or 0
+            )
 
             if user_input and response:
                 topic_before = len(self.opinions)

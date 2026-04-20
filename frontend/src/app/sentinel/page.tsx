@@ -8,7 +8,7 @@ import {
   TrendingUp, TrendingDown, Minus, X, Check, Cpu,
   AlertCircle, Info, BarChart3, Layers, GitBranch, Brain
 } from 'lucide-react';
-import { apiClient } from '@/lib/api';
+import { apiClient, getApiBaseUrl } from '@/lib/api';
 
 /* ═══════════════════════════════════════════════════════════
    SENTINEL — Signal Validation & Risk Layer
@@ -218,7 +218,7 @@ export default function SentinelPage() {
   };
 
   const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
+    const baseUrl = getApiBaseUrl();
     try {
       const [statusRes, alertsRes, capRes, intelRes, cacheRes] = await Promise.all([
         apiClient.getSentinelStatus(),
@@ -247,7 +247,7 @@ export default function SentinelPage() {
 
   const runCycleNow = async () => {
     setRunningCycle(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
+    const baseUrl = getApiBaseUrl();
     try {
       await fetch(`${baseUrl}/sentinel/run-now`, { method: 'POST' });
       await fetchData();

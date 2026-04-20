@@ -221,7 +221,7 @@ class JanusDaemon:
                         from app.services.self_reflection import self_reflection
                         from app.services.case_store import list_cases
 
-                        recent_cases = list_cases(limit=20)
+                        recent_cases = list_cases(limit=20, full=True)
                         review = self_reflection.run_night_review(recent_cases)
                         logger.info(
                             f"[DAEMON] Self-review: {review.get('cases_reviewed', 0)} cases, "
@@ -266,11 +266,24 @@ class JanusDaemon:
                     try:
                         from app.services.autonomous_learner import autonomous_learner
 
-                        learning_result = autonomous_learner.run_learning_cycle(
-                            max_gaps=2,
-                            max_datasets_per_gap=2,
-                            max_samples_per_dataset=30,
-                        )
+                        learning_kwargs = {
+                            "max_gaps": 2,
+                            "max_datasets_per_gap": 2,
+                            "max_samples_per_dataset": 30,
+                        }
+
+                        try:
+                            learning_result = autonomous_learner.run_learning_cycle(
+                                **learning_kwargs
+                            )
+                        except TypeError as te:
+                            if "max_samples_per_dataset" not in str(te):
+                                raise
+                            # Backward-compatibility with older learner signature
+                            learning_kwargs.pop("max_samples_per_dataset", None)
+                            learning_result = autonomous_learner.run_learning_cycle(
+                                **learning_kwargs
+                            )
                         logger.info(
                             f"[DAEMON] Autonomous learning: {learning_result.get('gaps_addressed', 0)} gaps, "
                             f"{learning_result.get('knowledge_added', 0)} knowledge, "

@@ -12,7 +12,12 @@ logger = logging.getLogger(__name__)
 
 # GitHub raw URL for public-apis catalog
 PUBLIC_APIS_URL = "https://raw.githubusercontent.com/public-apis/public-apis/master/entries.json"
-CACHE_FILE = Path(__file__).parent.parent.parent / "data" / "api_catalog_cache.json"
+try:
+    from app.config import DATA_DIR
+except ImportError:
+    DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+CACHE_FILE = Path(DATA_DIR) / "api_catalog_cache.json"
 
 
 def load_public_apis_catalog(use_cache: bool = True) -> List[Dict[str, Any]]:

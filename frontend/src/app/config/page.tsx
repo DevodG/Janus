@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Activity, Brain, Zap, Shield, RefreshCw, Server, Globe, HardDrive, Cpu } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/api';
 
 export default function ConfigPage() {
   const [daemonStatus, setDaemonStatus] = useState<any>(null);
@@ -12,7 +13,7 @@ export default function ConfigPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
+    const baseUrl = getApiBaseUrl();
     try {
       const [healthRes, statusRes, curiosityRes, memoryRes] = await Promise.all([
         fetch(`${baseUrl}/health`).then(r => r.ok ? r.json() : null),

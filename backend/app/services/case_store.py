@@ -15,7 +15,7 @@ def _case_path(case_id: str) -> Path:
     return _memory_dir() / f"{case_id}.json"
 
 
-def list_cases(limit: Optional[int] = None) -> List[Dict[str, Any]]:
+def list_cases(limit: Optional[int] = None, full: bool = False) -> List[Dict[str, Any]]:
     files = sorted(
         _memory_dir().glob("*.json"),
         key=lambda p: p.stat().st_mtime,
@@ -28,16 +28,22 @@ def list_cases(limit: Optional[int] = None) -> List[Dict[str, Any]]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            results.append(
-                {
-                    "case_id": data.get("case_id", path.stem),
-                    "user_input": data.get("user_input", ""),
-                    "saved_at": data.get("saved_at"),
-                    "final_answer_preview": str(data.get("final_answer", ""))[:200],
-                    "simulation_id": data.get("simulation_id"),  # Include simulation link
-                    "route": data.get("route"),  # Include route for dashboard display
-                }
-            )
+            if full:
+                results.append(data)
+            else:
+                preview = data.get("final_answer") or data.get("final", {}).get(
+                    "response", ""
+                )
+                results.append(
+                    {
+                        "case_id": data.get("case_id", path.stem),
+                        "user_input": data.get("user_input", ""),
+                        "saved_at": data.get("saved_at"),
+                        "final_answer_preview": str(preview)[:200],
+                        "simulation_id": data.get("simulation_id"),
+                        "route": data.get("route"),
+                    }
+                )
         except Exception:
             continue
 

@@ -41,11 +41,16 @@ class AutonomousLearner:
         self,
         max_gaps: int = 3,
         max_datasets_per_gap: int = 3,
+        max_samples_per_dataset: int | None = None,
+        **kwargs,
     ) -> Dict:
         """
         Run a complete autonomous learning cycle.
         Lightweight - only uses HF Hub API for dataset search and metadata.
         """
+        if kwargs:
+            logger.debug("Ignoring unsupported run_learning_cycle kwargs: %s", kwargs)
+
         self.total_cycles += 1
         start_time = time.time()
         logger.info(
@@ -126,7 +131,7 @@ class AutonomousLearner:
             results["gaps_addressed"] += 1
 
         # Step 4: Add conversation data to training dataset
-        self._add_recent_conversations_to_training()
+        results["training_pairs_added"] = self._add_recent_conversations_to_training()
 
         elapsed = time.time() - start_time
         results["elapsed_seconds"] = round(elapsed, 1)
@@ -142,12 +147,13 @@ class AutonomousLearner:
 
         return results
 
-    def _add_recent_conversations_to_training(self):
+    def _add_recent_conversations_to_training(self) -> int:
         """Add recent high-quality conversations to training dataset."""
+        added = 0
         try:
             from app.services.case_store import list_cases
 
-            recent_cases = list_cases(limit=10)
+            recent_cases = list_cases(limit=10, full=True)
             for case in recent_cases:
                 user_input = case.get("user_input", "")
                 final = case.get("final", {})
@@ -159,9 +165,11 @@ class AutonomousLearner:
                     fine_tuning_builder.add_conversation_pair(
                         user_input, response, confidence, sources
                     )
+                    added += 1
 
         except Exception as e:
             logger.error(f"Failed to add conversations to training: {e}")
+        return added
 
     def get_status(self) -> Dict:
         """Get autonomous learner status."""

@@ -34,10 +34,16 @@ _TOPIC_STOPWORDS = {
     "some", "any", "all", "more", "most", "much", "many", "few", "little",
     "of", "in", "on", "at", "to", "for", "by", "from", "with", "and",
     "or", "but", "not", "no", "if", "than", "then", "so", "yet",
+    "hi", "hey", "hello", "howdy", "greetings", "yo", "sup",
+    "use", "conversation", "below", "context", "answer", "latest",
+    "message", "messages", "assistant", "system", "user",
 }
 
 MAX_PENDING_THOUGHTS = 20  # hard cap — was unbounded
 MAX_THOUGHT_AGE_HOURS = 24  # drop thoughts older than 24h
+_META_TOPIC_WORDS = {
+    "conversation", "context", "latest", "message", "messages", "assistant", "system", "user"
+}
 
 
 def _extract_topic(query: str) -> str:
@@ -64,6 +70,11 @@ def _extract_topic(query: str) -> str:
     return topic if topic and len(topic) > 2 else "general query"
 
 
+def _is_meta_topic(topic: str) -> bool:
+    words = set((topic or "").lower().split())
+    return bool(words & _META_TOPIC_WORDS)
+
+
 class ContextEngine:
     """Manages system-wide context for LLM injection."""
 
@@ -88,6 +99,11 @@ class ContextEngine:
                 self._last_topic = data.get("last_topic", "")
                 self._last_interaction = data.get("last_interaction", 0)
                 self._recurring_interests = data.get("recurring_interests", [])
+                if _is_meta_topic(self._last_topic):
+                    self._last_topic = ""
+                self._recurring_interests = [
+                    topic for topic in self._recurring_interests if not _is_meta_topic(topic)
+                ]
             except Exception as e:
                 logger.warning(f"ContextEngine: load failed: {e}")
 
@@ -173,7 +189,7 @@ class ContextEngine:
         topic = _extract_topic(user_input) if user_input else ""
 
         # Update recurring interests
-        if topic and topic != "general query":
+        if topic and topic != "general query" and not _is_meta_topic(topic):
             if topic not in self._recurring_interests:
                 self._recurring_interests.insert(0, topic)
                 self._recurring_interests = self._recurring_interests[:10]
@@ -197,7 +213,7 @@ class ContextEngine:
     def update_after_interaction(self, user_input: str, response: str, context: dict):
         """Update state after each interaction."""
         topic = _extract_topic(user_input)
-        if topic and topic != "general query":
+        if topic and topic != "general query" and not _is_meta_topic(topic):
             self._last_topic = topic
         self._last_interaction = time.time()
         self._conversation_count += 1

@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { getApiBaseUrl } from '@/lib/api';
 
 interface HistoricalPoint {
   date:   string;
@@ -35,8 +36,6 @@ const TIMEFRAME_DAYS: Record<Timeframe, number> = {
   '1Y': 365,
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:7860';
-
 export default function LineChart({ symbol, companyName, isPositive = true, height = 280 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef     = useRef<unknown>(null);
@@ -55,10 +54,11 @@ export default function LineChart({ symbol, companyName, isPositive = true, heig
     setLoading(true);
     setError(null);
     try {
+      const apiBase = getApiBaseUrl();
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 25_000);
       const res = await fetch(
-        `${API_BASE}/finance/historical/${symbol.toUpperCase()}?outputsize=full`,
+        `${apiBase}/finance/historical/${symbol.toUpperCase()}?outputsize=full`,
         { signal: ctrl.signal }
       );
       clearTimeout(timer);

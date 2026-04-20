@@ -9,35 +9,51 @@ import type {
   SimulationRequest,
 } from './types';
 
-export class MiroOrgClient {
-  private baseUrl: string;
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL !== undefined) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
 
-  constructor(baseUrl: string = 'http://localhost:7860') {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return 'http://localhost:7860';
+}
+
+export class MiroOrgClient {
+  private baseUrl?: string;
+
+  constructor(baseUrl?: string) {
     this.baseUrl = baseUrl;
+  }
+
+  private getBaseUrl(): string {
+    return this.baseUrl ?? getApiBaseUrl();
   }
 
   // Health endpoints
   async getHealth(): Promise<HealthResponse> {
-    const response = await fetch(`${this.baseUrl}/health`);
+    const response = await fetch(`${this.getBaseUrl()}/health`);
     if (!response.ok) throw new Error('Health check failed');
     return response.json();
   }
 
   async getDeepHealth(): Promise<DeepHealthResponse> {
-    const response = await fetch(`${this.baseUrl}/health/deep`);
+    const response = await fetch(`${this.getBaseUrl()}/health/deep`);
     if (!response.ok) throw new Error('Deep health check failed');
     return response.json();
   }
 
   async getConfigStatus(): Promise<ConfigStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/config/status`);
+    const response = await fetch(`${this.getBaseUrl()}/config/status`);
     if (!response.ok) throw new Error('Config status check failed');
     return response.json();
   }
 
   // Analysis endpoints
   async analyze(request: AnalyzeRequest): Promise<CaseRecord> {
-    const response = await fetch(`${this.baseUrl}/run`, {
+    const response = await fetch(`${this.getBaseUrl()}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...request, query: request.user_input }),
@@ -51,21 +67,21 @@ export class MiroOrgClient {
 
   // Case endpoints
   async getCases(): Promise<CaseRecord[]> {
-    const response = await fetch(`${this.baseUrl}/cases`);
+    const response = await fetch(`${this.getBaseUrl()}/cases`);
     if (!response.ok) throw new Error('Failed to fetch cases');
     const data = await response.json();
     return Array.isArray(data) ? data : (data.cases ?? []);
   }
 
   async getCase(caseId: string): Promise<CaseRecord> {
-    const response = await fetch(`${this.baseUrl}/cases/${caseId}`);
+    const response = await fetch(`${this.getBaseUrl()}/cases/${caseId}`);
     if (!response.ok) throw new Error('Failed to fetch case');
     return response.json();
   }
 
   // Simulation endpoints
   async createSimulation(request: SimulationRequest): Promise<SimulationRecord> {
-    const response = await fetch(`${this.baseUrl}/simulation/run`, {
+    const response = await fetch(`${this.getBaseUrl()}/simulation/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -78,33 +94,33 @@ export class MiroOrgClient {
   }
 
   async getSimulations(): Promise<SimulationRecord[]> {
-    const response = await fetch(`${this.baseUrl}/simulation/list`);
+    const response = await fetch(`${this.getBaseUrl()}/simulation/list`);
     if (!response.ok) throw new Error('Failed to fetch simulations');
     return response.json();
   }
 
   async getSimulation(simulationId: string): Promise<SimulationRecord> {
-    const response = await fetch(`${this.baseUrl}/simulation/${simulationId}`);
+    const response = await fetch(`${this.getBaseUrl()}/simulation/${simulationId}`);
     if (!response.ok) throw new Error('Failed to fetch simulation');
     return response.json();
   }
 
   async getSimulationStatus(simulationId: string): Promise<{ status: string }> {
-    const response = await fetch(`${this.baseUrl}/simulation/${simulationId}`);
+    const response = await fetch(`${this.getBaseUrl()}/simulation/${simulationId}`);
     if (!response.ok) throw new Error('Failed to fetch simulation status');
     const data = await response.json();
     return { status: data.status };
   }
 
   async getSimulationReport(simulationId: string): Promise<{ report: string }> {
-    const response = await fetch(`${this.baseUrl}/simulation/${simulationId}/report`);
+    const response = await fetch(`${this.getBaseUrl()}/simulation/${simulationId}/report`);
     if (!response.ok) throw new Error('Failed to fetch simulation report');
     const data = await response.json();
     return { report: data.report };
   }
 
   async runNativeSimulation(userInput: string, context?: any): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/simulation/run`, {
+    const response = await fetch(`${this.getBaseUrl()}/simulation/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_input: userInput, context }),
@@ -117,7 +133,7 @@ export class MiroOrgClient {
   }
 
   async chatWithSimulation(simulationId: string, message: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/simulation/${simulationId}/chat`, {
+    const response = await fetch(`${this.getBaseUrl()}/simulation/${simulationId}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
@@ -128,38 +144,38 @@ export class MiroOrgClient {
 
   // Sentinel endpoints
   async getSentinelStatus(): Promise<any> {
-    const r = await fetch(`${this.baseUrl}/sentinel/status`);
+    const r = await fetch(`${this.getBaseUrl()}/sentinel/status`);
     if (!r.ok) return null;
     return r.json();
   }
 
   async getSentinelAlerts(limit = 20): Promise<any[]> {
-    const r = await fetch(`${this.baseUrl}/sentinel/alerts?limit=${limit}`);
+    const r = await fetch(`${this.getBaseUrl()}/sentinel/alerts?limit=${limit}`);
     if (!r.ok) return [];
     return r.json();
   }
 
   async getSentinelCapability(): Promise<any> {
-    const r = await fetch(`${this.baseUrl}/sentinel/capability/current`);
+    const r = await fetch(`${this.getBaseUrl()}/sentinel/capability/current`);
     if (!r.ok) return null;
     return r.json();
   }
 
   // Prompt endpoints
   async getPrompts(): Promise<PromptInfo[]> {
-    const response = await fetch(`${this.baseUrl}/prompts`);
+    const response = await fetch(`${this.getBaseUrl()}/prompts`);
     if (!response.ok) throw new Error('Failed to fetch prompts');
     return response.json();
   }
 
   async getPrompt(name: string): Promise<PromptInfo> {
-    const response = await fetch(`${this.baseUrl}/prompts/${name}`);
+    const response = await fetch(`${this.getBaseUrl()}/prompts/${name}`);
     if (!response.ok) throw new Error('Failed to fetch prompt');
     return response.json();
   }
 
   async updatePrompt(name: string, content: string): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseUrl}/prompts/${name}`, {
+    const response = await fetch(`${this.getBaseUrl()}/prompts/${name}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content }),
@@ -173,19 +189,22 @@ export class MiroOrgClient {
 }
 
 // Export singleton instance
-export const apiClient = new MiroOrgClient(
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
-);
+export const apiClient = new MiroOrgClient();
 
 // Finance Intelligence endpoints
 export class FinanceClient {
-  private baseUrl: string;
-  constructor(baseUrl: string = 'http://localhost:7860') {
+  private baseUrl?: string;
+
+  constructor(baseUrl?: string) {
     this.baseUrl = baseUrl;
   }
 
+  private getBaseUrl(): string {
+    return this.baseUrl ?? getApiBaseUrl();
+  }
+
   async analyzeText(text: string, sources: string[] = []) {
-    const r = await fetch(`${this.baseUrl}/finance/analyze/text`, {
+    const r = await fetch(`${this.getBaseUrl()}/finance/analyze/text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, sources }),
@@ -195,19 +214,19 @@ export class FinanceClient {
   }
 
   async getTickerIntelligence(symbol: string) {
-    const r = await fetch(`${this.baseUrl}/finance/ticker/${symbol}`);
+    const r = await fetch(`${this.getBaseUrl()}/finance/ticker/${symbol}`);
     if (!r.ok) throw new Error(`Failed to fetch ${symbol}`);
     return r.json();
   }
 
   async searchTicker(query: string) {
-    const r = await fetch(`${this.baseUrl}/finance/search/${encodeURIComponent(query)}`);
+    const r = await fetch(`${this.getBaseUrl()}/finance/search/${encodeURIComponent(query)}`);
     if (!r.ok) return [];
     return r.json();
   }
 
   async analyzeNews(query: string, limit = 8) {
-    const r = await fetch(`${this.baseUrl}/finance/news/analyze`, {
+    const r = await fetch(`${this.getBaseUrl()}/finance/news/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, limit }),
@@ -217,12 +236,10 @@ export class FinanceClient {
   }
 
   async getHeadlines() {
-    const r = await fetch(`${this.baseUrl}/finance/headlines`);
+    const r = await fetch(`${this.getBaseUrl()}/finance/headlines`);
     if (!r.ok) return [];
     return r.json();
   }
 }
 
-export const financeClient = new FinanceClient(
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860'
-);
+export const financeClient = new FinanceClient();

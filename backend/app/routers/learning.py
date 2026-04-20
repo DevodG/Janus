@@ -43,7 +43,8 @@ scheduler: Optional[LearningScheduler] = None
 
 async def _async_call_model(prompt: str, max_tokens: int = 1000) -> str:
     """Async wrapper around synchronous call_model."""
-    return call_model(prompt, mode="chat")
+    messages = [{"role": "user", "content": prompt}]
+    return await asyncio.to_thread(call_model, messages, max_tokens=max_tokens)
 
 
 def init_learning_services(config):

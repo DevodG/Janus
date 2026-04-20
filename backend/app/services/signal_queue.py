@@ -11,7 +11,12 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "daemon"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "daemon"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 SEVERITY_PRIORITY = {

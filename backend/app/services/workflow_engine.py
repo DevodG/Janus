@@ -27,7 +27,12 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "workflows"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "workflows"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 

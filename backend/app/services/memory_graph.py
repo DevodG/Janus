@@ -12,7 +12,12 @@ from typing import Dict, List, Optional, Any
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "memory_graph"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "memory_graph"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 DB_PATH = DATA_DIR / "memory_graph.db"

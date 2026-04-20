@@ -14,14 +14,40 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "daemon"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "daemon"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class MarketWatcher:
     def __init__(self, watchlist: List[str] = None):
         self.api_key = os.getenv("ALPHAVANTAGE_API_KEY", "")
-        self.watchlist = watchlist or ["AAPL", "NVDA", "TSLA", "MSFT", "GOOGL"]
+        self.watchlist = watchlist or [
+            "AAPL",
+            "MSFT",
+            "NVDA",
+            "AMZN",
+            "GOOGL",
+            "META",
+            "TSLA",
+            "TSM",
+            "ASML",
+            "JPM",
+            "XOM",
+            "SPY",
+            "QQQ",
+            "DIA",
+            "IWM",
+            "EEM",
+            "FXI",
+            "EWJ",
+            "INDA",
+            "EWG",
+        ]
         self.price_history: Dict[str, List[Dict]] = {}
         self._load_history()
 
@@ -166,6 +192,15 @@ class MarketWatcher:
                         "price": latest.get("price"),
                         "timestamp": latest.get("timestamp"),
                         "data_points": len(history),
+                    }
+                )
+            else:
+                status.append(
+                    {
+                        "symbol": symbol,
+                        "price": None,
+                        "timestamp": None,
+                        "data_points": 0,
                     }
                 )
         return status

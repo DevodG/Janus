@@ -13,7 +13,12 @@ from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent.parent / "data" / "curation"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "curation"
 CURATED_FILE = DATA_DIR / "curated_examples.jsonl"
 REJECTED_FILE = DATA_DIR / "rejected_examples.jsonl"
 

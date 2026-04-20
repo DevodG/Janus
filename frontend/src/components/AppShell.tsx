@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getApiBaseUrl } from '@/lib/api';
 import {
   MessageSquare, Globe, BarChart3, Layers, Activity,
   Zap, Shield, Terminal, Settings, Plus,
@@ -57,7 +58,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const [daemonStatus, setDaemonStatus] = useState<any>(null);
 
   const fetchStatus = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7860';
+    const baseUrl = getApiBaseUrl();
     try {
       const r = await fetch(`${baseUrl}/daemon/status`);
       if (r.ok) setDaemonStatus(await r.json());

@@ -27,6 +27,21 @@ TIMEOUT = 90
 OLLAMA_TIMEOUT = 30
 MAX_RETRIES_PER_MODEL = 2
 BASE_BACKOFF = 3
+OLLAMA_REACHABILITY_TIMEOUT = 1.5
+
+
+def _ollama_is_reachable() -> bool:
+    base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    if base.endswith("/api"):
+        probe_url = f"{base}/tags"
+    else:
+        probe_url = f"{base}/api/tags"
+    try:
+        with httpx.Client(timeout=OLLAMA_REACHABILITY_TIMEOUT) as client:
+            response = client.get(probe_url)
+            return response.status_code < 500
+    except Exception:
+        return False
 
 
 def _huggingface_call(messages: list[dict], **kwargs) -> str:
@@ -64,6 +79,9 @@ def _openrouter_call(messages: list[dict], model: str, **kwargs) -> str:
 
 def _ollama_call(messages: list[dict], **kwargs) -> str:
     """Fallback: Ollama local via OpenAI-compatible endpoint."""
+    if not _ollama_is_reachable():
+        raise RuntimeError("Ollama server is not reachable")
+
     base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     if base.endswith("/api"):
         base = base[:-4]
@@ -120,19 +138,25 @@ def call_model(messages: list[dict], **kwargs) -> str:
 
     # Direct OpenRouter fallback with fixed model list
     errors = []
-    for model in FREE_MODEL_LADDER:
-        try:
-            result = _call_with_retry(messages, model, **kwargs)
-            logger.info(f"OpenRouter direct succeeded: {model}")
-            return result
-        except Exception as e2:
-            errors.append(f"OpenRouter [{model}]: {e2}")
+    if os.getenv("OPENROUTER_API_KEY", ""):
+        for model in FREE_MODEL_LADDER:
+            try:
+                result = _call_with_retry(messages, model, **kwargs)
+                logger.info(f"OpenRouter direct succeeded: {model}")
+                return result
+            except Exception as e2:
+                errors.append(f"OpenRouter [{model}]: {e2}")
+    else:
+        errors.append("OpenRouter: OPENROUTER_API_KEY is not set")
 
     # Ollama last resort
-    try:
-        return _ollama_call(messages, **kwargs)
-    except Exception as e3:
-        errors.append(f"Ollama: {e3}")
+    if os.getenv("OLLAMA_ENABLED", "true").lower() == "true":
+        try:
+            return _ollama_call(messages, **kwargs)
+        except Exception as e3:
+            errors.append(f"Ollama: {e3}")
+    else:
+        errors.append("Ollama: disabled")
 
     raise RuntimeError("All model tiers failed:\n" + "\n".join(errors))
 

@@ -57,15 +57,25 @@ class BrowserManager:
             )
             raise
 
-        self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-            ],
-        )
+        try:
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                ],
+            )
+        except Exception as e:
+            logger.error(
+                "Playwright browser launch failed. Install browser binaries with: playwright install chromium (%s)",
+                e,
+            )
+            if self._playwright:
+                await self._playwright.stop()
+                self._playwright = None
+            raise
 
         ua = random.choice(USER_AGENTS)
         self._context = await self._browser.new_context(

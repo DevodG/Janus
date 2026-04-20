@@ -14,7 +14,12 @@ from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data" / "daemon"
+try:
+    from app.config import DATA_DIR as BASE_DATA_DIR
+except ImportError:
+    BASE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+DATA_DIR = Path(BASE_DATA_DIR) / "daemon"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -23,11 +28,19 @@ class NewsPulse:
         self.api_key = os.getenv("NEWS_API_KEY", os.getenv("NEWSAPI_KEY", ""))
         self.topics = topics or [
             "artificial intelligence",
-            "stock market",
+            "global equities",
+            "S&P 500",
+            "Nasdaq",
             "federal reserve",
+            "European Central Bank",
+            "Bank of Japan",
+            "China economy",
+            "India markets",
             "cryptocurrency",
-            "electric vehicles",
             "semiconductor",
+            "oil market",
+            "top companies earnings",
+            "electric vehicles",
         ]
         self.seen_titles: set = set()
         self._load_seen_titles()

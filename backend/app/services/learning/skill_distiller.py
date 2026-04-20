@@ -42,12 +42,23 @@ class SkillDistiller:
         
         for case in cases:
             route = case.get("route", {})
-            domain = route.get("domain_pack")
+            domain = route.get("domain_pack") or route.get("domain")
             if domain:
                 domain_patterns[domain] += 1
             
             # Extract sources from research output
-            outputs = case.get("outputs", {})
+            raw_outputs = case.get("outputs", {})
+            if isinstance(raw_outputs, list):
+                outputs = {
+                    output.get("agent"): output.get("details", {})
+                    for output in raw_outputs
+                    if isinstance(output, dict) and output.get("agent")
+                }
+            elif isinstance(raw_outputs, dict):
+                outputs = raw_outputs
+            else:
+                outputs = {}
+
             research_output = outputs.get("research", {})
             sources = research_output.get("sources", [])
             for source in sources:

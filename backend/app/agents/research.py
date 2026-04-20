@@ -11,6 +11,7 @@ from app.agents._model import call_model
 from app.agents.api_discovery import discover_apis, call_discovered_api
 from app.config import load_prompt, CRAWLER_ENABLED
 from app.memory import knowledge_store
+from app.services.external_sources import deep_web_research_bundle
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,102 @@ def _extract_json(text: str) -> dict | None:
             pass
 
     return None
+
+
+def _deterministic_research_result(
+    intent: str,
+    route: dict,
+    deep_bundle: dict,
+    news: list[dict],
+    knowledge: list[dict],
+    simulation: dict | None,
+    finance: dict | None,
+) -> dict:
+    synthesis = deep_bundle.get("synthesis", {}) if isinstance(deep_bundle, dict) else {}
+    top_sources = synthesis.get("top_sources", []) if isinstance(synthesis.get("top_sources"), list) else []
+    key_points = synthesis.get("key_points", []) if isinstance(synthesis.get("key_points"), list) else []
+    avg_credibility = float(synthesis.get("avg_credibility", 0.0) or 0.0)
+
+    summary_parts = []
+    if synthesis.get("summary"):
+        summary_parts.append(synthesis.get("summary", ""))
+
+    if route.get("domain") == "finance":
+        summary_parts.append(
+            "For this finance request, Janus is weighting official company sources and high-credibility financial reporting above generic commentary."
+        )
+
+    if simulation and isinstance(simulation, dict):
+        simulation_synthesis = simulation.get("synthesis", {})
+        if simulation_synthesis.get("most_likely"):
+            summary_parts.append(
+                f"The scenario layer currently points to: {simulation_synthesis.get('most_likely', '')}."
+            )
+
+    if finance and isinstance(finance, dict):
+        quote = finance.get("quote", {}) if isinstance(finance.get("quote"), dict) else {}
+        metrics = finance.get("key_metrics", {}) if isinstance(finance.get("key_metrics"), dict) else {}
+        price = quote.get("05. price") if isinstance(quote, dict) else None
+        if price is None:
+            price = metrics.get("price")
+        market_cap = metrics.get("market_cap")
+        if price is not None:
+            summary_parts.append(
+                f"Structured market data was available with a latest quoted price of {price}."
+            )
+        if market_cap:
+            summary_parts.append(f"Reported market capitalization was {market_cap}.")
+
+    if not summary_parts:
+        summary_parts.append(
+            f"Janus assembled a deterministic research view for: {intent}. External model synthesis was unavailable, so this result is grounded directly in retrieved evidence."
+        )
+
+    sources = [
+        f"{item.get('title', item.get('url', 'source'))} [{item.get('credibility_score', 0.0):.2f}]"
+        for item in top_sources[:6]
+    ]
+    if news:
+        sources.extend(
+            f"{item.get('title', 'news item')} ({item.get('source', 'news')})"
+            for item in news[:3]
+        )
+
+    key_facts = [
+        f"{item.get('point', '')} (source={item.get('source', '')}, credibility={item.get('credibility_score', 0.0):.2f})"
+        for item in key_points[:4]
+        if item.get("point")
+    ]
+    if knowledge:
+        key_facts.extend(
+            f"Knowledge base context: {str(item.get('text', item.get('content', '')))[:220]}"
+            for item in knowledge[:2]
+        )
+
+    gaps = []
+    if not top_sources:
+        gaps.append("no high-confidence deep-web sources were retained")
+    if route.get("requires_finance_data") and not finance and route.get("domain") == "finance":
+        gaps.append("live market API data was unavailable, so the view relies on web evidence")
+    if route.get("domain") == "finance" and not news:
+        gaps.append("fresh finance/news API coverage was limited in this run")
+
+    confidence = max(avg_credibility, 0.35 if top_sources else 0.25)
+    return {
+        "summary": " ".join(part.strip() for part in summary_parts if part).strip(),
+        "key_facts": key_facts,
+        "sources": list(dict.fromkeys(sources)),
+        "gaps": gaps,
+        "confidence": round(min(confidence, 0.85), 3),
+        "deep_web": {
+            "summary": synthesis.get("summary", ""),
+            "avg_credibility": avg_credibility,
+            "query_variants": deep_bundle.get("query_variants", []),
+            "top_sources": top_sources,
+            "key_points": key_points,
+        },
+        "mode": "deterministic_fallback",
+    }
 
 
 def _duckduckgo_urls(query: str, max_results: int = 5) -> list[str]:
@@ -189,18 +286,66 @@ def run(state: dict) -> dict:
     route = state.get("route", {})
     intent = route.get("intent", state.get("user_input", ""))
     domain = route.get("domain", "general")
+    runtime_context = state.get("context", {})
+    complexity = route.get("complexity", "medium")
 
     context_blocks = []
 
-    # Step 1: Self-hosted crawler (DuckDuckGo + Jina Reader)
-    crawl_results = crawl_web_search(intent)
-    if crawl_results:
+    # Step 1: Deeper public-web research (multi-source search + reader + crawler)
+    deep_max_results = 4
+    deep_follow_links = 0
+    deep_variants = 2
+
+    if domain == "finance" or route.get("requires_finance_data"):
+        deep_max_results = 5
+        deep_follow_links = 1
+        deep_variants = 3
+
+    if route.get("requires_simulation") or complexity in {"high", "very_high"}:
+        deep_max_results = 6
+        deep_follow_links = 1
+        deep_variants = 4
+
+    deep_bundle = deep_web_research_bundle(
+        intent,
+        max_results=deep_max_results,
+        follow_links=deep_follow_links,
+        max_variants=deep_variants,
+    )
+    deep_results = deep_bundle.get("results", [])
+    deep_brief = deep_bundle.get("synthesis", {})
+    if deep_results:
+        context_blocks.append(f"[Deep Web Brief]\n{deep_brief.get('summary', '')}")
+        if deep_bundle.get("query_variants"):
+            context_blocks.append(
+                f"[Deep Web Query Variants]\n{json.dumps(deep_bundle.get('query_variants', []), indent=2)}"
+            )
         formatted = "\n".join(
-            f"- {r.get('title', 'Untitled')}\n  URL: {r.get('url', '')}\n  {r.get('content', '')[:500]}"
-            for r in crawl_results
+            (
+                f"- {r.get('title', 'Untitled')}\n"
+                f"  URL: {r.get('url', '')}\n"
+                f"  Source: {r.get('source', 'web')}\n"
+                f"  Credibility: {r.get('credibility_score', 0.0):.2f} ({r.get('credibility_reason', 'unknown')})\n"
+                f"  {r.get('content', '')[:700]}"
+                + (
+                    f"\n  Related read: {r.get('related_reads', [])[0].get('url', '')} [{r.get('related_reads', [])[0].get('credibility_score', 0.0):.2f}]\n"
+                    f"  {str(r.get('related_reads', [])[0].get('content', ''))[:250]}"
+                    if r.get('related_reads')
+                    else ""
+                )
+            )
+            for r in deep_results
         )
-        context_blocks.append(f"[Web Crawl Results]\n{formatted}")
-    elif TAVILY_API_KEY:
+        context_blocks.append(f"[Deep Web Results]\n{formatted}")
+    else:
+        crawl_results = crawl_web_search(intent)
+        if crawl_results:
+            formatted = "\n".join(
+                f"- {r.get('title', 'Untitled')}\n  URL: {r.get('url', '')}\n  {r.get('content', '')[:500]}"
+                for r in crawl_results
+            )
+            context_blocks.append(f"[Web Crawl Results]\n{formatted}")
+    if not deep_results and not context_blocks and TAVILY_API_KEY:
         web_results = tavily_search(intent)
         if web_results:
             formatted = "\n".join(
@@ -226,6 +371,31 @@ def run(state: dict) -> dict:
             f"- {k.get('text', k.get('content', ''))[:300]}" for k in knowledge
         )
         context_blocks.append(f"[Knowledge Base]\n{formatted}")
+
+    # Step 3b: Runtime memory and self-awareness context
+    similar_cases = runtime_context.get("memory", {}).get("similar_cases", [])
+    if similar_cases:
+        formatted = "\n".join(
+            f"- {c.get('query', '')[:140]} (domain={c.get('domain', 'general')}, score={c.get('score', 0)})"
+            for c in similar_cases[:3]
+        )
+        context_blocks.append(f"[Similar Past Cases]\n{formatted}")
+
+    reflection = runtime_context.get("self_reflection", {})
+    reflection_gaps = reflection.get("gaps", [])
+    if reflection_gaps:
+        formatted = "\n".join(
+            f"- {g.get('topic', '')}: {g.get('reason', '')[:140]}"
+            for g in reflection_gaps[:3]
+        )
+        context_blocks.append(f"[Known Weaknesses]\n{formatted}")
+
+    adaptive_context = runtime_context.get("adaptive_intelligence", {})
+    domain_expertise = adaptive_context.get("domain_expertise")
+    if domain_expertise:
+        context_blocks.append(
+            f"[Accumulated Domain Expertise]\n{json.dumps(domain_expertise, indent=2)}"
+        )
 
     # Step 4: API Discovery
     discovered = discover_apis(query=intent, domain=domain)
@@ -274,13 +444,60 @@ def run(state: dict) -> dict:
 
     result = None
     raw_response = None
+    deterministic_summary_parts = [
+        deep_brief.get("summary", "")
+        or "Janus assembled a grounded research bundle from retrieved public-web evidence."
+    ]
+    if domain == "finance":
+        deterministic_summary_parts.append(
+            "For this finance request, Janus is weighting official company disclosures and high-credibility financial reporting above generic commentary."
+        )
+    if state.get("simulation") and isinstance(state.get("simulation"), dict):
+        sim_synthesis = state.get("simulation", {}).get("synthesis", {})
+        if sim_synthesis.get("most_likely"):
+            deterministic_summary_parts.append(
+                f"The scenario layer currently leans toward: {sim_synthesis.get('most_likely', '')}."
+            )
+    deterministic_research = {
+        "summary": " ".join(
+            part.strip() for part in deterministic_summary_parts if part
+        ).strip(),
+        "key_facts": [
+            f"{item.get('point', '')} (source={item.get('source', '')}, credibility={item.get('credibility_score', 0.0):.2f})"
+            for item in deep_brief.get("key_points", [])[:4]
+            if item.get("point")
+        ],
+        "sources": [
+            f"{item.get('title', item.get('url', 'source'))} [{item.get('credibility_score', 0.0):.2f}]"
+            for item in deep_brief.get("top_sources", [])[:6]
+        ],
+        "gaps": [
+            "model-based research synthesis unavailable; result assembled from retrieved evidence"
+        ],
+        "confidence": min(
+            max(float(deep_brief.get("avg_credibility", 0.0) or 0.0), 0.35), 0.85
+        ),
+        "mode": "deterministic_fallback",
+    }
+
+    if news:
+        deterministic_research["sources"].extend(
+            f"{item.get('title', 'news item')} ({item.get('source', 'news')})"
+            for item in news[:3]
+        )
+    if knowledge:
+        deterministic_research["key_facts"].extend(
+            f"Knowledge base context: {str(item.get('text', item.get('content', '')))[:220]}"
+            for item in knowledge[:2]
+        )
+    deterministic_research["sources"] = list(dict.fromkeys(deterministic_research["sources"]))
 
     try:
         raw_response = call_model(messages)
     except Exception as e:
         logger.error(f"[AGENT ERROR] research: {e}")
         raw_response = None
-        result = {"status": "error", "reason": str(e)}
+        result = {**deterministic_research, "reason": str(e)}
 
     if raw_response:
         result = _extract_json(raw_response)
@@ -296,16 +513,35 @@ def run(state: dict) -> dict:
                 "confidence": 0.3,
             }
 
-    if result is None or "error" in result:
+    if result is None or "error" in result or result.get("status") == "error":
         logger.warning(
             f"[AGENT ERROR] research: {result.get('error') if result else 'result is None'}"
         )
-        result = {
-            "summary": "Research encountered an error during analysis.",
-            "key_facts": [],
-            "sources": [],
-            "gaps": ["analysis failed"],
-            "confidence": 0.0,
-        }
+        result = deterministic_research
+
+    deep_sources = [
+        f"{item.get('title', item.get('url', 'source'))} [{item.get('credibility_score', 0.0):.2f}]"
+        for item in deep_brief.get("top_sources", [])[:4]
+    ]
+    if deep_sources:
+        existing_sources = result.get("sources", []) if isinstance(result.get("sources"), list) else []
+        result["sources"] = list(dict.fromkeys([*existing_sources, *deep_sources]))
+
+    deep_facts = [
+        f"{item.get('point', '')} (source={item.get('source', '')}, credibility={item.get('credibility_score', 0.0):.2f})"
+        for item in deep_brief.get("key_points", [])[:3]
+        if item.get("point")
+    ]
+    if deep_facts:
+        existing_facts = result.get("key_facts", []) if isinstance(result.get("key_facts"), list) else []
+        result["key_facts"] = list(dict.fromkeys([*existing_facts, *deep_facts]))
+
+    result["deep_web"] = {
+        "summary": deep_brief.get("summary", ""),
+        "avg_credibility": deep_brief.get("avg_credibility", 0.0),
+        "query_variants": deep_bundle.get("query_variants", []),
+        "top_sources": deep_brief.get("top_sources", []),
+        "key_points": deep_brief.get("key_points", []),
+    }
 
     return {**state, "research": result}

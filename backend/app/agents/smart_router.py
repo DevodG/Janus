@@ -78,6 +78,21 @@ HUGGINGFACE_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
 CF_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
 CF_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
 TIMEOUT = 90
+OLLAMA_REACHABILITY_TIMEOUT = 1.5
+
+
+def _ollama_is_reachable() -> bool:
+    base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    if base.endswith("/api"):
+        probe_url = f"{base}/tags"
+    else:
+        probe_url = f"{base}/api/tags"
+    try:
+        with httpx.Client(timeout=OLLAMA_REACHABILITY_TIMEOUT) as client:
+            response = client.get(probe_url)
+            return response.status_code < 500
+    except Exception:
+        return False
 
 
 def _call_huggingface(messages: List[Dict[str, str]], **kwargs) -> str:
@@ -236,6 +251,9 @@ def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
 
 def _call_ollama(messages: List[Dict[str, str]], **kwargs) -> str:
     """Ollama — local, unlimited fallback (not available on HF Spaces)."""
+    if not _ollama_is_reachable():
+        raise RuntimeError("Ollama server is not reachable")
+
     base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     if base.endswith("/api"):
         base = base[:-4]
@@ -289,7 +307,7 @@ PROVIDERS = [
         "daily_limit": 999999,
         "rpm_limit": 999,
         "call": _call_ollama,
-        "enabled": True,
+        "enabled": os.getenv("OLLAMA_ENABLED", "true").lower() == "true",
     },
 ]
 
