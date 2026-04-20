@@ -18,11 +18,12 @@ from app.config import ALPHAVANTAGE_API_KEY, FINNHUB_API_KEY, FMP_API_KEY, EODHD
 logger = logging.getLogger(__name__)
 
 INDIAN_SUFFIX_MAP = {
-    "RELIANCE": "RELIANCE.BSE",
-    "TCS": "TCS.BSE",
+    "RELIANCE": "RELIANCE.BO",
+    "TCS": "TCS.BO",
     "HDFCBANK": "HDFCBANK.NS",
     "ICICIBANK": "ICICIBANK.NS",
     "SBIN": "SBIN.NS",
+    "INFY": "INFY.NS",
 }
 
 
@@ -31,6 +32,9 @@ def _get_yahoo_symbol(symbol: str) -> str:
     clean = symbol.upper().strip()
     if clean in INDIAN_SUFFIX_MAP:
         return INDIAN_SUFFIX_MAP[clean]
+    # If it ends in .BSE, always convert to .BO for Yahoo
+    if clean.endswith(".BSE"):
+        return clean[:-4] + ".BO"
     if "." not in clean:
         return clean
     return symbol

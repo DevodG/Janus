@@ -34,6 +34,11 @@ KNOWN_TICKERS = {
     "WMT": "Walmart Inc.",
     "XOM": "Exxon Mobil Corporation",
     "JNJ": "Johnson & Johnson",
+    "RELIANCE": "Reliance Industries Limited",
+    "TCS": "Tata Consultancy Services Limited",
+    "HDFCBANK": "HDFC Bank Limited",
+    "INFY": "Infosys Limited",
+    "ICICIBANK": "ICICI Bank Limited",
 }
 
 # Reverse mapping
