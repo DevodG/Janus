@@ -4,6 +4,7 @@ Classifies user input and produces structured routing decisions using LLM.
 """
 
 import logging
+import json
 from app.agents._model import call_model, safe_parse
 from app.config import load_prompt
 from pydantic import BaseModel, Field
@@ -25,6 +26,7 @@ class RouteDecision(BaseModel):
     requires_simulation: bool = Field(description="True if scenario/simulation needed")
     requires_finance_data: bool = Field(description="True if stock/finance data needed")
     requires_news: bool = Field(description="True if current news needed")
+    requires_research: bool = Field(description="True if ANY external search/research is needed. False if pure logic/chat", default=True)
     confidence: float = Field(description="Confidence of routing decision (0.0 - 1.0)")
 
 
@@ -106,13 +108,32 @@ def run(state: dict) -> dict:
     user_input = state.get("user_input", "")
     prompt = load_prompt("switchboard")
 
+    # Prepare cognitive context summary to stay within token limits for free models
+    ctx = state.get("context", {})
+    reflection = ctx.get("self_reflection", {})
+    adaptive = ctx.get("adaptive_intelligence", {})
+    
+    gaps = reflection.get("gaps", [])
+    opinions = reflection.get("opinions", [])
+    personality = adaptive.get("system_personality", {})
+    
+    context_summary = []
+    if gaps:
+        context_summary.append(f"[Known Knowledge Gaps]: {', '.join([g.get('topic', '') for g in gaps[:3]])}")
+    if opinions:
+        context_summary.append(f"[Formed Opinions]: {'; '.join([o.get('statement', '')[:100] for o in opinions[:2]])}")
+    if personality:
+        context_summary.append(f"[Current System Personality]: {json.dumps(personality)}")
+
+    context_prompt = "\n".join(context_summary) if context_summary else "No specific cognitive context formed yet."
+
     messages = [
         {"role": "system", "content": prompt},
-        {"role": "user", "content": user_input},
+        {"role": "user", "content": f"[COGNITIVE CONTEXT]\n{context_prompt}\n\n[USER QUERY]\n{user_input}"},
     ]
 
     try:
-        raw_response = call_model(messages)
+        raw_response = call_model(messages, personality=personality)
     except Exception as e:
         logger.error(f"[AGENT ERROR] switchboard: {e}")
         raw_response = None
@@ -124,6 +145,7 @@ def run(state: dict) -> dict:
             "requires_simulation": False,
             "requires_finance_data": False,
             "requires_news": False,
+            "requires_research": True,
             "confidence": 0.3,
         }
 
@@ -144,6 +166,7 @@ def run(state: dict) -> dict:
             "requires_simulation": False,
             "requires_finance_data": False,
             "requires_news": False,
+            "requires_research": True,
             "confidence": 0.3,
         }
     else:
@@ -155,6 +178,7 @@ def run(state: dict) -> dict:
         result.setdefault("requires_simulation", False)
         result.setdefault("requires_finance_data", False)
         result.setdefault("requires_news", False)
+        result.setdefault("requires_research", True)
         result.setdefault("confidence", 0.5)
 
     result = _apply_deterministic_fallback(user_input, result)

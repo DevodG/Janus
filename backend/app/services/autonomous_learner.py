@@ -92,32 +92,69 @@ class AutonomousLearner:
                 )
                 continue
 
-            # Step 3: Store dataset metadata as knowledge
+            # Step 3: Stream datasets and use LLM to extract genuine facts
+            from app.agents._model import call_model
+
             for ds_info in datasets:
                 ds_name = ds_info.get("name", "")
                 if not ds_name:
                     continue
 
-                logger.info(f"[AUTONOMOUS LEARNER] Found dataset: {ds_name}")
+                logger.info(f"[AUTONOMOUS LEARNER] Found dataset: {ds_name}. Streaming for cognitive analysis...")
 
-                # Create knowledge entry from dataset metadata
-                knowledge_entry = {
-                    "text": f"Relevant dataset for {gap_topic}: {ds_name}. "
-                    f"Description: {ds_info.get('description', 'N/A')[:200]}. "
-                    f"Downloads: {ds_info.get('downloads', 0)}. "
-                    f"Tags: {', '.join(ds_info.get('tags', [])[:5])}.",
-                    "source": f"hf_dataset:{ds_name}",
-                    "topic": gap_topic,
-                    "timestamp": time.time(),
-                    "confidence": ds_info.get("relevance_score", 0.5),
-                }
-
+                # Actually stream metadata and sample
                 try:
-                    knowledge_store.save_knowledge(knowledge_entry)
-                    results["knowledge_added"] += 1
-                    self.total_knowledge_added += 1
+                    samples = hf_dataset_searcher.stream_dataset_sample(ds_name, max_samples=5)
                 except Exception as e:
-                    logger.error(f"Failed to save knowledge: {e}")
+                    logger.warning(f"Failed to stream dataset {ds_name}: {e}")
+                    continue
+
+                if not samples:
+                    continue
+
+                # Pass to LLM for knowledge extraction
+                try:
+                    # serialize safely and restrict size to save token cost
+                    sample_text = json.dumps(samples[:3])[:6000]
+                    prompt = (
+                        f"You are Janus' autonomous learning engine. You are researching the topic: '{gap_topic}'.\n"
+                        f"Analyze this raw dataset preview ({ds_name}) and extract 1-3 highly specific, factual knowledge rules to definitively resolve your knowledge gap.\n"
+                        "Focus on hard facts, correlations, or specific examples shown in the data.\n"
+                        "Return a STRICT JSON dictionary matching this schema (with no markdown block padding around it):\n"
+                        '{"knowledge_points": ["specific fact 1", "specific fact 2"]}\n\n'
+                        f"DATASET PREVIEW:\n{sample_text}"
+                    )
+                    
+                    response_json_str = call_model([{"role": "user", "content": prompt}], temperature=0.2)
+                    
+                    # Clean possible markdown format
+                    response_json_str = response_json_str.strip()
+                    if response_json_str.startswith("```json"):
+                        response_json_str = response_json_str[7:]
+                    if response_json_str.startswith("```"):
+                        response_json_str = response_json_str[3:]
+                    if response_json_str.endswith("```"):
+                        response_json_str = response_json_str[:-3]
+
+                    data = json.loads(response_json_str.strip())
+                    points = data.get("knowledge_points", [])
+                    
+                    for pt in points:
+                        if len(pt) > 15:
+                            knowledge_entry = {
+                                "text": pt,
+                                "source": f"hf_dataset_learning:{ds_name}",
+                                "topic": gap_topic,
+                                "timestamp": time.time(),
+                                "confidence": 0.85,
+                            }
+                            knowledge_store.save_knowledge(knowledge_entry)
+                            results["knowledge_added"] += 1
+                            self.total_knowledge_added += 1
+                            logger.info(f"[AUTONOMOUS LEARNER] Extracted knowledge point: {pt[:50]}...")
+
+                except Exception as e:
+                    logger.error(f"[AUTONOMOUS LEARNER] LLM reasoning failed on dataset {ds_name}: {e}")
 
                 results["details"].append(
                     {

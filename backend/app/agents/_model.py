@@ -19,11 +19,11 @@ OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 
 # FIXED: replaced dead/renamed model IDs (all were returning HTTP 400)
 FREE_MODEL_LADDER = [
+    "deepseek/deepseek-r1:free",
+    "google/gemini-2.0-flash-thinking-exp:free",
     "meta-llama/llama-3.3-70b-instruct:free",
-    "deepseek/deepseek-chat-v3-0324:free",
-    "qwen/qwen-2.5-72b-instruct:free",
     "google/gemma-3-27b-it:free",
-    "mistralai/mistral-7b-instruct:free",
+    "nousresearch/hermes-3-llama-3.1-405b:free",
 ]
 
 OLLAMA_BASE = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -75,7 +75,11 @@ def _openrouter_call(messages: list[dict], model: str, **kwargs) -> str:
     )
     r.raise_for_status()
     data = r.json()
-    content = data["choices"][0]["message"]["content"]
+    msg_data = data["choices"][0]["message"]
+    content = msg_data.get("content") or ""
+    reasoning = msg_data.get("reasoning")
+    if reasoning:
+        content = f"<think>\n{reasoning}\n</think>\n\n{content}"
     if not content:
         raise ValueError(f"Empty response from {model}")
     return content

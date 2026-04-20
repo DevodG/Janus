@@ -292,6 +292,20 @@ class JanusDaemon:
                     except Exception as e:
                         logger.error(f"[DAEMON] Autonomous learning failed: {e}")
 
+                    # Continuous Training: generate synthetic datasets, test prompts, crawl internet
+                    try:
+                        from app.services.continuous_training import continuous_self_trainer
+                        
+                        ct_result = continuous_self_trainer.run_training_cycle()
+                        logger.info(
+                            f"[DAEMON] Continuous Training: "
+                            f"{ct_result.get('synthetic_data_generated', 0)} synthetic pairs, "
+                            f"{ct_result.get('prompts_tested', 0)} prompts tested, "
+                            f"{ct_result.get('improvements_made', 0)} optimizations"
+                        )
+                    except Exception as e:
+                        logger.error(f"[DAEMON] Continuous training failed: {e}")
+
                 elapsed = time.time() - cycle_start
                 stats = self.signal_queue.get_stats()
 

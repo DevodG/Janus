@@ -292,6 +292,21 @@ def run(state: dict) -> dict:
     runtime_context = state.get("context", {})
     complexity = route.get("complexity", "medium")
 
+    # Knowledge-gap driven research: identify if this query touches a known weakness
+    reflection = runtime_context.get("self_reflection", {})
+    gaps = reflection.get("gaps", [])
+    # Search for gap topics that intersect with our intent/user_input
+    relevant_gaps = [
+        g.get("topic", "") 
+        for g in gaps 
+        if g.get("topic", "").lower() in intent.lower() or g.get("topic", "").lower() in state.get("user_input", "").lower()
+    ]
+    
+    if relevant_gaps:
+        logger.info(f"[RESEARCH] Targeting known gaps to improve Janus: {relevant_gaps}")
+        # Append gap-bridging directives to the research intent
+        intent = f"{intent} (priority: investigate specifically for gaps in {', '.join(relevant_gaps)})"
+
     context_blocks = []
 
     # Step 1: Deeper public-web research (multi-source search + reader + crawler)
@@ -358,6 +373,7 @@ def run(state: dict) -> dict:
             context_blocks.append(f"[Web Search Results]\n{formatted}")
 
     # Step 2: News API (if requires_news or finance domain)
+    news = []
     if route.get("requires_news") or domain == "finance":
         news = news_search(intent)
         if news:
@@ -495,8 +511,12 @@ def run(state: dict) -> dict:
         )
     deterministic_research["sources"] = list(dict.fromkeys(deterministic_research["sources"]))
 
+    # Extract personality for adaptive scaling
+    adaptive = runtime_context.get("adaptive_intelligence", {})
+    personality = adaptive.get("system_personality", {})
+
     try:
-        raw_response = call_model(messages)
+        raw_response = call_model(messages, personality=personality)
     except Exception as e:
         logger.error(f"[AGENT ERROR] research: {e}")
         raw_response = None

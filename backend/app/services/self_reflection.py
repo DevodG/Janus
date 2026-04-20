@@ -32,36 +32,6 @@ MAX_OPINIONS    = 50
 MAX_CORRECTIONS = 100
 MAX_GAPS        = 30
 
-# Stopwords to skip when extracting meaningful topic
-_STOPWORDS = {
-    "what", "is", "the", "a", "an", "are", "was", "were", "how", "why",
-    "when", "where", "who", "which", "will", "can", "could", "should",
-    "would", "do", "does", "did", "tell", "me", "about", "explain",
-    "give", "show", "find", "get", "make", "help", "please", "i", "we",
-    "my", "our", "your", "their", "its", "this", "that", "these", "those",
-    "some", "any", "all", "more", "most", "much", "many", "few", "little",
-    "of", "in", "on", "at", "to", "for", "by", "from", "with", "and",
-    "or", "but", "not", "no", "if", "than", "then", "so", "yet", "up",
-    "hi", "hey", "hello", "howdy", "greetings", "yo", "sup",
-    "use", "conversation", "below", "context", "answer", "latest",
-    "message", "messages", "assistant", "system", "user",
-}
-
-
-def _extract_topic(query: str, min_word_len: int = 4) -> str:
-    """
-    Extract meaningful topic from a query, skipping leading stopwords.
-
-    'what is the stock market' → 'stock market'
-    'how does inflation work'  → 'inflation'
-    'AAPL earnings report'     → 'AAPL earnings report'
-    'what is the'              → ''  (empty = don't form an opinion)
-    """
-    import re
-    words = re.findall(r"[a-zA-Z0-9$€£%]+", query.lower())
-    meaningful = [w for w in words if w not in _STOPWORDS and len(w) >= min_word_len]
-    topic = " ".join(meaningful[:4])
-    return topic if len(topic) >= 4 else ""
 
 
 class SelfReflection:
@@ -119,49 +89,25 @@ class SelfReflection:
         gaps: list,
         elapsed: float,
     ):
-        """Called after every /run response. Only forms opinions on meaningful topics."""
-        topic = _extract_topic(user_input)
-        if not topic:
-            logger.debug(f"SelfReflection: skipped trivial query '{user_input[:50]}'")
-            return
+        """Called after every /run response. Left for backward compatibility, does not block chat with LLM reasoning."""
+        topic_approx = user_input.split()[:3]
+        topic = " ".join(topic_approx).lower()
+        if len(topic) > 3:
+            self._topic_freq[topic] += 1
+            if self._topic_freq[topic] % 5 == 0:
+                self._save()
 
-        self._topic_freq[topic] += 1
-        freq = self._topic_freq[topic]
-
-        if freq >= MIN_OPINION_FREQUENCY:
-            self._form_opinion(topic, response, confidence, freq)
-
-        if confidence < 0.5 and gaps:
-            for gap in gaps[:2]:
-                self._add_gap(topic, gap)
-
-        if elapsed > 25:
-            self._add_gap(topic, f"Response took {elapsed:.0f}s — research took too long")
-
-        if freq % 5 == 0:
-            self._save()
-
-    def _form_opinion(self, topic: str, response: str, confidence: float, frequency: int):
-        """Form or update an opinion on a topic."""
-        existing = next((op for op in self.opinions if op.get("topic") == topic), None)
-        if existing:
-            existing["frequency"] = frequency
-            existing["confidence"] = (existing["confidence"] * 0.8 + confidence * 0.2)
-            return
-
-        statement = response[:200].replace("\n", " ").strip() if response else ""
-        if not statement or len(statement) < 20:
-            return
-
+    def _add_opinion(self, topic: str, statement: str, confidence: float):
+        """Internal helper to add an LLM-generated opinion to the cache."""
         self.opinions.append({
             "topic":      topic,
             "statement":  statement,
             "confidence": confidence,
-            "frequency":  frequency,
+            "frequency":  self._topic_freq.get(topic.lower(), 1),
             "formed_at":  time.time(),
         })
         self.opinions = self.opinions[-MAX_OPINIONS:]
-        logger.debug(f"SelfReflection: formed opinion on '{topic}'")
+        logger.debug(f"SelfReflection: natively formed opinion on '{topic}'")
 
     def _add_gap(self, topic: str, reason: str):
         """Record a knowledge gap."""
@@ -179,7 +125,7 @@ class SelfReflection:
 
     def record_correction(self, user_input: str, original: str, correction: str):
         """User corrects the system — record for future use."""
-        topic = _extract_topic(user_input) or user_input[:50]
+        topic = user_input[:50]
         self.corrections.append({
             "topic":        topic,
             "original":     original[:300],
@@ -191,13 +137,13 @@ class SelfReflection:
 
     def get_opinions(self, topic: Optional[str] = None) -> list:
         if topic:
-            t = _extract_topic(topic) or topic.lower()
+            t = topic.lower()
             return [op for op in self.opinions if t in op.get("topic", "").lower()]
         return self.opinions
 
     def get_corrections(self, topic: Optional[str] = None) -> list:
         if topic:
-            t = _extract_topic(topic) or topic.lower()
+            t = topic.lower()
             return [c for c in self.corrections if t in c.get("topic", "").lower()]
         return self.corrections
 
@@ -233,11 +179,15 @@ class SelfReflection:
         )
 
     def run_night_review(self, recent_cases: list) -> dict:
-        """Called by daemon during night phase."""
-        reviewed = 0
+        """Called by daemon during night phase. Feeds interaction history to LLM to form deep worldviews."""
+        if not recent_cases:
+            return {"cases_reviewed": 0, "opinions_formed": 0, "learning_rate": 0.0}
+
+        reviewed = len(recent_cases)
         opinions_formed = 0
         learning_rate = 0.0
 
+        history_text = []
         for case in recent_cases:
             user_input  = case.get("user_input", case.get("query", ""))
             final       = case.get("final", {})
@@ -246,24 +196,61 @@ class SelfReflection:
                 or final.get("answer")
                 or final.get("synthesis", "")
             )
-            confidence  = float(final.get("confidence", 0.5))
-            elapsed     = float(
-                case.get("elapsed") or case.get("elapsed_seconds") or 0
-            )
-
+            # Remove giant think blocks to save tokens
+            import re
+            response = re.sub(r"<think>.*?</think>", "[Cognitive Trace Removed]", response, flags=re.DOTALL)
+            
             if user_input and response:
-                topic_before = len(self.opinions)
-                self.reflect_on_response(
-                    user_input=user_input,
-                    response=response,
-                    confidence=confidence,
-                    data_sources=[],
-                    gaps=[],
-                    elapsed=elapsed,
-                )
-                if len(self.opinions) > topic_before:
+                history_text.append(f"USER: {user_input}\nSYSTEM_REPLY: {response[:300]}...\n")
+        
+        if not history_text:
+            return {"cases_reviewed": 0, "opinions_formed": 0, "learning_rate": 0.0}
+
+        prompt = (
+            "You are Janus, an advanced cognitive intelligence. Review your recent interaction history below.\n"
+            "Identify recurring macro-trends, implicit user preferences, or major financial/analytical themes.\n"
+            "Formulate 1 to 3 deep, high-level 'opinions' or 'worldviews' (approx 1-2 sentences each).\n"
+            "Identify up to 2 systemic knowledge gaps (things you failed to answer or struggled researching).\n"
+            "Return a STRICT JSON dictionary. No markdown formatting around the JSON, just the raw JSON text.\n"
+            "{\n"
+            '  "opinions": [{"topic": "...", "statement": "...", "confidence": 0.9}],\n'
+            '  "gaps": [{"topic": "...", "reason": "...", "urgency": 0.8}]\n'
+            "}\n\n"
+            "INTERACTION HISTORY:\n"
+            + "\n---\n".join(history_text)
+        )
+
+        try:
+            from app.agents._model import call_model
+            response_json_str = call_model([{"role": "user", "content": prompt}], temperature=0.3)
+            
+            # Clean possible markdown format
+            response_json_str = response_json_str.strip()
+            if response_json_str.startswith("```json"):
+                response_json_str = response_json_str[7:]
+            if response_json_str.startswith("```"):
+                response_json_str = response_json_str[3:]
+            if response_json_str.endswith("```"):
+                response_json_str = response_json_str[:-3]
+                
+            data = json.loads(response_json_str.strip())
+            
+            opinions = data.get("opinions", [])
+            for op in opinions:
+                topic = op.get("topic", "")
+                stmt = op.get("statement", "")
+                conf = float(op.get("confidence", 0.8))
+                if topic and stmt:
+                    self._topic_freq[topic.lower()] += 1
+                    self._add_opinion(topic, stmt, conf)
                     opinions_formed += 1
-                reviewed += 1
+            
+            gaps = data.get("gaps", [])
+            for gap in gaps:
+                self._add_gap(gap.get("topic", ""), gap.get("reason", ""))
+                
+        except Exception as e:
+            logger.error(f"[SELF-REFLECTION] LLM reasoning failed: {e}")
 
         if reviewed > 0:
             learning_rate = opinions_formed / reviewed

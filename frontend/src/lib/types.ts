@@ -37,6 +37,11 @@ export interface CaseRecord {
   learned?: boolean;
   learning_reason?: string;
   adaptive_context?: Record<string, any>;
+  research?: Record<string, any>;
+  finance?: Record<string, any>;
+  simulation?: Record<string, any>;
+  planner?: Record<string, any>;
+  verifier?: Record<string, any>;
 }
 
 export interface SimulationRecord {

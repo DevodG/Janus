@@ -135,7 +135,9 @@ def run(state: dict) -> dict:
     raw_response = None
 
     try:
-        raw_response = call_model(messages)
+        adaptive = context.get("adaptive_intelligence", {})
+        personality = adaptive.get("system_personality", {})
+        raw_response = call_model(messages, personality=personality)
     except Exception as e:
         logger.error(f"[AGENT ERROR] planner: {e}")
         raw_response = None

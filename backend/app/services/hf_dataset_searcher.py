@@ -100,7 +100,6 @@ class HFDatasetSearcher:
                 search=gap_topic,
                 limit=max_results,
                 sort="downloads",
-                direction=-1,
             )
 
             results = []
@@ -201,34 +200,31 @@ class HFDatasetSearcher:
                 else "",
                 "tags": getattr(ds_info, "tags", []) or [],
                 "downloads": getattr(ds_info, "downloads", 0) or 0,
-                "size_categories": getattr(ds_info, "size_categories", []) or [],
             }
 
-            # Try to download a small sample file if available
             try:
-                # Look for README.md or dataset_info.json
                 readme = api.hf_hub_download(
                     repo_id=dataset_name,
                     filename="README.md",
                     repo_type="dataset",
                 )
                 with open(readme) as f:
-                    content = f.read()[:5000]
+                    content = f.read()[:1000]
                     sample_data["readme_preview"] = content
             except Exception:
                 pass
 
-            return [sample_data]
-
         except Exception as e:
-            logger.error(f"Failed to get dataset info for {dataset_name}: {e}")
-            return []
+            logger.warning(f"Failed to get basic dataset info for {dataset_name}: {e}")
+            sample_data = {"dataset_name": dataset_name}
 
         try:
             from datasets import load_dataset
 
+            # Try to load the dataset using the library
             ds = load_dataset(dataset_name, split=split, streaming=True)
-            samples = []
+            samples = [sample_data] # first element is dataset metadata
+
 
             for i, item in enumerate(ds):
                 if i >= max_samples:

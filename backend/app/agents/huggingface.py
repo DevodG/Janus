@@ -1,104 +1,52 @@
-"""
-HuggingFace Inference API Client for Janus.
-
-NOTE: HF deprecated api-inference.huggingface.co in favor of router.huggingface.co.
-The new router requires provider-specific endpoints. This client tries multiple providers.
-Fallback to OpenRouter is recommended for reliability.
-"""
-
-import json
-import time
 import logging
 from typing import Dict, List, Any, Optional
-
-import httpx
-
+from huggingface_hub import InferenceClient
 from app.config import HUGGINGFACE_API_KEY, HUGGINGFACE_MODEL
 
 logger = logging.getLogger(__name__)
 
-MAX_RETRIES = 2
-BACKOFF_BASE = 1
-PROVIDER_TIMEOUT = 45
-
-PROVIDER_ROUTES = [
-    "https://router.huggingface.co/together/v1/chat/completions",
-    "https://router.huggingface.co/sambanova/v1/chat/completions",
-    "https://router.huggingface.co/nebius/v1/chat/completions",
-]
-
+# Models that are usually available on the free serverless Inference API
 MODEL_LADDER = [
-    HUGGINGFACE_MODEL,
-    "openai/gpt-oss-120b",
+    "Qwen/Qwen2.5-72B-Instruct",
+    "meta-llama/Llama-3.1-8B-Instruct",
     "deepseek-ai/DeepSeek-R1",
+    HUGGINGFACE_MODEL,
 ]
-
 
 class HuggingFaceInferenceClient:
-    """HuggingFace Inference API client — tries multiple providers."""
+    """HuggingFace Inference API client using the official hub library."""
 
     def __init__(self, model: str = HUGGINGFACE_MODEL):
-        self.model = model
-        self.headers = {
-            "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
-            "Content-Type": "application/json",
-        }
+        self.default_model = model
+        self.client = InferenceClient(token=HUGGINGFACE_API_KEY)
 
     def chat(self, messages: List[Dict[str, str]], **kwargs) -> str:
+        last_error = None
         for model in dict.fromkeys(MODEL_LADDER):
-            payload = {
-                "model": model,
-                "messages": messages,
-                "temperature": kwargs.get("temperature", 0.7),
-                "max_tokens": kwargs.get("max_tokens", 4096),
-            }
-
-            for route in PROVIDER_ROUTES:
-                try:
-                    with httpx.Client(timeout=PROVIDER_TIMEOUT) as client:
-                        response = client.post(
-                            route,
-                            headers=self.headers,
-                            json=payload,
-                        )
-
-                        if response.status_code == 200:
-                            data = response.json()
-                            choices = data.get("choices", [])
-                            if choices:
-                                return choices[0].get("message", {}).get("content", "")
-                            return data.get("generated_text", "")
-
-                        if response.status_code == 429:
-                            time.sleep(BACKOFF_BASE)
-                            continue
-
-                        if response.status_code in (400, 403, 404, 410):
-                            logger.debug(
-                                "[HF] %s rejected %s (%s)",
-                                route.split("/")[3],
-                                model,
-                                response.status_code,
-                            )
-                            continue
-
-                        logger.warning(
-                            "[HF] Error %s on %s for %s",
-                            response.status_code,
-                            route,
-                            model,
-                        )
-
-                except httpx.TimeoutException:
-                    logger.debug(f"[HF] Timeout on {route} for {model}")
-                    continue
-                except Exception as e:
-                    logger.debug(f"[HF] Error on {route} for {model}: {e}")
-                    continue
-
-        raise RuntimeError("All HF providers exhausted")
+            try:
+                logger.info(f"[HF] Attempting chat with model: {model}")
+                response = ""
+                for chunk in self.client.chat_completion(
+                    messages=messages,
+                    model=model,
+                    max_tokens=kwargs.get("max_tokens", 4096),
+                    temperature=kwargs.get("temperature", 0.7),
+                    stream=True,
+                ):
+                    if chunk.choices[0].delta.content:
+                        response += chunk.choices[0].delta.content
+                
+                if response:
+                    return response
+            except Exception as e:
+                last_error = e
+                logger.warning(f"[HF] Model {model} failed: {e}")
+                continue
+        
+        raise RuntimeError(f"All HF models exhausted. Last error: {last_error}")
 
     def reason(self, messages: List[Dict[str, str]], **kwargs) -> str:
+        # For high-end reasoning, we try the ladder with higher tokens
         return self.chat(
             messages,
             temperature=kwargs.get("temperature", 0.9),
@@ -106,15 +54,7 @@ class HuggingFaceInferenceClient:
         )
 
     def is_available(self) -> bool:
-        try:
-            with httpx.Client(timeout=10) as client:
-                r = client.get(
-                    "https://router.huggingface.co/hf-inference/v1/models",
-                    headers=self.headers,
-                )
-                return r.status_code < 500
-        except Exception:
-            return False
-
+        return bool(HUGGINGFACE_API_KEY)
 
 hf_client = HuggingFaceInferenceClient()
+

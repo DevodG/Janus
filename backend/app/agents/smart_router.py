@@ -74,7 +74,7 @@ def _record_usage(provider: str):
 GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
 GROQ_KEY = os.getenv("GROQ_API_KEY", "")
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY", "")
-HUGGINGFACE_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
+HUGGINGFACE_KEY = os.getenv("HUGGINGFACE_API_KEY", os.getenv("HF_TOKEN", ""))
 CF_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
 CF_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
 TIMEOUT = 90
@@ -193,11 +193,11 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
         raise ValueError("OPENROUTER_API_KEY not set")
 
     free_models = [
+        "deepseek/deepseek-r1:free",
+        "google/gemini-2.0-flash-thinking-exp:free",
         "meta-llama/llama-3.3-70b-instruct:free",
         "google/gemma-3-27b-it:free",
-        "microsoft/phi-4:free",
         "nousresearch/hermes-3-llama-3.1-405b:free",
-        "liquid/lfm-40b:free",
     ]
 
     errors = []
@@ -220,7 +220,11 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
                     json=body,
                 )
                 r.raise_for_status()
-                content = r.json()["choices"][0]["message"]["content"]
+                msg_data = r.json()["choices"][0]["message"]
+                content = msg_data.get("content") or ""
+                reasoning = msg_data.get("reasoning")
+                if reasoning:
+                    content = f"<think>\n{reasoning}\n</think>\n\n{content}"
                 if not content:
                     raise ValueError("Empty response")
                 return content
@@ -250,29 +254,63 @@ def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
 
 
 def _call_ollama(messages: List[Dict[str, str]], **kwargs) -> str:
-    """Ollama — local, unlimited fallback (not available on HF Spaces)."""
+    """Ollama — local, unlimited fallback with autonomous model discovery."""
     if not _ollama_is_reachable():
         raise RuntimeError("Ollama server is not reachable")
 
     base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     if base.endswith("/api"):
         base = base[:-4]
-    model = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:3b")
-    body = {"model": model, "messages": messages, "stream": False}
-    with httpx.Client(timeout=60) as client:
-        r = client.post(f"{base}/v1/chat/completions", json=body)
+    
+    preferred_model = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:3b-instruct")
+    
+    # Autonomous Discovery: Check available models
+    available_models = []
+    try:
+        with httpx.Client(timeout=5) as client:
+            r = client.get(f"{base}/api/tags")
+            if r.status_code == 200:
+                available_models = [m["name"] for m in r.json().get("models", [])]
+    except Exception as e:
+        logger.debug(f"[router] Ollama model discovery failed: {e}")
+
+    # Select the best available model
+    selected_model = preferred_model
+    if available_models and preferred_model not in available_models:
+        # Fallback to the first instruct or chat model, or just the first available
+        fallbacks = [m for m in available_models if "instruct" in m or "chat" in m]
+        selected_model = fallbacks[0] if fallbacks else available_models[0]
+        logger.info(f"[router] Preferred model {preferred_model} not found. Autonomously switching to {selected_model}")
+
+    body = {"model": selected_model, "messages": messages, "stream": False}
+    
+    with httpx.Client(timeout=180) as client:
+        # Strategy 1: Attempt OpenAI-compatible endpoint
+        try:
+            r = client.post(f"{base}/v1/chat/completions", json=body)
+            if r.status_code == 200:
+                return r.json()["choices"][0]["message"]["content"]
+            elif r.status_code != 404:
+                r.raise_for_status()
+        except Exception as e:
+            logger.debug(f"[router] Ollama V1 failed for {selected_model}: {e}")
+        
+        # Strategy 2: Attempt Native Ollama API
+        logger.debug(f"[router] Falling back to Ollama native API (/api/chat) for {selected_model}")
+        r = client.post(f"{base}/api/chat", json=body)
         r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"]
+        return r.json()["message"]["content"]
 
 
 # ── Provider registry ───────────────────────────────────────────────────────
+# Priority reordered for "Cloud-Hybrid" high-parameter intelligence.
 PROVIDERS = [
     {
-        "name": "huggingface",
-        "daily_limit": 999999,
-        "rpm_limit": 60,
-        "call": _call_huggingface,
-        "enabled": bool(HUGGINGFACE_KEY),
+        "name": "gemini",
+        "daily_limit": 1500,
+        "rpm_limit": 15,
+        "call": _call_gemini,
+        "enabled": bool(GEMINI_KEY),
     },
     {
         "name": "groq",
@@ -282,11 +320,11 @@ PROVIDERS = [
         "enabled": bool(GROQ_KEY),
     },
     {
-        "name": "gemini",
-        "daily_limit": 1500,
-        "rpm_limit": 15,
-        "call": _call_gemini,
-        "enabled": bool(GEMINI_KEY),
+        "name": "huggingface",
+        "daily_limit": 999999,
+        "rpm_limit": 60,
+        "call": _call_huggingface,
+        "enabled": bool(HUGGINGFACE_KEY),
     },
     {
         "name": "openrouter",
@@ -321,7 +359,19 @@ def call_model(messages: List[Dict[str, str]], **kwargs) -> str:
     """
     Smart router — tries providers in priority order with rate limit tracking.
     Returns text from the first successful provider.
+    
+    Now supports Adaptive Personality scaling:
+    - skepticism_level: higher skepticism reduces temperature for more grounded responses.
     """
+    # Apply Adaptive Personality scaling to temperature
+    personality = kwargs.get("personality", {})
+    if "temperature" not in kwargs and personality:
+        base_temp = 0.7
+        skepticism = personality.get("skepticism_level", 0.3)
+        # Higher skepticism (max 1.0) reduces temperature (down to min 0.2)
+        kwargs["temperature"] = max(0.2, base_temp - (skepticism * 0.4))
+        logger.debug(f"[router] scaled temperature to {kwargs['temperature']:.2f} based on skepticism={skepticism:.2f}")
+
     errors = []
     now = time.time()
 

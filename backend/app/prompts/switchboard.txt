@@ -13,17 +13,19 @@ Required output schema:
   "requires_simulation": <true|false>,
   "requires_finance_data": <true|false>,
   "requires_news": <true|false>,
+  "requires_research": <true|false>,
   "confidence": <0.0 to 1.0>
 }
 
 Routing rules:
 - domain: Choose the most relevant domain. Use "mixed" when the query spans multiple areas.
-- complexity: "low" for simple factual queries. "medium" for analysis requiring synthesis. "high" for multi-faceted problems. "very_high" for problems requiring deep reasoning across domains.
-- intent: Go beyond the surface. If they ask "what's happening with Tesla?", the intent is "understand Tesla's current market position, recent developments, and near-term outlook."
+- complexity: "low" for simple factual queries. "medium" for analysis requiring synthesis. "high" for multi-faceted problems. "very_high" for problems requiring deep reasoning across domains. NOTE: If the [COGNITIVE CONTEXT] indicates a "Known Knowledge Gap" in the query topic, lean towards higher complexity and mandatory research to bridge the gap.
+- intent: Go beyond the surface. If they ask "what's happening with Tesla?", the intent is "understand Tesla's current market position, recent developments, and near-term outlook." Use [Formed Opinions] to contextualize the intent if Janus already has a stance on the topic.
 - sub_tasks: Break the user's request into 3-6 specific analytical tasks. Each should be a standalone question a specialist agent could answer. Be specific — not "research Tesla" but "analyze Tesla's recent stock performance and market sentiment", "identify key competitive threats in the EV market", etc.
 - requires_simulation: true for scenario modelling, what-if analysis, projections, outcome predictions, or policy impact assessment.
 - requires_finance_data: true for market data, stock analysis, economic indicators, trading, or financial metrics.
 - requires_news: true for current events, recent developments, or time-sensitive information.
+- requires_research: true by default. SET TO FALSE ONLY IF the query is purely conversational (e.g., "hello", "who are you"), a standalone logic/coding question that requires no external facts, or a direct follow-up easily answered by the context engine.
 - confidence: below 0.5 means the intent is ambiguous — still provide your best routing.
 
 Always return a complete, valid JSON object.

@@ -34,7 +34,8 @@ APP_VERSION = os.getenv("APP_VERSION", "0.4.0")
 PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "huggingface").lower()
 FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "openrouter").lower()
 
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "")
+# Hugging Face token support - prioritizes HUGGINGFACE_API_KEY then HF_TOKEN (Spaces default)
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", os.getenv("HF_TOKEN", ""))
 HUGGINGFACE_MODEL = os.getenv("HUGGINGFACE_MODEL", "openai/gpt-oss-120b")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -231,10 +232,7 @@ ALL_DATA_DIRS = [
     SIMULATION_DIR,
     DATA_DIR / "memory",
     DATA_DIR / "simulations",
-    DATA_DIR / "logs",
     DATA_DIR / "knowledge",
-    DATA_DIR / "skills",
-    DATA_DIR / "prompt_versions",
     DATA_DIR / "learning",
     DATA_DIR / "cache",
     DATA_DIR / "adaptive",
@@ -244,10 +242,7 @@ ALL_DATA_DIRS = [
     DATA_DIR / "daemon",
     DATA_DIR / "dreams",
     DATA_DIR / "memory_graph",
-    DATA_DIR / "router_state",
     DATA_DIR / "curation",
-    DATA_DIR / "workflows",
-    DATA_DIR / "api_metadata",
 ]
 
 

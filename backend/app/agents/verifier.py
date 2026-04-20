@@ -69,29 +69,42 @@ def run(state: dict) -> dict:
 
     prompt = load_prompt("verifier")
 
-    messages = [
-        {"role": "system", "content": prompt},
-        {
-            "role": "user",
-            "content": (
-                f"Original route: {route}\n\n"
-                f"Research findings: {research}\n\n"
-                f"Planner output: {planner}\n\n"
-                f"Runtime context: {context}\n\n"
-                "Verify the plan against the research and route. Return ONLY valid JSON:\n"
-                "{\n"
-                '  "passed": true | false,\n'
-                '  "issues": ["<issue 1>", "<issue 2>"],\n'
-                '  "fixes_required": ["<fix 1>", "<fix 2>"],\n'
-                '  "confidence": 0.0-1.0\n'
-                "}\n"
-                "passed=false MUST include specific, actionable fixes_required items."
-            ),
-        },
-    ]
-
     try:
-        result = safe_parse(call_model(messages))
+        adaptive = context.get("adaptive_intelligence", {})
+        personality = adaptive.get("system_personality", {})
+        socratic_depth = personality.get("socratic_depth", 0.4)
+        
+        socratic_instruction = ""
+        if socratic_depth > 0.6:
+            socratic_instruction = (
+                "\nCRITICAL Socratic AUDIT REQUIRED:\n"
+                "- Challenge the evidence. Is it current? Is it biased?\n"
+                "- Look for logical gaps. Does the plan jump to conclusions?\n"
+                "- Search for contradictions. Does one fact undermine another?"
+            )
+
+        messages = [
+            {"role": "system", "content": prompt + socratic_instruction},
+            {
+                "role": "user",
+                "content": (
+                    f"Original route: {route}\n\n"
+                    f"Research findings: {research}\n\n"
+                    f"Planner output: {planner}\n\n"
+                    f"Runtime context: {context}\n\n"
+                    "Verify the plan against the research and route. Return ONLY valid JSON:\n"
+                    "{\n"
+                    '  "passed": true | false,\n'
+                    '  "issues": ["<issue 1>", "<issue 2>"],\n'
+                    '  "fixes_required": ["<fix 1>", "<fix 2>"],\n'
+                    '  "confidence": 0.0-1.0\n'
+                    "}\n"
+                    "passed=false MUST include specific, actionable fixes_required items."
+                ),
+            },
+        ]
+        
+        result = safe_parse(call_model(messages, personality=personality))
     except Exception as e:
         logger.error(f"[AGENT ERROR] verifier: {e}")
         result = {"status": "error", "reason": str(e)}

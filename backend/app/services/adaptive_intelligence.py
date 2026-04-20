@@ -241,6 +241,9 @@ class AdaptiveIntelligence:
             "confidence_threshold": 0.6,  # Minimum confidence to state something as fact
             "skepticism_level": 0.3,  # How skeptical of unverified claims (0-1)
             "actionability_focus": 0.8,  # How much to focus on actionable insights (0-1)
+            "deliberation_threshold": 0.5,  # Controls internal reflection loops (0-1)
+            "cognitive_breadth": 0.5,  # Controls diversity of search/strategy (0-1)
+            "socratic_depth": 0.4,  # How critical the verification is (0-1)
         }
         self.total_cases = 0
         self._load()

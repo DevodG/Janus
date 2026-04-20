@@ -597,6 +597,21 @@ def _apply_post_run_learning(app: FastAPI, case_payload: dict, runtime_context: 
     except Exception as e:
         logger.error("Self-reflection update failed: %s", e)
 
+    try:
+        from app.services.self_training import self_training_engine
+        
+        training_stats = self_training_engine.train_on_response(
+            user_input=case_payload.get("user_input", ""),
+            response=final_answer,
+            confidence=float(final.get("confidence", 0.0) or 0.0),
+            data_sources=final.get("data_sources", []),
+            elapsed=elapsed,
+            prompt_name="synthesizer",
+        )
+        logger.info(f"Self-training cycle {training_stats.get('training_cycle')} complete. Prompt score: {training_stats.get('prompt_score')}")
+    except Exception as e:
+        logger.error("Self-training engine failed: %s", e)
+
     adaptive = getattr(app.state, "adaptive", None)
     if adaptive and hasattr(adaptive, "learn_from_case"):
         try:
@@ -724,7 +739,7 @@ async def _execute_case_request(app: FastAPI, body: dict) -> dict:
             "elapsed_seconds": round(time.perf_counter() - started_at, 1),
         }
 
-    result = await asyncio.to_thread(run_case, user_input, runtime_context)
+    result = await run_case(user_input, runtime_context)
     final = result.get("final", {})
     response = {
         "case_id": result.get("case_id"),

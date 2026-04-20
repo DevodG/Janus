@@ -5,8 +5,8 @@ Provides access to market quotes, historical data, and financial metrics
 via Yahoo Finance (primary) with Alpha Vantage fallback.
 """
 
-import os
-from typing import Dict, Any, Optional
+import asyncio
+from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
 
@@ -40,14 +40,15 @@ def _get_yahoo_symbol(symbol: str) -> str:
     return symbol
 
 
-def get_quote(symbol: str) -> Dict[str, Any]:
+async def get_quote(symbol: str) -> Dict[str, Any]:
     """
-    Get real-time quote for a stock symbol.
+    Get real-time quote for a stock symbol (Async).
     """
     yf_symbol = _get_yahoo_symbol(symbol)
     try:
+        # Wrap yfinance (blocking) in a thread
         ticker = yfinance.Ticker(yf_symbol)
-        info = ticker.info
+        info = await asyncio.to_thread(lambda: ticker.info)
         if info:
             return {
                 "05. price": info.get("currentPrice") or info.get("regularMarketPrice"),
@@ -60,7 +61,6 @@ def get_quote(symbol: str) -> Dict[str, Any]:
         logger.warning(f"Yahoo Finance quote failed for {symbol}: {e}")
 
     if not ALPHAVANTAGE_API_KEY or not symbol:
-        logger.warning("Alpha Vantage API key missing or symbol empty")
         return {}
 
     try:
@@ -69,35 +69,28 @@ def get_quote(symbol: str) -> Dict[str, Any]:
             "symbol": symbol.upper(),
             "apikey": ALPHAVANTAGE_API_KEY,
         }
-        with httpx.Client(timeout=30) as client:
-            response = client.get("https://www.alphavantage.co/query", params=params)
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get("https://www.alphavantage.co/query", params=params)
 
         if response.status_code >= 400:
-            logger.error(f"Alpha Vantage API error {response.status_code}")
             return {}
 
         data = response.json()
         quote = data.get("Global Quote", {})
-
-        if quote:
-            logger.info(f"Retrieved quote for {symbol}")
-        else:
-            logger.warning(f"No quote data for {symbol}")
-
         return quote
     except Exception as e:
         logger.error(f"Error fetching quote for {symbol}: {e}")
         return {}
 
 
-def get_company_overview(symbol: str) -> Dict[str, Any]:
+async def get_company_overview(symbol: str) -> Dict[str, Any]:
     """
-    Get company overview and fundamental data using Yahoo Finance.
+    Get company overview and fundamental data using Yahoo Finance (Async).
     """
     yf_symbol = _get_yahoo_symbol(symbol)
     try:
         ticker = yfinance.Ticker(yf_symbol)
-        info = ticker.info
+        info = await asyncio.to_thread(lambda: ticker.info)
         if info:
             return {
                 "Name": info.get("longName") or info.get("shortName") or symbol,
@@ -122,14 +115,13 @@ def get_company_overview(symbol: str) -> Dict[str, Any]:
             "symbol": symbol.upper(),
             "apikey": ALPHAVANTAGE_API_KEY,
         }
-        with httpx.Client(timeout=30) as client:
-            response = client.get("https://www.alphavantage.co/query", params=params)
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get("https://www.alphavantage.co/query", params=params)
 
         if response.status_code >= 400:
             return {}
 
         data = response.json()
-        logger.info(f"Retrieved company overview for {symbol}")
         return data
     except Exception as e:
         logger.error(f"Error fetching company overview for {symbol}: {e}")
@@ -337,9 +329,9 @@ def _hist_eodhd(symbol: str, days: int) -> list:
         return []
 
 
-def search_symbol(keywords: str) -> list[Dict[str, Any]]:
+async def search_symbol(keywords: str) -> list[Dict[str, Any]]:
     """
-    Search for stock symbols by company name or keywords.
+    Search for stock symbols by company name or keywords (Async).
     """
     if not keywords:
         return []
@@ -351,15 +343,14 @@ def search_symbol(keywords: str) -> list[Dict[str, Any]]:
                 "keywords": keywords,
                 "apikey": ALPHAVANTAGE_API_KEY,
             }
-            with httpx.Client(timeout=30) as client:
-                response = client.get(
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.get(
                     "https://www.alphavantage.co/query", params=params
                 )
 
             if response.status_code < 400:
                 data = response.json()
                 matches = data.get("bestMatches", [])
-                logger.info(f"Found {len(matches)} symbol matches for '{keywords}'")
                 return matches
         except Exception as e:
             logger.error(f"Error searching symbols for '{keywords}': {e}")

@@ -333,7 +333,8 @@ Respond in this exact JSON format (no markdown, no extra text):
         raw = call_model(prompt, mode="chat")
 
         # Parse JSON from response
-        import json, re
+        import json
+        import re
 
         cleaned = raw.strip()
         if cleaned.startswith("```"):

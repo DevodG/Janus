@@ -93,8 +93,8 @@ def resolve_ticker(ticker: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def resolve_company_to_ticker(company_name: str) -> Optional[str]:
-    """Resolve company name to ticker symbol."""
+async def resolve_company_to_ticker(company_name: str) -> Optional[str]:
+    """Resolve company name to ticker symbol (Async)."""
     if not company_name:
         return None
         
@@ -114,7 +114,7 @@ def resolve_company_to_ticker(company_name: str) -> Optional[str]:
     from app.config import ALPHAVANTAGE_API_KEY
     if ALPHAVANTAGE_API_KEY:
         try:
-            results = search_symbol(company_name)
+            results = await search_symbol(company_name)
             if results:
                 return results[0].get("1. symbol")
         except Exception as e:
@@ -123,15 +123,9 @@ def resolve_company_to_ticker(company_name: str) -> Optional[str]:
     return None
 
 
-def enrich_with_tickers(entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+async def enrich_with_tickers(entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
-    Enrich entity list with ticker symbols.
-    
-    Args:
-        entities: List of entities from entity_resolver
-        
-    Returns:
-        Enriched entities with ticker information
+    Enrich entity list with ticker symbols (Async).
     """
     enriched = []
     
@@ -140,7 +134,7 @@ def enrich_with_tickers(entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         
         if entity.get("type") == "company":
             company_name = entity.get("text", "")
-            ticker = resolve_company_to_ticker(company_name)
+            ticker = await resolve_company_to_ticker(company_name)
             if ticker:
                 enriched_entity["ticker"] = ticker
         

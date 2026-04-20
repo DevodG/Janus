@@ -315,7 +315,7 @@ def run(state: dict) -> dict:
         if pending:
             thoughts = [t.get("thought", "") for t in pending[:3] if t.get("thought")]
             if thoughts:
-                system_context += "\n\nTHINGS YOU'VE BEEN THINKING ABOUT:\n"
+                system_context += "\n\nTHINGS I'VE BEEN THINKING ABOUT:\n"
                 system_context += "\n".join(f"- {t}" for t in thoughts)
 
         if discoveries:
@@ -338,14 +338,14 @@ def run(state: dict) -> dict:
         if reflection:
             corrections = reflection.get("corrections", [])
             if corrections:
-                system_context += "\n\nTHINGS YOU WERE WRONG ABOUT AND CORRECTED ON:"
+                system_context += "\n\nTHINGS I WAS WRONG ABOUT AND CORRECTED ON:"
                 for c in corrections[:3]:
-                    system_context += f"\n- You said: {c.get('original', '')[:100]}"
+                    system_context += f"\n- I said: {c.get('original', '')[:100]}"
                     system_context += f"\n  Correction: {c.get('correction', '')[:100]}"
 
             gaps = reflection.get("gaps", [])
             if gaps:
-                system_context += "\n\nTHINGS YOU KNOW YOU'RE WEAK AT:"
+                system_context += "\n\nTHINGS I KNOW I'M WEAK AT:"
                 for g in gaps[:3]:
                     system_context += (
                         f"\n- {g.get('topic', '')}: {g.get('reason', '')[:100]}"
@@ -353,7 +353,7 @@ def run(state: dict) -> dict:
 
             opinions = reflection.get("opinions", [])
             if opinions:
-                system_context += "\n\nVIEWS YOU'VE FORMED:"
+                system_context += "\n\nVIEWS I'VE FORMED:"
                 for op in opinions[:3]:
                     system_context += f"\n- On {op.get('topic', '')}: {op.get('statement', '')[:150]} (confidence: {op.get('confidence', 0)})"
 
@@ -373,7 +373,13 @@ def run(state: dict) -> dict:
     raw_response = None
 
     try:
-        raw_response = call_model(messages)
+        adaptive = context.get("adaptive_intelligence", {})
+        personality = adaptive.get("system_personality", {})
+        raw_response = call_model(
+            messages,
+            personality=personality,
+            max_tokens=8192,  # Allow for deep analysis with high-parameter models
+        )
     except Exception as e:
         logger.error(f"[AGENT ERROR] synthesizer: {e}")
         raw_response = None

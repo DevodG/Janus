@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Zap, ArrowUp } from 'lucide-react';
+import { Send, Sparkles, Zap, ArrowUp, Brain } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 
 // ─── Types ───────────────────────────────────────────────
@@ -16,7 +16,12 @@ interface Message {
     queryType?: string;
     elapsed?: number;
     confidence?: number;
-    routeInfo?: { domain_pack?: string; execution_mode?: string; complexity?: string };
+    routeInfo?: { domain_pack?: string; execution_mode?: string; complexity?: string; intent?: string };
+    research?: any;
+    finance?: any;
+    simulation?: any;
+    planner?: any;
+    verifier?: any;
   };
 }
 
@@ -134,57 +139,120 @@ function ThinkingIndicator({ stage }: { stage: string }) {
 function MessageBubble({ message, isLatest }: { message: Message; isLatest: boolean }) {
   const isUser = message.role === 'user';
 
+  let content = message.content;
+  let thoughtProcess = '';
+  // Extract <think>...</think> block via regex to simulate Claude 3.7
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+  if (thinkMatch) {
+    thoughtProcess = thinkMatch[1].trim();
+    content = content.replace(thinkMatch[0], '').trim();
+  }
+
   if (isUser) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex justify-end"
+        className="flex justify-end mb-4"
       >
-        <div className="bubble-user px-5 py-3 max-w-[600px]">
-          <p className="text-[14px] text-gray-200 leading-relaxed">{message.content}</p>
+        <div className="bg-[#2b2a2a] px-5 py-3 max-w-[600px] rounded-2xl rounded-tr-sm">
+          <p className="text-[15px] text-[#ececec] leading-relaxed whitespace-pre-wrap">{content}</p>
         </div>
       </motion.div>
     );
   }
 
+  const meta = message.metadata || {};
+  const { routeInfo, research, finance, planner } = meta;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-start gap-3 max-w-[768px]"
+      className="flex items-start gap-3 max-w-[768px] mb-6"
     >
-      <div className="mt-0.5 shrink-0">
-        <JanusOrb size={28} />
+      <div className="mt-1 shrink-0 bg-transparent border border-white/10 rounded-md p-1.5 flex items-center justify-center bg-[#1e1e1e]">
+        <Sparkles size={16} className="text-[#D97757]" />
       </div>
       <div className="flex-1 min-w-0">
         {/* Route metadata pills */}
-        {message.metadata?.routeInfo && (
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            {message.metadata.routeInfo.domain_pack && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/15">
-                {message.metadata.routeInfo.domain_pack}
+        {routeInfo && (
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            {routeInfo.domain_pack && (
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-medium text-[#D97757] bg-[#D97757]/10 border border-[#D97757]/20">
+                {routeInfo.domain_pack}
               </span>
             )}
-            {message.metadata.routeInfo.execution_mode && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] text-gray-500 bg-white/[0.04] border border-white/[0.06]">
-                {message.metadata.routeInfo.execution_mode}
+            {routeInfo.execution_mode && (
+              <span className="px-2 py-0.5 rounded-full text-[11px] text-gray-400 bg-white/[0.04] border border-white/[0.06]">
+                {routeInfo.execution_mode}
               </span>
             )}
-            {message.metadata.elapsed && (
-              <span className="text-[10px] text-gray-600">
-                {message.metadata.elapsed}s
+            {meta.elapsed && (
+              <span className="text-[11px] text-gray-500">
+                {meta.elapsed}s
               </span>
             )}
           </div>
         )}
 
+        {/* Thought Process Accordion */}
+        {(thoughtProcess || routeInfo || research) && (
+          <details open className="mb-4 bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden group">
+            <summary className="px-4 py-2.5 text-[12px] font-medium text-gray-400 cursor-pointer hover:text-gray-300 hover:bg-white/[0.02] flex items-center gap-2 select-none transition-colors">
+              <Brain size={14} className="group-open:text-[#D97757] transition-colors" /> Thought Process
+            </summary>
+            
+            <div className="px-5 py-4 text-[13px] text-gray-400 font-mono border-t border-white/[0.06] bg-black/20 whitespace-pre-wrap leading-relaxed max-h-[400px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              
+              {/* Architectural Trace */}
+              {routeInfo && (
+                <div className="mb-4 text-[#D97757]/80">
+                  <span className="opacity-70">◆ </span> Routing query to <span className="text-[#ececec]">{routeInfo.domain_pack}</span> domain 
+                  (Intent: "{routeInfo.intent || 'analysis'}")
+                </div>
+              )}
+              
+              {research?.summary && (
+                <div className="mb-4 text-emerald-400/80">
+                  <span className="opacity-70">◆ </span> Web & Knowledge Sweep Complete
+                  <div className="pl-4 mt-1 border-l border-emerald-400/20 text-[12px] text-gray-500">
+                    Sources retrieved: {research.sources?.length || 0}<br/>
+                    {research.key_facts?.length ? `Extracted ${research.key_facts.length} key facts.` : ''}
+                  </div>
+                </div>
+              )}
+
+              {finance?.tickers && Object.keys(finance.tickers).length > 0 && (
+                <div className="mb-4 text-blue-400/80">
+                  <span className="opacity-70">◆ </span> Gathered financial market data for: {Object.keys(finance.tickers).join(', ')}
+                </div>
+              )}
+
+              {planner?.plan && (
+                <div className="mb-4 text-purple-400/80 border-b border-white/[0.04] pb-4">
+                  <span className="opacity-70">◆ </span> Executed analytical reasoning graph
+                </div>
+              )}
+
+              {/* LLM Extended Thinking Trace */}
+              {thoughtProcess && (
+                <div>
+                  <div className="text-gray-500 mb-2 uppercase tracking-wide text-[10px]">Internal Cognitive Trace</div>
+                  {thoughtProcess}
+                </div>
+              )}
+              
+            </div>
+          </details>
+        )}
+
         {/* Response content */}
-        <div className="text-[14px] text-gray-300 leading-[1.7] whitespace-pre-wrap">
+        <div className="text-[15px] text-[#d1d5db] leading-[1.7] whitespace-pre-wrap">
           {isLatest ? (
-            <Typewriter text={message.content} speed={6} />
+            <Typewriter text={content} speed={6} />
           ) : (
-            message.content
+            content
           )}
         </div>
       </div>

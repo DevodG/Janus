@@ -20,7 +20,14 @@ from typing import TypedDict, Dict, Any, Optional
 
 from langgraph.graph import StateGraph, START, END
 
-from app.agents import planner, switchboard, research, synthesizer, verifier
+from app.agents import (
+    planner,
+    switchboard,
+    research,
+    synthesizer,
+    verifier,
+    mental_scratchpad,
+)
 from app.agents import mirofish_node, finance_node
 
 logger = logging.getLogger(__name__)
@@ -39,6 +46,7 @@ class AgentState(TypedDict, total=False):
     errors: list
     context: dict
     replan_count: int
+    scratchpad: dict
 
 
 def switchboard_node(state: AgentState) -> dict:
@@ -51,17 +59,17 @@ def switchboard_node(state: AgentState) -> dict:
     return result
 
 
-def mirofish_node_fn(state: AgentState) -> dict:
+async def mirofish_node_fn(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    result = mirofish_node.run(state)
+    result = await mirofish_node.run(state)
     elapsed = time.perf_counter() - t0
     logger.info(f"[{state.get('case_id', '?')[:8]}] mirofish: {elapsed:.2f}s")
     return result
 
 
-def finance_node_fn(state: AgentState) -> dict:
+async def finance_node_fn(state: AgentState) -> dict:
     t0 = time.perf_counter()
-    result = finance_node.run(state)
+    result = await finance_node.run(state)
     elapsed = time.perf_counter() - t0
     logger.info(f"[{state.get('case_id', '?')[:8]}] finance: {elapsed:.2f}s")
     return result
@@ -102,6 +110,14 @@ def synthesizer_node(state: AgentState) -> dict:
     return result
 
 
+def mental_scratchpad_node(state: AgentState) -> dict:
+    t0 = time.perf_counter()
+    result = mental_scratchpad.run(state)
+    elapsed = time.perf_counter() - t0
+    logger.info(f"[{state.get('case_id', '?')[:8]}] mental_scratchpad: {elapsed:.2f}s")
+    return result
+
+
 def repair_node(state: AgentState) -> dict:
     next_replan = state.get("replan_count", 0) + 1
     logger.info(
@@ -126,7 +142,10 @@ def after_switchboard(state: AgentState) -> str:
             "[%s] switchboard triggered simulation due to low confidence",
             state.get("case_id", "?")[:8],
         )
-        return "mirofish"
+    # High Complexity Deliberation: Go through Scratchpad
+    if route.get("complexity") in {"high", "very_high"}:
+        return "mental_scratchpad"
+
     return "research"
 
 
@@ -143,7 +162,13 @@ def after_finance(state: AgentState) -> str:
 
 def after_verifier(state: AgentState) -> str:
     verifier_result = state.get("verifier", {})
-    if not verifier_result.get("passed", True) and state.get("replan_count", 0) < 1:
+    route = state.get("route", {})
+    complexity = route.get("complexity", "medium")
+    
+    # Allow 2 replans (3 attempts total) for high/very_high complexity, otherwise 1 replan.
+    max_replans = 2 if complexity in {"high", "very_high"} else 1
+    
+    if not verifier_result.get("passed", True) and state.get("replan_count", 0) < max_replans:
         return "repair"
     return "synthesizer"
 
@@ -159,14 +184,23 @@ def build_graph():
     g.add_node("verifier", verifier_node)
     g.add_node("repair", repair_node)
     g.add_node("synthesizer", synthesizer_node)
+    g.add_node("mental_scratchpad", mental_scratchpad_node)
 
     g.set_entry_point("switchboard")
 
     g.add_conditional_edges(
         "switchboard",
         after_switchboard,
-        {"mirofish": "mirofish", "finance": "finance", "research": "research"},
+        {
+            "mirofish": "mirofish",
+            "finance": "finance",
+            "research": "research",
+            "synthesizer": "synthesizer",
+            "mental_scratchpad": "mental_scratchpad",
+        },
     )
+
+    g.add_edge("mental_scratchpad", "research")
 
     g.add_edge("mirofish", "research")
     g.add_conditional_edges(
@@ -217,7 +251,7 @@ def graph_status():
     return {"status": "not_compiled"}
 
 
-def run_case(user_input: str, context: dict = None) -> dict:
+async def run_case(user_input: str, context: dict = None) -> dict:
     """Run the optimized agent pipeline on user input."""
     graph = get_compiled_graph()
     case_id = str(uuid.uuid4())
@@ -238,7 +272,7 @@ def run_case(user_input: str, context: dict = None) -> dict:
     if context:
         initial_state["context"] = context
 
-    result = graph.invoke(initial_state)
+    result = await graph.ainvoke(initial_state)
 
     elapsed = time.perf_counter() - t0
     logger.info("Case %s completed in %.2fs", case_id, elapsed)

@@ -6,6 +6,7 @@ Fallback: Actually Relevant (free, no key, curated)
 Legacy: Alpha Vantage (requires API key)
 """
 
+import asyncio
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import logging
@@ -56,38 +57,34 @@ def _normalize_actually_relevant(stories: list) -> List[Dict[str, Any]]:
     return articles
 
 
-def _fetch_actually_relevant(
+async def _fetch_actually_relevant(
     issue_slug: str = None, page_size: int = 10, search_query: str = None
 ) -> List[Dict[str, Any]]:
-    """Fetch curated stories from Actually Relevant API."""
+    """Fetch curated stories from Actually Relevant API (Async)."""
     try:
         params = {"pageSize": page_size}
         if issue_slug:
             params["issueSlug"] = issue_slug
         if search_query:
             params["query"] = search_query
-        with httpx.Client(timeout=15) as client:
-            response = client.get(f"{ACTUALLY_RELEVANT_API}/stories", params=params)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(f"{ACTUALLY_RELEVANT_API}/stories", params=params)
         if response.status_code == 200:
             data = response.json()
             stories = data.get("data", [])
             if stories:
-                logger.info(
-                    f"Retrieved {len(stories)} curated stories from Actually Relevant"
-                )
                 return _normalize_actually_relevant(stories[:page_size])
     except Exception as e:
         logger.warning(f"Actually Relevant API failed: {e}")
     return []
 
 
-def _get_yahoo_finance_news(symbol: str) -> List[Dict[str, Any]]:
-    """Get news from Yahoo Finance for a specific symbol."""
+async def _get_yahoo_finance_news(symbol: str) -> List[Dict[str, Any]]:
+    """Get news from Yahoo Finance for a specific symbol (Async)."""
     try:
         ticker = yfinance.Ticker(symbol)
-        news = ticker.news
+        news = await asyncio.to_thread(lambda: ticker.news)
         if not news:
-            logger.info(f"No news from Yahoo Finance for {symbol}")
             return []
 
         articles = []
@@ -113,21 +110,19 @@ def _get_yahoo_finance_news(symbol: str) -> List[Dict[str, Any]]:
                     }
                 )
             except Exception as inner_e:
-                logger.warning(f"Failed to parse news item: {inner_e}")
                 continue
 
-        logger.info(f"Got {len(articles)} articles from Yahoo Finance for {symbol}")
         return articles
     except Exception as e:
         logger.warning(f"Yahoo Finance news failed for {symbol}: {e}")
     return []
 
 
-def search_news(
+async def search_news(
     query: str, page_size: int = 10, language: str = "en", sort_by: str = "publishedAt"
 ) -> List[Dict[str, Any]]:
-    """Search for news articles."""
-    articles = _fetch_actually_relevant(page_size=page_size, search_query=query)
+    """Search for news articles (Async)."""
+    articles = await _fetch_actually_relevant(page_size=page_size, search_query=query)
     if articles:
         query_lower = query.lower()
         filtered = [
@@ -149,31 +144,28 @@ def search_news(
                 "sortBy": sort_by,
                 "apiKey": NEWSAPI_KEY,
             }
-            with httpx.Client(timeout=30) as client:
-                response = client.get(
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.get(
                     "https://newsapi.org/v2/everything", params=params
                 )
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get("articles", [])
                 if articles:
-                    logger.info(
-                        f"Found {len(articles)} articles for '{query}' via NewsAPI"
-                    )
                     return articles
         except Exception as e:
             logger.warning(f"NewsAPI search failed: {e}")
 
     if ALPHAVANTAGE_API_KEY:
-        return _search_alphavantage(query, page_size)
+        return await _search_alphavantage(query, page_size)
 
     return []
 
 
-def get_top_headlines(
+async def get_top_headlines(
     category: str = "business", country: str = "us", page_size: int = 10
 ) -> List[Dict[str, Any]]:
-    """Get top headlines by category."""
+    """Get top headlines by category (Async)."""
     issue_map = {
         "business": None,
         "technology": "science-technology",
@@ -182,7 +174,7 @@ def get_top_headlines(
         "general": None,
     }
     issue_slug = issue_map.get(category)
-    articles = _fetch_actually_relevant(
+    articles = await _fetch_actually_relevant(
         issue_slug=issue_slug, page_size=page_size, search_query=category
     )
     if articles:
@@ -196,8 +188,8 @@ def get_top_headlines(
                 "pageSize": min(page_size, 100),
                 "apiKey": NEWSAPI_KEY,
             }
-            with httpx.Client(timeout=15) as client:
-                response = client.get(
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(
                     "https://newsapi.org/v2/top-headlines", params=params
                 )
             if response.status_code == 200:
@@ -209,13 +201,13 @@ def get_top_headlines(
             logger.warning(f"NewsAPI headlines failed: {e}")
 
     if ALPHAVANTAGE_API_KEY:
-        return _get_headlines_from_alphavantage(category, page_size)
+        return await _get_headlines_from_alphavantage(category, page_size)
 
     return []
 
 
-def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]]:
-    """Search Alpha Vantage news by query/ticker/company name."""
+async def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]]:
+    """Search Alpha Vantage news by query/ticker/company name (Async)."""
     if not ALPHAVANTAGE_API_KEY:
         return []
     try:
@@ -225,8 +217,8 @@ def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]
             "limit": page_size,
             "apikey": ALPHAVANTAGE_API_KEY,
         }
-        with httpx.Client(timeout=15) as client:
-            response = client.get("https://www.alphavantage.co/query", params=params)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get("https://www.alphavantage.co/query", params=params)
         if response.status_code != 200:
             return []
         data = response.json()
@@ -265,10 +257,10 @@ def _search_alphavantage(query: str, page_size: int = 10) -> List[Dict[str, Any]
         return []
 
 
-def _get_headlines_from_alphavantage(
+async def _get_headlines_from_alphavantage(
     category: str = "business", page_size: int = 10
 ) -> List[Dict[str, Any]]:
-    """Get headlines from Alpha Vantage News & Sentiment endpoint."""
+    """Get headlines from Alpha Vantage News & Sentiment endpoint (Async)."""
     if not ALPHAVANTAGE_API_KEY:
         return []
     topic_map = {
@@ -288,8 +280,8 @@ def _get_headlines_from_alphavantage(
             "limit": page_size,
             "apikey": ALPHAVANTAGE_API_KEY,
         }
-        with httpx.Client(timeout=15) as client:
-            response = client.get("https://www.alphavantage.co/query", params=params)
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get("https://www.alphavantage.co/query", params=params)
         if response.status_code != 200:
             return []
         data = response.json()
@@ -317,16 +309,13 @@ def _get_headlines_from_alphavantage(
         return []
 
 
-def get_company_news(
+async def get_company_news(
     company_name: str, days_back: int = 7, symbol: str = None
 ) -> List[Dict[str, Any]]:
-    """Get recent news about a specific company."""
+    """Get recent news about a specific company (Async)."""
     if symbol:
-        yf_articles = _get_yahoo_finance_news(symbol)
+        yf_articles = await _get_yahoo_finance_news(symbol)
         if yf_articles:
-            logger.info(
-                f"Found {len(yf_articles)} articles from Yahoo Finance for {symbol}"
-            )
             return yf_articles[:10]
 
     search_queries = []
@@ -343,7 +332,7 @@ def get_company_news(
     for query in search_queries:
         if not query:
             continue
-        articles = _fetch_actually_relevant(page_size=20, search_query=query)
+        articles = await _fetch_actually_relevant(page_size=20, search_query=query)
         if articles:
             query_lower = query.lower()
             symbol_lower = (symbol or "").lower()
@@ -356,7 +345,7 @@ def get_company_news(
             if filtered:
                 return filtered[:10]
 
-    articles = _fetch_actually_relevant(page_size=20, search_query=company_name)
+    articles = await _fetch_actually_relevant(page_size=20, search_query=company_name)
     if articles:
         company_lower = company_name.lower()
         filtered = [
@@ -382,8 +371,8 @@ def get_company_news(
                 "pageSize": 20,
                 "apiKey": NEWSAPI_KEY,
             }
-            with httpx.Client(timeout=30) as client:
-                response = client.get(
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.get(
                     "https://newsapi.org/v2/everything", params=params
                 )
             if response.status_code == 200:
@@ -394,4 +383,4 @@ def get_company_news(
         except Exception as e:
             logger.warning(f"NewsAPI company news failed: {e}")
 
-    return _search_alphavantage(company_name, 20)
+    return await _search_alphavantage(company_name, 20)
