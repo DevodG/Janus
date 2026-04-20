@@ -4,7 +4,10 @@ Uses lightweight HTTP crawler (no Playwright needed), Knowledge Store, and API D
 to gather context before calling the LLM for structured analysis.
 """
 
-import os, json, re, logging
+import os
+import json
+import re
+import logging
 from urllib.parse import quote_plus
 import httpx
 from app.agents._model import call_model

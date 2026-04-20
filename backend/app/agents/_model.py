@@ -5,7 +5,11 @@ All tiers use the OpenAI-compatible messages format.
 Includes retry-with-backoff for 429 rate limits.
 """
 
-import os, json, re, logging, time
+import os
+import json
+import re
+import logging
+import time
 import httpx
 from typing import Any
 
