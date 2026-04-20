@@ -150,10 +150,24 @@ class ContextEngine:
     def add_pending_thought(self, thought: str, priority: float = 0.5, source: str = "system"):
         """Add a thought to the pending queue — with dedup and cap enforcement."""
         thought = thought.strip()
-        if not thought or len(thought) < 10:
+        if not thought or len(thought) < 15:
             return
 
-        # Deduplicate by exact text
+        # NEW: rate-limit daemon sources to 1 thought per hour
+        now = time.time()
+        if source in {"dream", "curiosity", "daemon"}:
+            last = getattr(self, '_last_daemon_thought', 0)
+            if now - last < 3600:
+                return
+            self._last_daemon_thought = now
+        
+        # NEW: fingerprint dedup (first 80 chars)
+        import re
+        def fp(t): return re.sub(r"[^a-z0-9 ]", "", t.lower())[:80]
+        if any(fp(thought) == fp(t.get("thought","")) for t in self._pending_thoughts):
+            return
+
+        # Deduplicate by exact text (kept for backwards compat)
         existing_texts = {t.get("thought", "") for t in self._pending_thoughts}
         if thought in existing_texts:
             logger.debug(f"ContextEngine: duplicate thought skipped: {thought[:60]}")

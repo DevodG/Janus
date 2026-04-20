@@ -194,10 +194,10 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
 
     free_models = [
         "meta-llama/llama-3.3-70b-instruct:free",
-        "deepseek/deepseek-chat-v3-0324:free",
-        "qwen/qwen-2.5-72b-instruct:free",
         "google/gemma-3-27b-it:free",
-        "mistralai/mistral-7b-instruct:free",
+        "microsoft/phi-4:free",
+        "nousresearch/hermes-3-llama-3.1-405b:free",
+        "liquid/lfm-40b:free",
     ]
 
     errors = []
