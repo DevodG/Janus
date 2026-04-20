@@ -54,6 +54,7 @@ Useful env vars:
 ```bash
 export HUGGINGFACE_API_KEY=...
 export TAVILY_API_KEY=...
+export JANUS_DATA_DIR=./data
 ```
 
 Optional overrides:

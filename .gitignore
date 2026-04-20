@@ -26,15 +26,32 @@ frontend/.turbo/
 frontend/out/
 
 # ── Runtime data (never commit) ───────────────────────────────
+backend/data/
+data/
+
 backend/app/data/memory/*.json
 backend/app/data/simulations/*.json
 backend/app/data/logs/*
 backend/app/data/knowledge/*.json
+!backend/app/data/knowledge/global_markets_seed.json
 backend/app/data/skills/*.json
 backend/app/data/prompt_versions/*.json
 backend/app/data/learning/*.json
 backend/app/data/cache/
 backend/app/data/adaptive/
+
+# Daemon + background systems runtime state
+backend/app/data/daemon/
+backend/app/data/curiosity/
+backend/app/data/dreams/
+backend/app/data/fine_tuning/
+backend/app/data/router_state/
+backend/app/data/memory_graph/
+backend/app/data/context/
+backend/app/data/workflows/
+backend/app/data/curation/
+backend/app/data/api_metadata/
+backend/app/data/api_catalog_cache.json
 
 # Sentinel runtime data
 backend/app/data/sentinel/*.json

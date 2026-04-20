@@ -10,7 +10,12 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-METADATA_DIR = Path(__file__).parent.parent.parent / "data" / "api_metadata"
+try:
+    from app.config import DATA_DIR
+except ImportError:
+    DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+METADATA_DIR = Path(DATA_DIR) / "api_metadata"
 METADATA_DIR.mkdir(parents=True, exist_ok=True)
 
 

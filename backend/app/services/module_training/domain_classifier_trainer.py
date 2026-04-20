@@ -41,10 +41,12 @@ class DomainClassifierTrainer:
 
     def __init__(self, data_dir: Optional[Path] = None):
         if data_dir is None:
-            # Default to backend/data/curation
-            self.data_dir = (
-                Path(__file__).parent.parent.parent.parent / "data" / "curation"
-            )
+            try:
+                from app.config import DATA_DIR as BASE_DATA_DIR
+            except ImportError:
+                BASE_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+
+            self.data_dir = Path(BASE_DATA_DIR) / "curation"
         else:
             self.data_dir = data_dir
 
