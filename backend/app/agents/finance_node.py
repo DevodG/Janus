@@ -5,7 +5,8 @@ No chart rendering — raw structured data only.
 """
 
 from typing import List, Dict, Any, Optional
-import json, httpx, os, re, logging
+import json
+import httpx, os, re, logging
 from app.agents._model import call_model, safe_parse
 from app.config import load_prompt
 from app.domain_packs.finance.entity_resolver import extract_entities
