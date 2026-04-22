@@ -145,11 +145,10 @@ def _call_gemini(messages: List[Dict[str, str]], **kwargs) -> str:
                 r.raise_for_status()
                 data = r.json()
 
-            candidates = data.get("candidates", [])
-            if not candidates:
+            cands = data.get("candidates", [])
+            if not cands:
                 raise ValueError(f"No candidates in Gemini response from {model}")
-            content = candidates[0].get("content", {})
-            parts = content.get("parts", [])
+            parts = cands[0].get("content", {}).get("parts", [])
             if not parts:
                 raise ValueError(f"No parts in Gemini response from {model}")
             text = parts[0].get("text", "")
@@ -193,11 +192,11 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
         raise ValueError("OPENROUTER_API_KEY not set")
 
     free_models = [
-        "deepseek/deepseek-r1:free",
-        "google/gemini-2.0-flash-thinking-exp:free",
         "meta-llama/llama-3.3-70b-instruct:free",
         "google/gemma-3-27b-it:free",
+        "microsoft/phi-4:free",
         "nousresearch/hermes-3-llama-3.1-405b:free",
+        "liquid/lfm-40b:free",
     ]
 
     errors = []
