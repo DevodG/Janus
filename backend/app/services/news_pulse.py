@@ -235,6 +235,7 @@ class NewsPulse:
             "topics_count": len(self.topics),
             "current_topic_index": self._current_topic_index,
             "active_provider": self.active_provider,
+            "configured_providers": [p for p, k in self.providers.items() if k],
             "last_error": self.last_error,
             "total_fetched_last_cycle": self.total_fetched_last_cycle,
             "total_signals_last_cycle": self.total_signals_last_cycle,
