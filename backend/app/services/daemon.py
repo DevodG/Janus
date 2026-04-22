@@ -344,7 +344,7 @@ class JanusDaemon:
                 "current_tasks": phase_config["tasks"],
             },
             "watchlist": self.market_watcher.watchlist,
-            "topics": self.news_pulse.topics,
+            "news_pulse": self.news_pulse.get_status(),
             "signal_queue": self.signal_queue.get_stats(),
             "dream_processor": self.dream_processor.get_status(),
             "curiosity_engine": self.curiosity.get_status(),
