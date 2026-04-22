@@ -2090,7 +2090,10 @@ def create_app() -> FastAPI:
     async def daemon_status():
         daemon = _services.get("daemon")
         if daemon:
-            return daemon.get_status()
+            from app.agents.smart_router import get_router_status
+            status = daemon.get_status()
+            status["router_health"] = get_router_status()
+            return status
         return {"running": False, "message": "Daemon not started"}
 
     @app.get("/daemon/alerts")
