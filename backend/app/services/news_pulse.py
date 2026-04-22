@@ -40,6 +40,9 @@ class NewsPulse:
         ]
         self.seen_titles: set = set()
         self._load_seen_titles()
+        self.last_error = None
+        self.total_fetched_last_cycle = 0
+        self.total_signals_last_cycle = 0
 
     def _load_seen_titles(self):
         """Load seen titles to avoid duplicates."""
@@ -59,7 +62,11 @@ class NewsPulse:
 
     def fetch(self) -> List[Dict]:
         """Fetch news for all topics. Returns list of signals."""
+        self.total_fetched_last_cycle = 0
+        self.total_signals_last_cycle = 0
+        
         if not self.api_key:
+            self.last_error = "No NewsAPI key"
             logger.warning("[NEWS] No NewsAPI key")
             return []
 
@@ -67,13 +74,16 @@ class NewsPulse:
         for topic in self.topics:
             try:
                 articles = self._fetch_news(topic)
+                self.total_fetched_last_cycle += len(articles)
                 for article in articles:
                     signal = self._classify_article(article, topic)
                     if signal:
                         signals.append(signal)
             except Exception as e:
+                self.last_error = str(e)
                 logger.error(f"[NEWS] Error fetching {topic}: {e}")
 
+        self.total_signals_last_cycle = len(signals)
         if signals:
             logger.info(
                 f"[NEWS] Generated {len(signals)} signals from {len(self.topics)} topics"
@@ -205,6 +215,17 @@ class NewsPulse:
 
         logger.info(f"[NEWS] {topic}: {title[:80]}... ({severity})")
         return signal
+
+    def get_status(self) -> dict:
+        """Get status for monitoring."""
+        return {
+            "topics_count": len(self.topics),
+            "seen_titles_count": len(self.seen_titles),
+            "last_error": self.last_error,
+            "total_fetched_last_cycle": self.total_fetched_last_cycle,
+            "total_signals_last_cycle": self.total_signals_last_cycle,
+            "api_key_configured": bool(self.api_key)
+        }
 
     def get_recent_news(self, limit: int = 20) -> List[Dict]:
         """Get recent news from disk."""
