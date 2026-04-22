@@ -1,6 +1,6 @@
 """
 News Pulse — Background daemon service for Janus.
-Fetches news from NewsAPI, classifies signal vs noise, stores signals.
+Fetches news from multiple providers (NewsAPI, GNews, NewsData) with fallback logic.
 """
 
 import os
@@ -11,7 +11,7 @@ import httpx
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from app.config import DATA_DIR as BASE_DATA_DIR, NEWS_API_KEY
+from app.config import DATA_DIR as BASE_DATA_DIR, NEWS_API_KEY, GNEWS_API_KEY, NEWDATA_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,11 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 class NewsPulse:
     def __init__(self, topics: List[str] = None):
-        self.api_key = NEWS_API_KEY
+        self.providers = {
+            "newsapi": NEWS_API_KEY,
+            "gnews": GNEWS_API_KEY,
+            "newsdata": NEWDATA_API_KEY
+        }
         self.topics = topics or [
             "artificial intelligence",
             "global equities",
@@ -40,7 +44,10 @@ class NewsPulse:
         ]
         self.seen_titles: set = set()
         self._load_seen_titles()
+        
+        # Diagnostics
         self.last_error = None
+        self.active_provider = "newsapi"
         self.total_fetched_last_cycle = 0
         self.total_signals_last_cycle = 0
         self._current_topic_index = 0
@@ -63,19 +70,13 @@ class NewsPulse:
 
     def fetch(self) -> List[Dict]:
         """
-        Fetch news with topic cycling to stay within NewsAPI free tier limits (100 req/day).
-        Fetches 1-2 topics per cycle instead of all 14.
+        Fetch news with provider fallback and topic cycling.
+        Attempts NewsAPI -> GNews -> NewsData.
         """
         self.total_fetched_last_cycle = 0
         self.total_signals_last_cycle = 0
         
-        if not self.api_key:
-            self.last_error = "No NewsAPI key"
-            logger.warning("[NEWS] No NewsAPI key")
-            return []
-
-        # Optimization: Fetch 2 topics per cycle (approx 14 cycles/day * 2 = 28 req/day)
-        # 14 cycles * 2 topics = 28 requests/day. Well within 100 limit.
+        # Select topics for this cycle (rotating queue)
         topics_to_fetch = []
         for _ in range(2):
             topics_to_fetch.append(self.topics[self._current_topic_index])
@@ -83,33 +84,82 @@ class NewsPulse:
 
         signals = []
         for topic in topics_to_fetch:
-            try:
-                articles = self._fetch_news(topic)
-                self.total_fetched_last_cycle += len(articles)
-                for article in articles:
-                    signal = self._classify_article(article, topic)
-                    if signal:
-                        signals.append(signal)
-            except Exception as e:
-                self.last_error = str(e)
-                logger.error(f"[NEWS] Error fetching {topic}: {e}")
+            # Try providers in order
+            fetched_articles = []
+            provider_chain = ["newsapi", "gnews", "newsdata"]
+            
+            for provider in provider_chain:
+                key = self.providers.get(provider)
+                if not key:
+                    continue
+                
+                try:
+                    self.active_provider = provider
+                    if provider == "newsapi":
+                        fetched_articles = self._fetch_newsapi(topic, key)
+                    elif provider == "gnews":
+                        fetched_articles = self._fetch_gnews(topic, key)
+                    elif provider == "newsdata":
+                        fetched_articles = self._fetch_newsdata(topic, key)
+                    
+                    if fetched_articles:
+                        self.last_error = None # Clear error if successful
+                        break
+                except Exception as e:
+                    self.last_error = f"{provider} error: {str(e)}"
+                    logger.warning(f"[NEWS] Provider {provider} failed for {topic}: {e}")
+                    continue # Try next provider
+
+            self.total_fetched_last_cycle += len(fetched_articles)
+            for article in fetched_articles:
+                signal = self._classify_article(article, topic)
+                if signal:
+                    signals.append(signal)
 
         self.total_signals_last_cycle = len(signals)
         if signals:
             logger.info(
-                f"[NEWS] Generated {len(signals)} signals from {len(topics_to_fetch)} topics"
+                f"[NEWS] Generated {len(signals)} signals via {self.active_provider}"
             )
 
         self._save_seen_titles()
         return signals
 
-    def _fetch_news(self, topic: str) -> List[Dict]:
-        """Fetch news for a topic from NewsAPI."""
-        url = f"https://newsapi.org/v2/everything?q={topic}&sortBy=publishedAt&language=en&pageSize=10&apiKey={self.api_key}"
+    def _fetch_newsapi(self, topic: str, key: str) -> List[Dict]:
+        """Fetch from NewsAPI.org."""
+        url = f"https://newsapi.org/v2/everything?q={topic}&sortBy=publishedAt&language=en&pageSize=10&apiKey={key}"
         r = httpx.get(url, timeout=10)
         r.raise_for_status()
-        data = r.json()
-        return data.get("articles", [])
+        return r.json().get("articles", [])
+
+    def _fetch_gnews(self, topic: str, key: str) -> List[Dict]:
+        """Fetch from GNews.io."""
+        url = f"https://gnews.io/api/v4/search?q={topic}&lang=en&max=10&apikey={key}"
+        r = httpx.get(url, timeout=10)
+        r.raise_for_status()
+        # Normalize GNews format to match NewsAPI roughly
+        articles = r.json().get("articles", [])
+        for a in articles:
+            a["source"] = {"name": a.get("source", {}).get("name", "GNews")}
+        return articles
+
+    def _fetch_newsdata(self, topic: str, key: str) -> List[Dict]:
+        """Fetch from NewsData.io."""
+        url = f"https://newsdata.io/api/1/news?apikey={key}&q={topic}&language=en"
+        r = httpx.get(url, timeout=10)
+        r.raise_for_status()
+        # Normalize NewsData format
+        results = r.json().get("results", [])
+        normalized = []
+        for res in results:
+            normalized.append({
+                "title": res.get("title"),
+                "description": res.get("description"),
+                "url": res.get("link"),
+                "source": {"name": res.get("source_id", "NewsData")},
+                "publishedAt": res.get("pubDate")
+            })
+        return normalized
 
     def _classify_article(self, article: Dict, topic: str) -> Optional[Dict]:
         """Classify a news article for signal vs noise. Returns signal if meaningful."""
@@ -140,38 +190,11 @@ class NewsPulse:
 
         # Market-moving event detection
         market_keywords = [
-            "earnings",
-            "revenue",
-            "profit",
-            "loss",
-            "guidance",
-            "fed",
-            "rate",
-            "inflation",
-            "gdp",
-            "merger",
-            "acquisition",
-            "buyout",
-            "sec",
-            "investigation",
-            "lawsuit",
-            "ceo",
-            "resign",
-            "fired",
-            "appointed",
-            "layoff",
-            "hire",
-            "expansion",
-            "regulation",
-            "ban",
-            "approval",
-            "breakthrough",
-            "launch",
-            "recall",
-            "crash",
-            "surge",
-            "plunge",
-            "rally",
+            "earnings", "revenue", "profit", "loss", "guidance", "fed", "rate", 
+            "inflation", "gdp", "merger", "acquisition", "buyout", "sec", 
+            "investigation", "lawsuit", "ceo", "resign", "fired", "appointed", 
+            "layoff", "hire", "expansion", "regulation", "ban", "approval", 
+            "breakthrough", "launch", "recall", "crash", "surge", "plunge", "rally"
         ]
 
         for kw in market_keywords:
@@ -181,26 +204,8 @@ class NewsPulse:
                     severity = "medium"
 
         # Sentiment detection
-        positive_words = [
-            "surge",
-            "rally",
-            "beat",
-            "record",
-            "growth",
-            "breakthrough",
-            "approval",
-            "launch",
-        ]
-        negative_words = [
-            "crash",
-            "plunge",
-            "miss",
-            "loss",
-            "scandal",
-            "investigation",
-            "recall",
-            "ban",
-        ]
+        positive_words = ["surge", "rally", "beat", "record", "growth", "breakthrough", "approval", "launch"]
+        negative_words = ["crash", "plunge", "miss", "loss", "scandal", "investigation", "recall", "ban"]
 
         sentiment = "neutral"
         if any(w in title.lower() for w in positive_words):
@@ -211,11 +216,11 @@ class NewsPulse:
         if not signals:
             return None
 
-        signal = {
+        return {
             "type": "news",
             "title": title,
             "description": description or "",
-            "source": source,
+            "source": f"{source} ({self.active_provider})",
             "topic": topic,
             "signals": signals,
             "severity": severity,
@@ -224,19 +229,15 @@ class NewsPulse:
             "timestamp": published_at or datetime.utcnow().isoformat(),
         }
 
-        logger.info(f"[NEWS] {topic}: {title[:80]}... ({severity})")
-        return signal
-
     def get_status(self) -> dict:
         """Get status for monitoring."""
         return {
             "topics_count": len(self.topics),
             "current_topic_index": self._current_topic_index,
-            "seen_titles_count": len(self.seen_titles),
+            "active_provider": self.active_provider,
             "last_error": self.last_error,
             "total_fetched_last_cycle": self.total_fetched_last_cycle,
             "total_signals_last_cycle": self.total_signals_last_cycle,
-            "api_key_configured": bool(self.api_key)
         }
 
     def get_recent_news(self, limit: int = 20) -> List[Dict]:
