@@ -2105,6 +2105,14 @@ def create_app() -> FastAPI:
                 return daemon.signal_queue.get_stats()
         return []
 
+    @app.get("/daemon/trigger")
+    async def daemon_trigger():
+        daemon = _services.get("daemon")
+        if daemon:
+            daemon._force_cycles = True
+            return {"message": "Daemon cycle triggered manually"}
+        return {"running": False, "message": "Daemon not started"}
+
     @app.get("/daemon/watchlist")
     async def daemon_watchlist():
         daemon = _services.get("daemon")
