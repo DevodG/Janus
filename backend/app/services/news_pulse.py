@@ -43,6 +43,7 @@ class NewsPulse:
         self.last_error = None
         self.total_fetched_last_cycle = 0
         self.total_signals_last_cycle = 0
+        self._current_topic_index = 0
 
     def _load_seen_titles(self):
         """Load seen titles to avoid duplicates."""
@@ -61,7 +62,10 @@ class NewsPulse:
             json.dump(list(self.seen_titles)[-5000:], f)  # Keep last 5000
 
     def fetch(self) -> List[Dict]:
-        """Fetch news for all topics. Returns list of signals."""
+        """
+        Fetch news with topic cycling to stay within NewsAPI free tier limits (100 req/day).
+        Fetches 1-2 topics per cycle instead of all 14.
+        """
         self.total_fetched_last_cycle = 0
         self.total_signals_last_cycle = 0
         
@@ -70,8 +74,15 @@ class NewsPulse:
             logger.warning("[NEWS] No NewsAPI key")
             return []
 
+        # Optimization: Fetch 2 topics per cycle (approx 14 cycles/day * 2 = 28 req/day)
+        # 14 cycles * 2 topics = 28 requests/day. Well within 100 limit.
+        topics_to_fetch = []
+        for _ in range(2):
+            topics_to_fetch.append(self.topics[self._current_topic_index])
+            self._current_topic_index = (self._current_topic_index + 1) % len(self.topics)
+
         signals = []
-        for topic in self.topics:
+        for topic in topics_to_fetch:
             try:
                 articles = self._fetch_news(topic)
                 self.total_fetched_last_cycle += len(articles)
@@ -86,7 +97,7 @@ class NewsPulse:
         self.total_signals_last_cycle = len(signals)
         if signals:
             logger.info(
-                f"[NEWS] Generated {len(signals)} signals from {len(self.topics)} topics"
+                f"[NEWS] Generated {len(signals)} signals from {len(topics_to_fetch)} topics"
             )
 
         self._save_seen_titles()
@@ -220,6 +231,7 @@ class NewsPulse:
         """Get status for monitoring."""
         return {
             "topics_count": len(self.topics),
+            "current_topic_index": self._current_topic_index,
             "seen_titles_count": len(self.seen_titles),
             "last_error": self.last_error,
             "total_fetched_last_cycle": self.total_fetched_last_cycle,
