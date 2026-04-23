@@ -7,7 +7,13 @@ Uses the `datasets` library with streaming to avoid full downloads.
 
 import logging
 import time
+import json
 from typing import Dict, List, Any, Optional
+from huggingface_hub import HfApi, hf_hub_download
+try:
+    from datasets import load_dataset
+except ImportError:
+    load_dataset = None
 
 logger = logging.getLogger(__name__)
 
@@ -178,13 +184,10 @@ class HFDatasetSearcher:
         self, dataset_name: str, max_samples: int = 100, split: str = "train"
     ) -> List[Dict]:
         """
-        Get dataset info via HF Hub API (lightweight, no datasets library needed).
+        Get dataset info via HF Hub API (lightweight).
         Returns dataset metadata and sample info instead of full data.
         """
         try:
-            from huggingface_hub import HfApi, hf_hub_download
-            import json
-
             api = HfApi()
 
             # Get dataset info
@@ -218,13 +221,14 @@ class HFDatasetSearcher:
             logger.warning(f"Failed to get basic dataset info for {dataset_name}: {e}")
             sample_data = {"dataset_name": dataset_name}
 
+        if not load_dataset:
+            logger.warning("datasets library not installed, skipping stream")
+            return [sample_data]
+
         try:
-            from datasets import load_dataset
-
-            # Try to load the dataset using the library
-            ds = load_dataset(dataset_name, split=split, streaming=True)
+            # Try to load the dataset using the library with streaming
+            ds = load_dataset(dataset_name, split=split or "train", streaming=True)
             samples = [sample_data] # first element is dataset metadata
-
 
             for i, item in enumerate(ds):
                 if i >= max_samples:
@@ -236,7 +240,7 @@ class HFDatasetSearcher:
 
         except Exception as e:
             logger.error(f"Failed to stream {dataset_name}: {e}")
-            return []
+            return [sample_data] # Return at least the metadata if streaming fails
 
 
 hf_dataset_searcher = HFDatasetSearcher()

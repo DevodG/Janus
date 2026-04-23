@@ -51,6 +51,12 @@ interface IntelligenceReport {
   system_personality: Record<string, number>;
   domain_expertise: Record<string, any>;
   cross_case_insights: CrossCaseInsights;
+  guardian?: {
+    intervention_threshold: number;
+    active_interventions: number;
+    graph_nodes: number;
+    graph_edges: number;
+  };
 }
 
 interface CacheStats {
@@ -197,6 +203,60 @@ const LAYER_NAMES: Record<number, string> = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// ─── Guardian Card ───────────────────────────────────────────
+function GuardianCard({ data }: { data?: IntelligenceReport['guardian'] }) {
+  if (!data) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="glass rounded-3xl p-6 relative overflow-hidden flex flex-col gap-4 border-indigo-500/10"
+    >
+      <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
+        <Shield size={100} />
+      </div>
+      
+      <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 uppercase tracking-wider">
+        <Bot size={14} /> ZeroTrust Guardian
+      </div>
+
+      <div className="flex items-end justify-between gap-4 mt-2">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+            <Activity size={20} className="text-indigo-400" />
+          </div>
+          <div>
+            <div className="text-2xl font-light text-white">{data.active_interventions}</div>
+            <div className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Active Interventions</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-light text-indigo-300">{(data.intervention_threshold * 100).toFixed(0)}%</div>
+          <div className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Threshold</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/5">
+        <div>
+          <div className="text-sm font-light text-gray-300">{data.graph_nodes}</div>
+          <div className="text-[8px] font-mono text-gray-600 uppercase tracking-widest">Journey Entities</div>
+        </div>
+        <div>
+          <div className="text-sm font-light text-gray-300">{data.graph_edges}</div>
+          <div className="text-[8px] font-mono text-gray-600 uppercase tracking-widest">Threat Relations</div>
+        </div>
+      </div>
+      
+      {data.active_interventions > 0 && (
+        <div className="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[9px] font-mono text-emerald-400/80 uppercase tracking-widest">Shield Active</span>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 //  MAIN PAGE
 // ═══════════════════════════════════════════════════════════
 export default function SentinelPage() {
@@ -387,6 +447,8 @@ export default function SentinelPage() {
             >
               {/* LEFT: System Health */}
               <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+                <GuardianCard data={intelligence?.guardian} />
+
                 {/* System Status Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

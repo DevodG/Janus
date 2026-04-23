@@ -380,6 +380,19 @@ def run(state: dict) -> dict:
                 for a in news
             )
             context_blocks.append(f"[News Articles]\n{formatted}")
+            
+            # Forensic Step: Perform Multimodal Analysis on News Video if available
+            try:
+                from app.services.mmsa_engine import mmsa_engine
+                for article in news[:2]: # Only analyze top 2 for efficiency
+                    url = article.get("url", "")
+                    if "youtube.com" in url or "youtu.be" in url:
+                        logger.info(f"[RESEARCH-FORENSICS] Triggering multimodal check for {url}")
+                        forensic_results = mmsa_engine.analyze_url(url, article.get("title", ""))
+                        if "error" not in forensic_results:
+                            context_blocks.append(f"[Multimodal Forensic Report - {url}]\n{json.dumps(forensic_results, indent=2)}")
+            except Exception as e:
+                logger.warning(f"[RESEARCH-FORENSICS] Multimodal check failed: {e}")
 
     # Step 3: Knowledge store
     knowledge = knowledge_store.search(intent, domain=domain)
@@ -439,6 +452,12 @@ def run(state: dict) -> dict:
 
     # Step 6: Call LLM
     prompt = load_prompt("research")
+    
+    # Inject User Persona for Adaptive Intelligence
+    user_persona = runtime_context.get("user_persona", {}) if 'runtime_context' in locals() else {}
+    if user_persona.get("context_injection"):
+        prompt = f"{prompt}\n\n{user_persona['context_injection']}"
+
     messages = [
         {"role": "system", "content": prompt},
         {

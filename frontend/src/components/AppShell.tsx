@@ -27,6 +27,7 @@ const navSections = [
       { path: '/cases', label: 'Cases', icon: Layers },
       { path: '/simulation', label: 'Simulation', icon: Zap },
       { path: '/sentinel', label: 'Sentinel', icon: Shield },
+      { path: '/safety', label: 'Safety Gateway', icon: Zap },
       { path: '/prompts', label: 'Prompts', icon: Terminal },
       { path: '/config', label: 'Config', icon: Settings },
     ],

@@ -16,6 +16,7 @@ from app.services.signal_queue import SignalQueue
 from app.services.circadian_rhythm import CircadianRhythm
 from app.services.dream_processor import DreamCycleProcessor
 from app.services.curiosity_engine import CuriosityEngine
+from app.services.guardian_interceptor import guardian_interceptor
 from app.config import DATA_DIR
 
 logger = logging.getLogger(__name__)
@@ -177,12 +178,24 @@ class JanusDaemon:
                 )
 
                 market_signals = self.market_watcher.poll()
-                self.signal_queue.add_batch(market_signals)
-
                 news_signals = self.news_pulse.fetch()
-                self.signal_queue.add_batch(news_signals)
+                
+                # ACTIVE GUARDIAN: Audit and Intervene on Scams
+                unfiltered_signals = market_signals + news_signals
+                all_signals, interventions = guardian_interceptor.process_signals(unfiltered_signals)
+                
+                if interventions:
+                    logger.warning(f"[DAEMON] Guardian blocked {len(interventions)} high-risk scam signals!")
+                    for inter in interventions:
+                        # Prioritize intervention in pending thoughts
+                        self._pending_thoughts.insert(0, {
+                            "thought": f"🚨 GUARDIAN INTERVENTION: {inter['reason']}",
+                            "priority": 1.0,
+                            "created_at": time.time(),
+                            "source": "guardian"
+                        })
 
-                all_signals = market_signals + news_signals
+                self.signal_queue.add_batch(all_signals)
                 events = self.event_detector.detect(all_signals)
 
                 new_thoughts = self._generate_pending_thoughts(

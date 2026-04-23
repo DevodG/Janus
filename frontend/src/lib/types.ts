@@ -42,6 +42,13 @@ export interface CaseRecord {
   simulation?: Record<string, any>;
   planner?: Record<string, any>;
   verifier?: Record<string, any>;
+  guardian?: {
+    risk_score: number;
+    is_scam: boolean;
+    reason: string;
+    safe_action: string;
+    details: Record<string, any>;
+  };
 }
 
 export interface SimulationRecord {
@@ -110,6 +117,7 @@ export interface ConfigStatusResponse {
 // Request types
 export interface AnalyzeRequest {
   user_input: string;
+  context?: Record<string, any>;
 }
 
 export interface SimulationRequest {

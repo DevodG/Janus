@@ -20,8 +20,9 @@ import subprocess
 import time
 import uuid
 from contextlib import asynccontextmanager
+from typing import Optional, List, Dict, Any, Union
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -320,8 +321,10 @@ def _build_runtime_context(app: FastAPI, user_input: str, requested: dict | None
     from app.services.context_engine import context_engine
     from app.services.memory_manager import memory_manager
     from app.services.self_reflection import self_reflection
+    from app.services.user_analyzer import user_analyzer
 
     context = context_engine.build_context(user_input)
+    user_state = user_analyzer.analyze_query(user_input)
 
     daemon = _services.get("daemon")
     daemon_thoughts = list(getattr(daemon, "_pending_thoughts", [])[:3]) if daemon else []
@@ -362,6 +365,7 @@ def _build_runtime_context(app: FastAPI, user_input: str, requested: dict | None
         "gaps": gaps,
         "self_model": getattr(self_reflection, "self_model", {}),
     }
+    context["user_persona"] = user_state
     context["memory"] = {
         "similar_cases": memory_manager.find_similar(user_input, top_k=5)
     }
@@ -1226,7 +1230,20 @@ async def _execute_provider_tool_call(
 
 
 def _summarize_provider_tool_execution(execution: dict, user_input: str) -> str:
+    """Fallback summarizer if the main reasoning model fails."""
     tool = execution.get("tool")
+    
+    # ── ZeroTrust Guardian & MMSA Fusion ────────────────────────
+    if execution.get("guardian_score") is not None or "dissonance_score" in execution:
+        risk = execution.get("guardian_score") or execution.get("deception_probability", 0) * 100
+        action = execution.get("safe_action", "Proceed with extreme caution.")
+        return (
+            f"Janus completed a Multimodal Dissonance scan. "
+            f"Risk Index: {risk:.1f}%. "
+            f"Forensic Conclusion: {execution.get('reason', 'Evidence synthesis complete.')} "
+            f"Recommended Safe Action: {action}"
+        )
+
     if tool in {"get_stock_quote", "get_market_quote", "ticker_intelligence"}:
         symbol = execution.get("symbol") or "the requested company"
         quote = execution.get("quote", {})
@@ -1271,54 +1288,21 @@ def _summarize_provider_tool_execution(execution: dict, user_input: str) -> str:
             f"Top headlines: {'; '.join(titles)}."
         )
 
-    if tool in {"deep_web_research", "public_web_research", "web_research"}:
-        results = execution.get("results", [])
-        if not results:
-            return "Janus could not retrieve deep public-web results for that request."
-        top = results[0]
-        key_points = execution.get("key_points", [])
-        point_text = " ".join(point.get("point", "") for point in key_points[:2])
+    if tool in {"news_market_web_brief", "research_sweep", "intel_sweep"}:
+        top = (execution.get("top_sources") or [{}])[0]
+        points = execution.get("key_points") or []
+        point_text = " ".join(p.get("point", "") for p in points[:2])
         return (
-            f"{execution.get('summary', '').strip()} "
-            f"Highest-ranked source domain: {top.get('domain', 'unknown')}. "
-            f"Key evidence: {point_text[:320]}"
+            f"Janus synthesized a multimodal brief. "
+            f"Top Source: {top.get('domain', 'primary index')}. "
+            f"Key Findings: {point_text[:320] if point_text else 'Synthesis awaiting deeper model reasoning.'}"
         )
 
     if tool in {"market_web_brief", "company_web_brief", "market_research_brief"}:
-        symbol = execution.get("symbol") or execution.get("company") or "the requested company"
-        quote = execution.get("quote", {})
-        overview = execution.get("overview", {})
-        top_sources = execution.get("top_sources", [])
-        news = execution.get("news", [])
-        parts = [f"Janus built a market-web brief for {symbol}."]
-        if quote.get("05. price") is not None:
-            parts.append(f"Price: {quote.get('05. price')}.")
-        if overview.get("market_cap"):
-            parts.append(f"Market cap: {overview.get('market_cap')}.")
-        if overview.get("analyst_target"):
-            parts.append(f"Analyst target: {overview.get('analyst_target')}.")
+        symbol = execution.get("symbol") or execution.get("company") or "the index"
+        parts = [f"Janus generated a market intelligence brief for {symbol}."]
         if execution.get("avg_credibility"):
-            parts.append(
-                f"Average credibility of the deep-web bundle: {execution.get('avg_credibility'):.2f}."
-            )
-        if top_sources:
-            parts.append(
-                "Top ranked sources: "
-                + "; ".join(
-                    f"{item.get('title', '')} [{item.get('credibility_score', 0.0):.2f}]"
-                    for item in top_sources[:3]
-                )
-                + "."
-            )
-        key_points = execution.get("key_points", [])
-        if key_points:
-            parts.append(
-                "Key evidence: "
-                + " ".join(point.get("point", "") for point in key_points[:2])[:360]
-                + "."
-            )
-        if news:
-            parts.append(f"Recent company/news items gathered: {len(news)}.")
+            parts.append(f"Source credibility: {execution.get('avg_credibility'):.2f}.")
         return " ".join(parts)
 
     if tool in {"analyze_finance_text", "finance_text_analysis"}:
@@ -1384,35 +1368,40 @@ def _summarize_provider_tool_execution(execution: dict, user_input: str) -> str:
             f"Tracked patterns: {len(patterns)}."
         )
 
-    return f"Janus executed tool {tool} for: {user_input}."
+    return f"Janus successfully executed the {tool} routine for: {user_input}."
 
 
 def _reason_over_tool_execution(user_input: str, execution: dict) -> str:
+    """Expert reasoning layer over tool outputs."""
     fallback = _summarize_provider_tool_execution(execution, user_input)
+    
+    # Ensure fallback is never empty even if the logic above fails
+    if not fallback or len(fallback.strip()) < 5:
+        fallback = f"Janus has processed the following signal: {user_input}. Analysis complete."
+
     try:
         from app.agents._model import call_model
 
         messages = [
             {
                 "role": "system",
-                "content": (
-                    "You are Janus. Use the executed tool result to answer the user directly and clearly. "
-                    "Ground the answer in the tool output. If the tool result is incomplete, say what is missing. "
-                    "Do not mention internal implementation details unless useful. Keep it concise but specific."
-                ),
+                "content": "You are Janus, the Multimodal Intelligence Sentinel. Summarize the tool execution results naturally."
             },
             {
                 "role": "user",
                 "content": (
                     f"User request:\n{user_input}\n\n"
                     f"Executed tool result:\n{json.dumps(execution, ensure_ascii=False, indent=2)}\n\n"
-                    "Write the answer Janus should return to the user."
+                    "Provide a high-fidelity final answer."
                 ),
             },
         ]
         result = call_model(messages)
         cleaned = (result or "").strip()
-        return cleaned or fallback
+        # Double-check cleaned to avoid protocol errors
+        if not cleaned or len(cleaned) < 10:
+             return fallback
+        return cleaned
     except Exception:
         return fallback
 
@@ -2096,6 +2085,107 @@ def create_app() -> FastAPI:
             return status
         return {"running": False, "message": "Daemon not started"}
 
+    @app.post("/daemon/trigger")
+    async def daemon_trigger():
+        daemon = _services.get("daemon")
+        if daemon:
+            daemon._force_cycles = True
+            daemon_id = getattr(daemon, "trigger_cycle", lambda: "legacy_trigger")()
+            return {"status": "triggered", "id": daemon_id, "message": "Global daemon cycle forced."}
+        return {"error": "Daemon not available"}
+
+    @app.post("/daemon/analyze/dissonance")
+    async def daemon_analyze_dissonance(
+        file: UploadFile = File(..., description="Audio file"),
+        transcript: str = Form(...),
+        video: Optional[UploadFile] = File(None, description="Optional Video file for visual dissonance")
+    ):
+        """Analyze audio vs transcript for emotional conflict."""
+        from app.services.mmsa_engine import mmsa_engine
+        import tempfile
+        import shutil
+        from pathlib import Path
+
+        # Save files to temp
+        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp_audio:
+            shutil.copyfileobj(file.file, tmp_audio)
+            audio_path = tmp_audio.name
+
+        video_path = None
+        if video:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(video.filename).suffix) as tmp_video:
+                shutil.copyfileobj(video.file, tmp_video)
+                video_path = tmp_video.name
+
+        try:
+            results = mmsa_engine.analyze(audio_path, transcript, video_path)
+            return results
+        finally:
+            if os.path.exists(audio_path):
+                os.remove(audio_path)
+            if video_path and os.path.exists(video_path):
+                os.remove(video_path)
+
+    @app.post("/daemon/analyze/url")
+    async def daemon_analyze_url(
+        url: str = Form(...),
+        transcript: str = Form(...)
+    ):
+        """Analyze a YouTube or Stream URL for emotional conflict."""
+        from app.services.mmsa_engine import mmsa_engine
+        return mmsa_engine.analyze_url(url, transcript)
+
+    @app.post("/guardian/analyze/file")
+    async def guardian_analyze_file(file: UploadFile = File(...)):
+        """Analyze a screenshot or PDF for scam journey patterns."""
+        from app.services.guardian_sensory import guardian_sensory
+        import shutil
+        import tempfile
+        
+        # Save to temp
+        suffix = os.path.splitext(file.filename)[1].lower()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = tmp.name
+        
+        try:
+            if suffix in ['.pdf']:
+                return guardian_sensory.analyze_document(tmp_path)
+            else:
+                # Assume image for screenshot analysis
+                return guardian_sensory.analyze_screenshot(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+    @app.post("/guardian/analyze/url")
+    async def guardian_analyze_url(url: str, transcript: Optional[str] = None):
+        """Universal URL Probe: Fuses Phishing Heuristics with MMSA Dissonance for Video."""
+        from app.services.guardian_sensory import guardian_sensory
+        from app.services.mmsa_engine import mmsa_engine
+        
+        # 1. Base URL Forensics (LinkBrain)
+        safety_report = guardian_sensory.analyze_url(url)
+        
+        # 2. Multimodal Dissonance (MMSA) if YouTube
+        if "youtube.com" in url or "youtu.be" in url:
+            mmsa_report = mmsa_engine.analyze_url(url, transcript or "Autonomous scan — no manual transcript provided.")
+            if "error" not in mmsa_report:
+                # Fuse reports
+                safety_report["details"]["mmsa"] = mmsa_report
+                safety_report["risk_score"] = float(max(safety_report["risk_score"], mmsa_report.get("deception_probability", 0)))
+                safety_report["reason"] += f" | MMSA Detection: {mmsa_report.get('reliability_tier')} confidence dissonance detected."
+                safety_report["safe_action"] = mmsa_report.get("safe_action", safety_report["safe_action"])
+        
+        return safety_report
+
+
+    @app.post("/daemon/calibrate/dissonance")
+    async def daemon_calibrate_dissonance():
+        """Trigger threshold calibration and generate Accuracy Report."""
+        from app.services.mmsa_engine import mmsa_engine
+        return mmsa_engine.calibrate()
+
     @app.get("/daemon/alerts")
     async def daemon_alerts(limit: int = 20, min_severity: str = "low"):
         daemon = _services.get("daemon")
@@ -2108,13 +2198,21 @@ def create_app() -> FastAPI:
                 return daemon.signal_queue.get_stats()
         return []
 
-    @app.get("/daemon/trigger")
-    async def daemon_trigger():
-        daemon = _services.get("daemon")
-        if daemon:
-            daemon._force_cycles = True
-            return {"message": "Daemon cycle triggered manually"}
-        return {"running": False, "message": "Daemon not started"}
+    @app.get("/daemon/adaptive")
+    async def daemon_adaptive_status():
+        adaptive = getattr(app.state, "adaptive", None)
+        if adaptive:
+            return adaptive.get_full_intelligence_report()
+        return {"running": False, "message": "Adaptive engine not active"}
+
+    @app.post("/daemon/adaptive/now")
+    async def trigger_adaptive_now():
+        adaptive = getattr(app.state, "adaptive", None)
+        if adaptive and hasattr(adaptive, "run_evolution_cycle"):
+            # Offload to task
+            asyncio.create_task(adaptive.run_evolution_cycle())
+            return {"status": "triggered", "message": "Adaptive evolution cycle started in background."}
+        return {"error": "Adaptive evolution not available"}
 
     @app.get("/daemon/watchlist")
     async def daemon_watchlist():
@@ -2241,6 +2339,8 @@ def create_app() -> FastAPI:
 
         adaptive = getattr(app.state, "adaptive", None)
         memory_manager = getattr(app.state, "memory_manager", None)
+        from app.services.scam_graph import scam_graph
+        from app.services.guardian_interceptor import guardian_interceptor
         snapshot_query = query or getattr(context_engine, "_last_topic", "") or "system state"
         return {
             "context": "ok",
@@ -2259,6 +2359,10 @@ def create_app() -> FastAPI:
             if memory_manager and hasattr(memory_manager, "get_frequent_patterns")
             else [],
             "adaptive_cases": adaptive.total_cases if adaptive else 0,
+            "guardian": {
+                "active_interventions": len(guardian_interceptor.active_interventions),
+                "graph_nodes": len(scam_graph.graph.nodes)
+            }
         }
 
     # ── Memory routes ──────────────────────────────────────────────────────
@@ -2330,10 +2434,11 @@ def create_app() -> FastAPI:
         tracer = getattr(app.state, "tracer", None)
         curator = getattr(app.state, "curator", None)
 
+        from app.services.scam_graph import scam_graph
+        from app.services.guardian_interceptor import guardian_interceptor
         sentinel_status = {}
         try:
             from app.routers.sentinel import engine as sentinel_engine
-
             sentinel_status = sentinel_engine.get_status()
         except Exception:
             sentinel_status = {}
@@ -2368,6 +2473,12 @@ def create_app() -> FastAPI:
             "observation": tracer.get_stats() if tracer and hasattr(tracer, "get_stats") else {},
             "curation": curator.get_stats() if curator and hasattr(curator, "get_stats") else {},
             "sentinel": sentinel_status,
+            "guardian": {
+                "intervention_threshold": guardian_interceptor.intervention_threshold,
+                "active_interventions": len(guardian_interceptor.active_interventions),
+                "graph_nodes": len(scam_graph.graph.nodes),
+                "graph_edges": len(scam_graph.graph.edges)
+            },
             "space": os.getenv("SPACE_ID", "local"),
         }
 
