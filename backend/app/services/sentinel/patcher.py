@@ -51,13 +51,16 @@ class PatchResult:
         }
 
 
+from app.config import DATA_DIR, PROMPTS_DIR, SENTINEL_DIR
+
+
 class SentinelPatcher:
     """Applies safe patches or queues for review."""
     
     def __init__(self):
-        self.data_dir = Path("backend/app/data")
-        self.prompts_dir = Path("backend/app/prompts")
-        self.sentinel_dir = self.data_dir / "sentinel"
+        self.data_dir = DATA_DIR
+        self.prompts_dir = PROMPTS_DIR
+        self.sentinel_dir = SENTINEL_DIR
         self.pending_dir = self.sentinel_dir / "pending_patches"
         
         # Ensure directories exist

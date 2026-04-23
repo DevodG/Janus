@@ -49,12 +49,15 @@ class CapabilitySnapshot:
         }
 
 
+from app.config import DATA_DIR, SENTINEL_DIR
+
+
 class CapabilityTracker:
     """Tracks system capability metrics over time."""
     
     def __init__(self):
-        self.data_dir = Path("backend/app/data")
-        self.sentinel_dir = self.data_dir / "sentinel"
+        self.data_dir = DATA_DIR
+        self.sentinel_dir = SENTINEL_DIR
         self.sentinel_dir.mkdir(parents=True, exist_ok=True)
     
     def snapshot(self) -> CapabilitySnapshot:
