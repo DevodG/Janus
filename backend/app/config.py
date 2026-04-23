@@ -346,5 +346,6 @@ def get_config():
         learning_schedule_interval = LEARNING_SCHEDULE_INTERVAL
         learning_batch_size = LEARNING_BATCH_SIZE
         learning_topics = LEARNING_TOPICS
+        sentinel_enabled = FEATURES["sentinel"]
 
     return Config()

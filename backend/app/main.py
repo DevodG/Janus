@@ -1802,6 +1802,10 @@ def create_app() -> FastAPI:
     app.include_router(feedback_router)
     app.include_router(websocket_router)
 
+    # Sentinel (always on, checks internal feature flag for logic)
+    from app.routers.sentinel import router as sentinel_router
+    app.include_router(sentinel_router)
+
     # ── Health (supports HEAD for HF health checker) ──────────────────────
     @app.api_route("/health", methods=["GET", "HEAD"])
     async def health(request=None):
@@ -2965,13 +2969,6 @@ def create_app() -> FastAPI:
         except Exception as e:
             logger.warning("Simulation router unavailable: %s", e)
 
-    if os.getenv("SENTINEL_ENABLED", "true").lower() == "true":
-        try:
-            from app.routers.sentinel import router as sentinel_router
-
-            app.include_router(sentinel_router)
-        except Exception as e:
-            logger.warning("Sentinel router unavailable: %s", e)
 
     if os.getenv("LEARNING_ENABLED", "false").lower() == "true":
         try:
