@@ -1,70 +1,65 @@
 ---
-title: Janus
-emoji: 🧠
+title: Janus ZeroTrust Sentinel
+emoji: 🛡️
 colorFrom: indigo
-colorTo: purple
+colorTo: slate
 sdk: docker
 app_file: app.py
-pinned: false
+pinned: true
 ---
-# Rebuild trigger Fri Apr 10 15:59:28 IST 2026
 
-## Hosted Deployment
+# Janus: The ZeroTrust Scam Journey Guardian
 
-This repo is now set up to run as a single Docker service:
+Janus is a proactive, multimodal intelligence sentinel designed to detect, intercept, and neutralize the entire lifecycle of a scam journey. Unlike standard phishing filters, Janus utilizes a **Multimodal Dissonance Engine** and a **Scam Journey Graph** to link disparate signals—SMS, URLs, Voice, and Documents—into a persistent relational threat map.
 
-- FastAPI serves the API on port `7860`
-- a bundled Next.js standalone server runs internally on port `3000`
-- FastAPI proxies the frontend, so the public app and API share one origin
+## 🛡️ The ZeroTrust Defensive Architecture
 
-For a Hugging Face Docker Space:
+Janus operates on a **ZeroTrust Execution Mode**, assuming every incoming signal is potentially part of a sophisticated deception campaign until proven otherwise.
 
-- add `HUGGINGFACE_API_KEY` in Space Secrets
-- add `TAVILY_API_KEY` in Space Secrets if you want web search
-- optionally add `HF_STORE_REPO=username/private-dataset-repo` if you want memory/cases to survive restarts
-- do not create a separate frontend Space for this repo
-- do not set `NEXT_PUBLIC_API_URL` unless you intentionally want the UI to call some external API host
+- **Active Interception**: The `GuardianInterceptor` audits the real-time signal stream, autonomously squashing high-risk trajectories before they can interact with the user.
+- **Dissonance Fusion**: Fuses Link Intelligence (LinkBrain) with the **MMSA Engine** to analyze the dissonance between audio-visual content and metadata signatures.
+- **Relational Threat Mapping**: The `ScamGraph` links entities (Phone numbers, UPI IDs, URL patterns) into a complex relational graph to identify persistent scammer clusters.
+- **Forensic Intake Hub**: A dedicated Safety Gateway for manual ingestion and high-diligence analysis of suspicious SMS, Chat logs, and Files.
 
-Important:
+## 🧠 Core Sensory Hubs
 
-- free Hugging Face Spaces can sleep when idle, so they are not truly 24/7
-- for always-on uptime, use upgraded HF hardware or another always-on host
+- **Optical Forensics**: OCR-driven extraction of scam intent from screenshots and document trails.
+- **Document Guardian**: Native PDF forensic analysis to detect fraudulent bank statements, KYC phishing, and malicious attachments.
+- **Link Dissonance**: Deep-probing of URLs for typosquatting, domain age anomalies, and media-layer deception.
+- **MMSA Engine**: High-fidelity audio-visual analysis for YouTube and video-based financial scams.
 
-## Run Locally
+## 🚀 Deployment (Hugging Face Spaces / Docker)
 
-Start the backend and frontend together from the repo root:
+Janus is optimized for **Hugging Face Docker Spaces** as a unified service:
+
+1.  **Secrets Configuration**:
+    - `HUGGINGFACE_API_KEY`: Required for core cognitive reasoning.
+    - `TAVILY_API_KEY`: Required for deep web research and threat verification.
+    - `HF_STORE_REPO`: (Optional) Persistent dataset repo for long-term memory.
+2.  **Architecture**:
+    - **FastAPI** serves the Janus Gateway on port `7860`.
+    - **Next.js** serves the Sentinel Dashboard internally on port `3000`.
+    - Automated proxying ensures one seamless origin for the API and UI.
+
+## 🛠️ Run Locally
+
+Initialize the Janus cognitive cluster from the repository root:
 
 ```bash
 ./run-dev.sh
 ```
 
-Default local URLs:
+### Prerequisites
+- **Backend**: Python 3.10+ virtualenv at `backend/.venv`
+- **Frontend**: Node.js dependencies installed in `frontend/`
+- **Sensory**: `easyocr` and `pymupdf` are required for full forensic capabilities.
 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:7860`
-
-Prerequisites:
-
-- backend virtualenv at `backend/.venv`
-- frontend dependencies installed in `frontend/`
-- required secrets available in your shell or environment manager
-
-Useful env vars:
-
+### Environment variables
 ```bash
 export HUGGINGFACE_API_KEY=...
 export TAVILY_API_KEY=...
 export JANUS_DATA_DIR=./data
 ```
 
-Optional overrides:
-
-```bash
-API_PORT=7860 WEB_PORT=3000 NEXT_PUBLIC_API_URL=http://localhost:7860 ./run-dev.sh
-```
-
-## Hugging Face Spaces
-
-- this repo should be deployed as one Docker Space
-- backend defaults to public port `7860`
-- the frontend is bundled into the same container and served through the backend
+---
+*Janus adapts. Janus Intercepts. Janus Protects.*
