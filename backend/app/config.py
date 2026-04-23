@@ -31,7 +31,7 @@ def load_prompt(name: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-APP_VERSION = os.getenv("APP_VERSION", "0.4.0")
+APP_VERSION = os.getenv("APP_VERSION", "1.0.1")
 
 PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "huggingface").lower()
 FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "openrouter").lower()

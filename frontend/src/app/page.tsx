@@ -269,7 +269,7 @@ const SUGGESTED = [
   'Explain how quantitative tightening affects emerging markets',
 ];
 
-function EmptyState({ onSelect }: { onSelect: (q: string) => void }) {
+function EmptyState({ onSelect, onOpenGuardian }: { onSelect: (q: string) => void, onOpenGuardian: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -278,14 +278,33 @@ function EmptyState({ onSelect }: { onSelect: (q: string) => void }) {
       className="flex flex-col items-center justify-center h-full px-4"
     >
       <JanusOrb size={56} />
-      <h2 className="mt-8 text-xl font-light text-gray-200 tracking-wide">
+      <h2 className="mt-8 text-xl font-light text-gray-200 tracking-wide text-center">
         What can I research for you?
       </h2>
       <p className="mt-2 text-sm text-gray-600 max-w-md text-center">
         Multi-agent intelligence pipeline — switchboard routes your query through research, analysis, and synthesis.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-10 w-full max-w-xl">
+      {/* Dedicated Scam Guardian Section */}
+      <div className="w-full max-w-xl mt-10">
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onOpenGuardian}
+          className="w-full p-4 rounded-3xl bg-indigo-600/10 border border-indigo-500/20 flex items-center gap-4 group hover:bg-indigo-600/20 transition-all mb-4"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <ShieldAlert size={24} className="text-white" />
+          </div>
+          <div className="text-left">
+            <h3 className="text-sm font-bold text-indigo-400 group-hover:text-indigo-300">Scam Guardian Module</h3>
+            <p className="text-[11px] text-gray-500">Forensic threat detection for messages, URLs, and suspicious files.</p>
+          </div>
+          <ChevronRight size={18} className="ml-auto text-gray-600 group-hover:text-indigo-400" />
+        </motion.button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-xl">
         {SUGGESTED.map(q => (
           <button
             key={q}
@@ -356,7 +375,7 @@ export default function ChatPage() {
     }
 
     try {
-      const result = await apiClient.analyze({ user_input: text.trim() });
+      const result = await apiClient.run(text.trim());
 
       const finalAnswer = result.final_answer || result.final?.response || result.final?.summary || 'No analysis could be generated.';
 
@@ -371,6 +390,10 @@ export default function ChatPage() {
           elapsed: result.elapsed_seconds,
           confidence: result.final?.confidence,
           routeInfo: result.route,
+          research: result.research,
+          finance: result.finance,
+          simulation: result.simulation,
+          planner: result.planner,
         },
       };
       latestMsgId.current = janusMsg.id;
@@ -448,7 +471,10 @@ export default function ChatPage() {
             {/* Conversation area */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto pt-4">
         {isEmpty ? (
-          <EmptyState onSelect={(q) => { setInput(q); sendMessage(q); }} />
+          <EmptyState 
+            onSelect={(q) => { setInput(q); sendMessage(q); }} 
+            onOpenGuardian={() => setView('scam')}
+          />
         ) : (
           <div className="max-w-[860px] mx-auto px-4 py-8 space-y-6">
             {messages.map((msg) => (

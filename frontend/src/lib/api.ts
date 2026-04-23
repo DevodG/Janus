@@ -52,7 +52,21 @@ export class MiroOrgClient {
     return response.json();
   }
 
-  // Analysis endpoints
+  // AI Assistant endpoints
+  async run(userInput: string, context?: any): Promise<any> {
+    const response = await fetch(`${this.getBaseUrl()}/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_input: userInput, context }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "AI query failed");
+    }
+    return response.json();
+  }
+
+  // Analysis endpoints (Scam Guardian)
   async analyze(request: AnalyzeRequest): Promise<ScamGuardianResponse> {
     const response = await fetch(`${this.getBaseUrl()}/analyze`, {
       method: 'POST',
