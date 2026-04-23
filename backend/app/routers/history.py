@@ -24,9 +24,9 @@ async def get_scam_history(limit: int = 50):
                     source=event.source,
                     risk_score=event.risk_score,
                     decision=event.decision,
-                    reasons=event.metadata.get("reasons", []),
-                    intent=IntentScore(**event.metadata.get("intent", {})),
-                    entities=ExtractedEntities(**event.metadata.get("entities", {})),
+                    reasons=event.event_metadata.get("reasons", []),
+                    intent=IntentScore(**event.event_metadata.get("intent", {})),
+                    entities=ExtractedEntities(**event.event_metadata.get("entities", {})),
                     # timestamp=event.created_at # Add if AnalyzeResponse schema supports it
                 ) for event in events
             ]
@@ -52,9 +52,9 @@ async def get_event_detail(event_id: str):
                 source=event.source,
                 risk_score=event.risk_score,
                 decision=event.decision,
-                reasons=event.metadata.get("reasons", []),
-                intent=IntentScore(**event.metadata.get("intent", {})),
-                entities=ExtractedEntities(**event.metadata.get("entities", {})),
+                reasons=event.event_metadata.get("reasons", []),
+                intent=IntentScore(**event.event_metadata.get("intent", {})),
+                entities=ExtractedEntities(**event.event_metadata.get("entities", {})),
                 similarity=None # Could fetch matches from similarity service if needed
             )
         except ValueError:

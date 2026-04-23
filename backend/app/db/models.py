@@ -22,7 +22,7 @@ class ScamEvent(Base):
     risk_score = Column(Float)
     decision = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON) # Store intent and extra details
+    event_metadata = Column("metadata", JSON) # Store intent and extra details
     embedding = Column(Vector(384)) # matches sentence-transformers (e.g. all-MiniLM-L6-v2)
 
 class Entity(Base):

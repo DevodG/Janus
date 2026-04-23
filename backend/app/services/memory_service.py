@@ -20,7 +20,7 @@ class MemoryService:
                 source=response.source,
                 risk_score=response.risk_score,
                 decision=response.decision,
-                metadata={
+                event_metadata={
                     "reasons": response.reasons,
                     "intent": response.intent.dict(),
                     "entities": response.entities.dict(),
