@@ -2,7 +2,7 @@
 title: Janus ZeroTrust Sentinel
 emoji: 🛡️
 colorFrom: indigo
-colorTo: slate
+colorTo: blue
 sdk: docker
 app_file: app.py
 pinned: true
