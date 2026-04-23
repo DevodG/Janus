@@ -15,6 +15,18 @@ class ExtractedEntities(BaseModel):
     crypto: List[str] = []
     accounts: List[str] = []
 
+class EvidenceItem(BaseModel):
+    source: str
+    signal: str
+    value: Optional[Any] = None
+    severity: str
+    explanation: str
+
+class OfficialVerify(BaseModel):
+    brand: Optional[str] = None
+    instruction: str
+    official_site: Optional[str] = None
+
 class AnalyzeResponse(BaseModel):
     id: str
     text: str
@@ -24,5 +36,9 @@ class AnalyzeResponse(BaseModel):
     reasons: List[str]
     intent: IntentScore
     entities: ExtractedEntities
+    evidence: List[EvidenceItem] = []
+    claimed_brand: Optional[str] = None
+    official_verify: Optional[OfficialVerify] = None
+    next_steps: List[str] = []
     similarity: Optional[Dict[str, Any]] = None
     timeline_link: Optional[str] = None

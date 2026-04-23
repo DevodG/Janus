@@ -9,7 +9,16 @@ from app.services.risk_service import risk_service
 from app.services.similarity_service import similarity_service
 from app.services.memory_service import memory_service
 
+from app.services.live_intel_service import live_intel_service
+
 router = APIRouter(tags=["scam-guardian"])
+
+def _decision_from_risk(risk: float) -> str:
+    if risk >= 85:
+        return "BLOCK"
+    if risk >= 50:
+        return "WARN"
+    return "ALLOW"
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_scam(request: AnalyzeRequest):
@@ -34,15 +43,30 @@ async def analyze_scam(request: AnalyzeRequest):
     # 5. Risk Scoring & Decisions
     risk_result = await risk_service.score(processed, intent, entities)
     
+    # 6. Live Evidence (Hackathon Upgrade)
+    live_intel = await live_intel_service.analyze(
+        urls=entities.domains, # Assuming extraction gives raw domains/urls
+        domains=entities.domains,
+        brands=entities.brands
+    )
+    
+    final_risk = min(100.0, float(risk_result["score"]) + float(live_intel["risk_boost"]))
+    final_reasons = list(dict.fromkeys([*risk_result["reasons"], *live_intel["reasons"]]))
+    final_decision = _decision_from_risk(final_risk)
+
     response = AnalyzeResponse(
         id=str(uuid.uuid4()),
         text=processed["text"],
         source=processed["source"],
-        risk_score=risk_result["score"],
-        decision=risk_result["decision"],
-        reasons=risk_result["reasons"],
+        risk_score=final_risk,
+        decision=final_decision,
+        reasons=final_reasons,
         intent=intent,
         entities=entities,
+        evidence=live_intel.get("evidence", []),
+        claimed_brand=live_intel.get("claimed_brand"),
+        official_verify=live_intel.get("official_verify"),
+        next_steps=live_intel.get("next_steps", []),
         similarity={"matches": matches} if matches else {"matches": []}
     )
     

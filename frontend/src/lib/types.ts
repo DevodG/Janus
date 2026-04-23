@@ -123,6 +123,20 @@ export interface AnalyzeRequest {
   context?: Record<string, any>;
 }
 
+export interface EvidenceItem {
+  source: string;
+  signal: string;
+  value?: string | number | boolean | null;
+  severity: string;
+  explanation: string;
+}
+
+export interface OfficialVerify {
+  brand?: string | null;
+  instruction: string;
+  official_site?: string | null;
+}
+
 export interface ScamGuardianResponse {
   id: string;
   text: string;
@@ -141,7 +155,13 @@ export interface ScamGuardianResponse {
     upi_ids: string[];
     domains: string[];
     brands: string[];
+    crypto?: string[];
+    accounts?: string[];
   };
+  evidence?: EvidenceItem[];
+  claimed_brand?: string | null;
+  official_verify?: OfficialVerify | null;
+  next_steps?: string[];
   similarity?: {
     matches: Array<{
       event_id: string;

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Link, Image as ImageIcon, Search, AlertTriangle, CheckCircle, XCircle, Info, Hash, ExternalLink, Brain } from 'lucide-react';
 import { apiClient, guardianClient } from '@/lib/api';
 import type { ScamGuardianResponse } from '@/lib/types';
+import LiveEvidencePanel from './guardian/LiveEvidencePanel';
 
 export default function ScamGuardian() {
   const [activeTab, setActiveTab] = useState<'text' | 'url' | 'image'>('text');
@@ -233,6 +234,9 @@ export default function ScamGuardian() {
                     </div>
                   </div>
                 )}
+
+                {/* Live Evidence & Actions (Hackathon Upgrade) */}
+                <LiveEvidencePanel result={result} />
               </motion.div>
             )}
           </AnimatePresence>
