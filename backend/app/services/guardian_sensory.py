@@ -29,14 +29,14 @@ class GuardianSensory:
         
         # Scam pattern triggers
         self.scam_keywords = {
-            "urgency": ["urgent", "immediately", "today", "seconds", "minute", "deadline", "expire"],
-            "fear": ["blocked", "suspended", "legal", "arrest", "court", "penalty", "fine", "police"],
-            "reward": ["winner", "lottery", "cashback", "refund", "gift", "lucky", "claim"],
-            "authority": ["bank", "support", "official", "gov", "police", "customs", "delivery", "kyc"]
+            "urgency": ["urgent", "immediately", "today", "seconds", "minute", "deadline", "expire", "limited", "now", "waiting"],
+            "fear": ["blocked", "suspended", "legal", "arrest", "court", "penalty", "fine", "police", "unauthorized", "suspicious", "fraud"],
+            "reward": ["winner", "lottery", "cashback", "refund", "gift", "lucky", "claim", "prize", "congratulations", "bonus"],
+            "authority": ["bank", "support", "official", "gov", "police", "customs", "delivery", "kyc", "admin", "team", "security", "tax"]
         }
         
         # Risky TLDs
-        self.risky_tlds = [".xyz", ".top", ".top", ".loan", ".win", ".bid", ".gift", ".zip", ".mov"]
+        self.risky_tlds = [".xyz", ".top", ".loan", ".win", ".bid", ".gift", ".zip", ".mov", ".pw", ".club", ".icu", ".shop", ".online", ".site", ".live"]
 
     def _init_ocr(self):
         global reader
@@ -49,6 +49,7 @@ class GuardianSensory:
                 logger.info("[GUARDIAN-SENSORY] OCR Brain initialized.")
             except Exception as e:
                 logger.error(f"[GUARDIAN-SENSORY] OCR Init Fail: {e}")
+                self._ocr_initialized = True # Prevent repeated retries
 
     def _init_doc(self):
         global fitz
@@ -59,6 +60,7 @@ class GuardianSensory:
                 logger.info("[GUARDIAN-SENSORY] Document Forensic Brain initialized.")
             except Exception as e:
                 logger.error(f"[GUARDIAN-SENSORY] Doc Init Fail: {e}")
+                self._doc_initialized = True
 
     def analyze_screenshot(self, image_path: str) -> Dict[str, Any]:
         """Extract text and detect scam intent from an image."""
@@ -90,13 +92,16 @@ class GuardianSensory:
         reasons = []
         
         # 1. TLD Check
-        tld = "." + url.split(".")[-1].split("/")[0]
-        if tld in self.risky_tlds:
-            risk_score += 30
-            reasons.append(f"Risky TLD detected: {tld}")
+        try:
+            tld = "." + url.split(".")[-1].split("/")[0]
+            if tld in self.risky_tlds:
+                risk_score += 30
+                reasons.append(f"Risky TLD detected: {tld}")
+        except:
+            pass
             
         # 2. Typosquatting Check (Logic bits)
-        brand_spoofs = ["micros0ft", "g00gle", "amzn", "paypa1", "app1e"]
+        brand_spoofs = ["micros0ft", "g00gle", "amzn", "paypa1", "app1e", "hdfc-secure", "icici-login"]
         for spoof in brand_spoofs:
             if spoof in url.lower():
                 risk_score += 50

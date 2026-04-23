@@ -22,9 +22,14 @@ async def analyze_scam(request: AnalyzeRequest):
     # 3. Extract Entities
     entities = await entity_service.extract(processed["text"])
     
-    # 4. Memory & Similarity
-    embedding = await similarity_service.get_embedding(processed["text"])
-    matches = await similarity_service.find_matches(embedding)
+    # 4. Memory & Similarity (Optional/Resilient)
+    matches = []
+    embedding = None
+    try:
+        embedding = await similarity_service.get_embedding(processed["text"])
+        matches = await similarity_service.find_matches(embedding)
+    except Exception as e:
+        print(f"Similarity search failed: {e}")
     
     # 5. Risk Scoring & Decisions
     risk_result = await risk_service.score(processed, intent, entities)
@@ -38,11 +43,14 @@ async def analyze_scam(request: AnalyzeRequest):
         reasons=risk_result["reasons"],
         intent=intent,
         entities=entities,
-        similarity={"matches": matches} if matches else None
+        similarity={"matches": matches} if matches else {"matches": []}
     )
     
-    # 6. Persist to DB (Background or async)
-    await memory_service.save_event(response, processed["metadata"], embedding)
+    # 6. Persist to DB (Fail-safe)
+    try:
+        await memory_service.save_event(response, processed["metadata"], embedding)
+    except Exception as e:
+        print(f"Event persistence failed: {e}")
     
     # 7. Real-time Broadcast (Optimization for live demo)
     try:

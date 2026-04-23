@@ -22,6 +22,7 @@ class SimilarityService:
                 logger.info("Similarity model (all-MiniLM-L6-v2) loaded successfully.")
             except Exception as e:
                 logger.error(f"Similarity model init failed: {e}")
+                self._initialized = True # Prevent repeated retries if it fails
 
     async def get_embedding(self, text: str) -> List[float]:
         """Convert text to a 384-dimensional vector."""
