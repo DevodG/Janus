@@ -491,7 +491,7 @@ export default function ChatPage() {
         )}
       </div>
 
-            </div>
+
 
             {/* Input bar */}
             <div className="shrink-0 border-t border-white/[0.04] px-4 py-6">
