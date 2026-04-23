@@ -35,7 +35,7 @@ export default function ScamGuardian() {
       if (activeTab === 'text') payload.text = inputValue;
       if (activeTab === 'url') payload.url = inputValue;
       
-      const res = await apiClient.analyze(payload);
+      const res = await guardianClient.analyze(payload);
       setResult(res as unknown as ScamGuardianResponse);
       fetchHistory(); // Refresh history
     } catch (err) {

@@ -66,7 +66,7 @@ export class MiroOrgClient {
     return response.json();
   }
 
-  // Analysis endpoints (Scam Guardian)
+  // Backward compatibility / General analysis
   async analyze(request: AnalyzeRequest): Promise<ScamGuardianResponse> {
     const response = await fetch(`${this.getBaseUrl()}/analyze`, {
       method: 'POST',
