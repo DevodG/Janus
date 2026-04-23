@@ -242,4 +242,51 @@ export class FinanceClient {
   }
 }
 
+
 export const financeClient = new FinanceClient();
+
+// Scam Guardian endpoints
+export class GuardianClient {
+  private baseUrl?: string;
+
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  private getBaseUrl(): string {
+    return this.baseUrl ?? getApiBaseUrl();
+  }
+
+  async analyze(payload: { text?: string; url?: string; image_base64?: string; source?: string }) {
+    const res = await fetch(`${this.getBaseUrl()}/analyze/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Analysis failed");
+    return res.json();
+  }
+
+  async getHistory() {
+    const res = await fetch(`${this.getBaseUrl()}/history/`);
+    if (!res.ok) throw new Error("Failed to fetch history");
+    return res.json();
+  }
+
+  async getEvent(id: string) {
+    const res = await fetch(`${this.getBaseUrl()}/history/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch event detail");
+    return res.json();
+  }
+
+  async submitFeedback(payload: { analyze_id: string; is_scam: boolean; notes?: string }) {
+    const res = await fetch(`${this.getBaseUrl()}/feedback/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  }
+}
+
+export const guardianClient = new GuardianClient();

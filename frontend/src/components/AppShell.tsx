@@ -22,6 +22,13 @@ const navSections = [
     ],
   },
   {
+    label: 'Guardian',
+    items: [
+      { path: '/guardian/intake', label: 'Forensic Intake', icon: Plus },
+      { path: '/guardian/journey', label: 'Journey Graph', icon: Activity },
+    ],
+  },
+  {
     label: 'System',
     items: [
       { path: '/cases', label: 'Cases', icon: Layers },

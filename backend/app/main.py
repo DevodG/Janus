@@ -1783,8 +1783,16 @@ def create_app() -> FastAPI:
 
     # ── Routers — always on ───────────────────────────────────────────────
     from app.routers.finance import router as finance_router
+    from app.routes.analyze import router as analyze_router
+    from app.routes.history import router as history_router
+    from app.routes.feedback import router as feedback_router
+    from app.routes.websocket import router as websocket_router
 
     app.include_router(finance_router)
+    app.include_router(analyze_router)
+    app.include_router(history_router)
+    app.include_router(feedback_router)
+    app.include_router(websocket_router)
 
     # ── Health (supports HEAD for HF health checker) ──────────────────────
     @app.api_route("/health", methods=["GET", "HEAD"])

@@ -7,6 +7,7 @@ import logging
 from typing import List, Dict, Any, Tuple
 from app.services.guardian_sensory import guardian_sensory
 from app.services.scam_graph import scam_graph
+from app.services.similarity_service import similarity_service
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class GuardianInterceptor:
         self.intervention_threshold = intervention_threshold
         self.active_interventions = []
 
-    def process_signals(self, signals: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    async def process_signals(self, signals: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Intercept and audit a batch of signals.
         Returns (CleanedSignals, Interventions).
@@ -26,7 +27,7 @@ class GuardianInterceptor:
         interventions = []
 
         for signal in signals:
-            risk_report = self._audit_signal(signal)
+            risk_report = await self._audit_signal(signal)
             
             if risk_report["score"] >= self.intervention_threshold:
                 # ACTIVE INTERVENTION: Squash the signal and create an alert
@@ -45,7 +46,7 @@ class GuardianInterceptor:
 
         return clean_signals, interventions
 
-    def _audit_signal(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    async def _audit_signal(self, signal: Dict[str, Any]) -> Dict[str, Any]:
         """Deep audit of a single signal for scam markers."""
         text = signal.get("headline", "") + " " + signal.get("summary", "") + " " + signal.get("content", "")
         url = signal.get("url", "")
@@ -62,8 +63,15 @@ class GuardianInterceptor:
         # 3. Graph Retrieval (Journey Score)
         journey_report = self.scam_memory.get_journey_score(entities)
         
-        # 4. Global Fusion
-        final_score = max(url_report["risk_score"], journey_report["score"])
+        # 4. Semantic Similarity (Depth Optimization)
+        embedding = await similarity_service.get_embedding(text)
+        semantic_matches = await similarity_service.find_matches(embedding, threshold=0.85)
+        semantic_score = 0
+        if semantic_matches:
+            semantic_score = semantic_matches[0]["similarity"] * 100
+        
+        # 5. Global Fusion
+        final_score = max(url_report["risk_score"], journey_report["score"], semantic_score)
         # Cross-channel escalation
         if url_report["risk_score"] > 30 and journey_report["event_count"] > 0:
             final_score = min(100, final_score + 25)
