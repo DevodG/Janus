@@ -88,3 +88,4 @@ Thumbs.db
 
 # Stray nested directory
 backend/backend/
+backend/app/services/face_landmarker.task
