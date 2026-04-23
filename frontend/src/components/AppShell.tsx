@@ -22,11 +22,19 @@ const navSections = [
     ],
   },
   {
+    label: 'Guardian',
+    items: [
+      { path: '/guardian/intake', label: 'Forensic Intake', icon: Plus },
+      { path: '/guardian/journey', label: 'Journey Graph', icon: Activity },
+    ],
+  },
+  {
     label: 'System',
     items: [
       { path: '/cases', label: 'Cases', icon: Layers },
       { path: '/simulation', label: 'Simulation', icon: Zap },
       { path: '/sentinel', label: 'Sentinel', icon: Shield },
+      { path: '/safety', label: 'Safety Gateway', icon: Zap },
       { path: '/prompts', label: 'Prompts', icon: Terminal },
       { path: '/config', label: 'Config', icon: Settings },
     ],

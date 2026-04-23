@@ -41,6 +41,14 @@ class NewsPulse:
             "oil market",
             "top companies earnings",
             "electric vehicles",
+            "Quantum Computing",
+            "Space Exploration",
+            "Fusion Energy",
+            "Global Cyber Attacks",
+            "Supply Chain resilience",
+            "Taiwan Strait geopolitics",
+            "Middle East conflict economics",
+            "Biotech breakthroughs",
         ]
         self.seen_titles: set = set()
         self._load_seen_titles()

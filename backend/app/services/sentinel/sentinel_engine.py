@@ -62,6 +62,9 @@ class SentinelCycleReport:
         }
 
 
+from app.config import SENTINEL_DIR
+
+
 class SentinelEngine:
     """Core sentinel orchestration engine."""
     
@@ -72,7 +75,7 @@ class SentinelEngine:
         self.tracker = CapabilityTracker()
         self.max_diagnoses = int(os.getenv("SENTINEL_MAX_DIAGNOSES_PER_CYCLE", "5"))
         self.logger = logging.getLogger("sentinel.engine")
-        self.data_dir = Path("backend/app/data/sentinel")
+        self.data_dir = SENTINEL_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
     
     def run_cycle(self) -> SentinelCycleReport:

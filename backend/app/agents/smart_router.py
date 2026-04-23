@@ -11,12 +11,6 @@ Provider priority:
 4. OpenRouter (free models — fixed model list)
 5. Cloudflare Workers AI (10k req/day)
 6. Ollama (local, unlimited)
-
-FIXES vs previous version:
-  - OpenRouter free_models list updated to working models (old ones all 400)
-  - Gemini response parsing fixed (was crashing with 'string indices must be int')
-  - Rate state moved to in-memory dict (HF filesystem is ephemeral, file was wiped on restart)
-  - Added provider cooldown after 3 consecutive failures
 """
 
 import os
@@ -45,28 +39,63 @@ def _midnight_ts() -> int:
 def _is_available(provider: str, daily_limit: int, rpm_limit: int) -> bool:
     now = time.time()
     p = _RATE_STATE.get(
-        provider, {"daily_count": 0, "rpm_timestamps": [], "reset_at": _midnight_ts()}
+        provider, {
+            "daily_count": 0, 
+            "rpm_timestamps": [], 
+            "reset_at": _midnight_ts(),
+            "consecutive_failures": 0,
+            "cooldown_until": 0
+        }
     )
+    
+    # 1. Reset check
     if now > p.get("reset_at", 0):
         p["daily_count"] = 0
         p["rpm_timestamps"] = []
         p["reset_at"] = _midnight_ts()
+        p["consecutive_failures"] = 0
+        p["cooldown_until"] = 0
+
+    # 2. Cooldown check
+    if now < p.get("cooldown_until", 0):
+        return False
+
+    # 3. Quota check
     if p["daily_count"] >= daily_limit:
         return False
+    
+    # 4. RPM check
     p["rpm_timestamps"] = [t for t in p["rpm_timestamps"] if now - t < 60]
     if len(p["rpm_timestamps"]) >= rpm_limit:
         return False
+    
     _RATE_STATE[provider] = p
     return True
 
 
-def _record_usage(provider: str):
+def _record_usage(provider: str, success: bool = True):
     now = time.time()
     p = _RATE_STATE.get(
-        provider, {"daily_count": 0, "rpm_timestamps": [], "reset_at": _midnight_ts()}
+        provider, {
+            "daily_count": 0, 
+            "rpm_timestamps": [], 
+            "reset_at": _midnight_ts(),
+            "consecutive_failures": 0,
+            "cooldown_until": 0
+        }
     )
-    p["daily_count"] = p.get("daily_count", 0) + 1
-    p["rpm_timestamps"] = p.get("rpm_timestamps", []) + [now]
+    
+    if success:
+        p["daily_count"] = p.get("daily_count", 0) + 1
+        p["rpm_timestamps"] = p.get("rpm_timestamps", []) + [now]
+        p["consecutive_failures"] = 0
+    else:
+        p["consecutive_failures"] = p.get("consecutive_failures", 0) + 1
+        # Circuit Breaker: 3 strikes = 15 minute cooldown
+        if p["consecutive_failures"] >= 3:
+            p["cooldown_until"] = now + 900 
+            logger.warning(f"[ROUTER] Provider {provider} entered cooldown until {p['cooldown_until']}")
+
     _RATE_STATE[provider] = p
 
 
@@ -100,42 +129,28 @@ def _call_huggingface(messages: List[Dict[str, str]], **kwargs) -> str:
     if not HUGGINGFACE_KEY:
         raise ValueError("HUGGINGFACE_API_KEY not set")
 
-    from app.agents.huggingface import hf_client
-
-    return hf_client.chat(messages, **kwargs)
+    from app.agents.huggingface import hf_agent
+    return hf_agent.call(messages, **kwargs)
 
 
 def _call_gemini(messages: List[Dict[str, str]], **kwargs) -> str:
-    """Google Gemini — FIXED response parsing (was crashing on candidates[0].content.parts[0])"""
+    """Google Gemini — best free quality."""
     if not GEMINI_KEY:
         raise ValueError("GEMINI_API_KEY not set")
 
-    system_msg = ""
-    user_messages = []
-    for m in messages:
-        if m["role"] == "system":
-            system_msg = m["content"]
-        else:
-            user_messages.append(m)
-
+    # Combine messages into a simple string for Gemini 1.5/2.0 API simplicity
+    prompt = "\n".join([f"{m['role']}: {m['content']}" for m in messages])
     body = {
-        "system_instruction": {"parts": [{"text": system_msg}]} if system_msg else None,
-        "contents": [
-            {
-                "role": "model" if m["role"] == "assistant" else "user",
-                "parts": [{"text": m["content"]}],
-            }
-            for m in user_messages
-        ],
+        "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
             "temperature": kwargs.get("temperature", 0.7),
             "maxOutputTokens": kwargs.get("max_tokens", 4096),
         },
     }
-    if body["system_instruction"] is None:
-        del body["system_instruction"]
 
-    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"]:
+    # Gemini supports multiple models; try 2.0-flash then 1.5-flash
+    models = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    for model in models:
         try:
             with httpx.Client(timeout=TIMEOUT) as client:
                 r = client.post(
@@ -187,16 +202,17 @@ def _call_groq(messages: List[Dict[str, str]], **kwargs) -> str:
 
 
 def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
-    """OpenRouter — FIXED model list (old models all return HTTP 400)."""
+    """OpenRouter — Robust free model list."""
     if not OPENROUTER_KEY:
         raise ValueError("OPENROUTER_API_KEY not set")
 
+    # Priority models (Exp/Flash/Large-instruct)
     free_models = [
-        "meta-llama/llama-3.3-70b-instruct:free",
+        "google/gemini-2.0-flash-exp:free",
         "google/gemma-3-27b-it:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "qwen/qwen-2.5-72b-instruct:free",
         "microsoft/phi-4:free",
-        "nousresearch/hermes-3-llama-3.1-405b:free",
-        "liquid/lfm-40b:free",
     ]
 
     errors = []
@@ -219,7 +235,12 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
                     json=body,
                 )
                 r.raise_for_status()
-                msg_data = r.json()["choices"][0]["message"]
+                response_json = r.json()
+                
+                if "choices" not in response_json or not response_json["choices"]:
+                     raise ValueError(f"OpenRouter {model} returned no choices: {response_json}")
+                     
+                msg_data = response_json["choices"][0]["message"]
                 content = msg_data.get("content") or ""
                 reasoning = msg_data.get("reasoning")
                 if reasoning:
@@ -228,24 +249,24 @@ def _call_openrouter(messages: List[Dict[str, str]], **kwargs) -> str:
                     raise ValueError("Empty response")
                 return content
         except Exception as e:
-            errors.append(f"{model}: {e}")
+            errors.append(f"{model}: {str(e)}")
+            logger.warning(f"OpenRouter {model} failed: {e}")
+            continue
 
     raise RuntimeError(f"All OpenRouter models failed: {'; '.join(errors)}")
 
 
 def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
-    """Cloudflare Workers AI — 10k req/day free."""
+    """Cloudflare Workers AI."""
     if not CF_ACCOUNT_ID or not CF_TOKEN:
-        raise ValueError("CLOUDFLARE credentials not set")
+        raise ValueError("Cloudflare credentials not set")
 
-    body = {"messages": messages, "max_tokens": kwargs.get("max_tokens", 4096)}
+    model = "@cf/meta/llama-3.1-70b-instruct"
+    body = {"messages": messages}
     with httpx.Client(timeout=TIMEOUT) as client:
         r = client.post(
-            f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-            headers={
-                "Authorization": f"Bearer {CF_TOKEN}",
-                "Content-Type": "application/json",
-            },
+            f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/{model}",
+            headers={"Authorization": f"Bearer {CF_TOKEN}"},
             json=body,
         )
         r.raise_for_status()
@@ -253,56 +274,23 @@ def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
 
 
 def _call_ollama(messages: List[Dict[str, str]], **kwargs) -> str:
-    """Ollama — local, unlimited fallback with autonomous model discovery."""
-    if not _ollama_is_reachable():
-        raise RuntimeError("Ollama server is not reachable")
-
+    """Ollama — local fallback."""
     base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    if base.endswith("/api"):
-        base = base[:-4]
-    
-    preferred_model = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:3b-instruct")
-    
-    # Autonomous Discovery: Check available models
-    available_models = []
-    try:
-        with httpx.Client(timeout=5) as client:
-            r = client.get(f"{base}/api/tags")
-            if r.status_code == 200:
-                available_models = [m["name"] for m in r.json().get("models", [])]
-    except Exception as e:
-        logger.debug(f"[router] Ollama model discovery failed: {e}")
+    model = os.getenv("OLLAMA_MODEL", "llama3.2")
 
-    # Select the best available model
-    selected_model = preferred_model
-    if available_models and preferred_model not in available_models:
-        # Fallback to the first instruct or chat model, or just the first available
-        fallbacks = [m for m in available_models if "instruct" in m or "chat" in m]
-        selected_model = fallbacks[0] if fallbacks else available_models[0]
-        logger.info(f"[router] Preferred model {preferred_model} not found. Autonomously switching to {selected_model}")
-
-    body = {"model": selected_model, "messages": messages, "stream": False}
-    
-    with httpx.Client(timeout=180) as client:
-        # Strategy 1: Attempt OpenAI-compatible endpoint
-        try:
-            r = client.post(f"{base}/v1/chat/completions", json=body)
-            if r.status_code == 200:
-                return r.json()["choices"][0]["message"]["content"]
-            elif r.status_code != 404:
-                r.raise_for_status()
-        except Exception as e:
-            logger.debug(f"[router] Ollama V1 failed for {selected_model}: {e}")
-        
-        # Strategy 2: Attempt Native Ollama API
-        logger.debug(f"[router] Falling back to Ollama native API (/api/chat) for {selected_model}")
+    body = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"temperature": kwargs.get("temperature", 0.7)},
+    }
+    with httpx.Client(timeout=TIMEOUT) as client:
         r = client.post(f"{base}/api/chat", json=body)
         r.raise_for_status()
         return r.json()["message"]["content"]
 
 
 # ── Provider registry ───────────────────────────────────────────────────────
-# Priority reordered for "Cloud-Hybrid" high-parameter intelligence.
 PROVIDERS = [
     {
         "name": "gemini",
@@ -348,78 +336,44 @@ PROVIDERS = [
     },
 ]
 
-# Consecutive failure tracking — skip provider after 3 failures until cooldown passes
-_FAILURES: Dict[str, int] = {}
-_LAST_FAIL: Dict[str, float] = {}
-COOLDOWN_SEC = 300  # 5 min cooldown after 3 consecutive failures
-
 
 def call_model(messages: List[Dict[str, str]], **kwargs) -> str:
-    """
-    Smart router — tries providers in priority order with rate limit tracking.
-    Returns text from the first successful provider.
-    
-    Now supports Adaptive Personality scaling:
-    - skepticism_level: higher skepticism reduces temperature for more grounded responses.
-    """
-    # Apply Adaptive Personality scaling to temperature
-    personality = kwargs.get("personality", {})
-    if "temperature" not in kwargs and personality:
-        base_temp = 0.7
-        skepticism = personality.get("skepticism_level", 0.3)
-        # Higher skepticism (max 1.0) reduces temperature (down to min 0.2)
-        kwargs["temperature"] = max(0.2, base_temp - (skepticism * 0.4))
-        logger.debug(f"[router] scaled temperature to {kwargs['temperature']:.2f} based on skepticism={skepticism:.2f}")
-
+    """Highly robust unified entry point with multi-tier failover."""
     errors = []
-    now = time.time()
 
-    for provider in PROVIDERS:
-        if not provider["enabled"]:
+    for p in PROVIDERS:
+        if not p["enabled"]:
             continue
 
-        name = provider["name"]
-
-        # Skip if on failure cooldown
-        if _FAILURES.get(name, 0) >= 3:
-            if now - _LAST_FAIL.get(name, 0) < COOLDOWN_SEC:
-                logger.debug(f"[router] {name} on cooldown")
-                continue
-            else:
-                _FAILURES[name] = 0
-
-        if not _is_available(name, provider["daily_limit"], provider["rpm_limit"]):
-            logger.info(f"[router] {name} skipped (rate limited)")
+        if not _is_available(p["name"], p["daily_limit"], p["rpm_limit"]):
             continue
 
         try:
-            logger.info(f"[router] trying {name}")
-            result = provider["call"](messages, **kwargs)
-            _record_usage(name)
-            _FAILURES[name] = 0
-            logger.info(f"[router] {name} succeeded")
+            result = p["call"](messages, **kwargs)
+            _record_usage(p["name"], success=True)
             return result
         except Exception as e:
-            _FAILURES[name] = _FAILURES.get(name, 0) + 1
-            _LAST_FAIL[name] = now
-            errors.append(f"{name}: {e}")
-            logger.warning(f"[router] {name} failed: {e}")
+            _record_usage(p["name"], success=False)
+            error_msg = f"{p['name']} error: {str(e)}"
+            errors.append(error_msg)
+            logger.warning(error_msg)
+            continue
 
-    raise RuntimeError("All LLM providers exhausted:\n" + "\n".join(errors))
+    raise RuntimeError(f"All model tiers failed:\n" + "\n".join(errors))
 
 
-def safe_parse(text: str) -> dict:
-    """Strip markdown fences, attempt JSON parse."""
-    import re
-
-    cleaned = re.sub(r"```(?:json)?|```", "", text).strip()
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", cleaned, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group())
-            except json.JSONDecodeError:
-                pass
-    return {"error": "parse_failed", "raw": text[:800]}
+def get_router_status() -> dict:
+    """Return status of all providers including cooldowns."""
+    status = {}
+    for p in PROVIDERS:
+        now = time.time()
+        record = _RATE_STATE.get(p["name"], {})
+        status[p["name"]] = {
+            "enabled": p["enabled"],
+            "daily_count": record.get("daily_count", 0),
+            "daily_limit": p["daily_limit"],
+            "on_cooldown": now < record.get("cooldown_until", 0),
+            "cooldown_remaining": max(0, int(record.get("cooldown_until", 0) - now)),
+            "consecutive_failures": record.get("consecutive_failures", 0)
+        }
+    return status

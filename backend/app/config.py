@@ -13,11 +13,13 @@ except ImportError:
     pass
 PROMPTS_DIR = BASE_DIR / "prompts"
 
+
 # Runtime state directory.
 # Override with JANUS_DATA_DIR when you want state on a persistent volume.
 DATA_DIR = Path(os.getenv("JANUS_DATA_DIR", str(BASE_DIR / "data"))).expanduser()
 MEMORY_DIR = DATA_DIR / "memory"
 SIMULATION_DIR = DATA_DIR / "simulations"
+SENTINEL_DIR = DATA_DIR / "sentinel"
 
 
 # Prompt loader
@@ -29,7 +31,7 @@ def load_prompt(name: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-APP_VERSION = os.getenv("APP_VERSION", "0.4.0")
+APP_VERSION = os.getenv("APP_VERSION", "1.0.1")
 
 PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "huggingface").lower()
 FALLBACK_PROVIDER = os.getenv("FALLBACK_PROVIDER", "openrouter").lower()
@@ -259,8 +261,8 @@ def ensure_data_dirs():
 FEATURES = {
     "daemon": os.getenv("FEATURE_DAEMON", "true").lower() == "true",
     "learning": os.getenv("FEATURE_LEARNING", "false").lower() == "true",
-    "sentinel": os.getenv("FEATURE_SENTINEL", "false").lower() == "true",
-    "simulation": os.getenv("FEATURE_SIMULATION", "true").lower() == "true",
+    "sentinel": os.getenv("SENTINEL_ENABLED", os.getenv("FEATURE_SENTINEL", "true")).lower() == "true",
+    "simulation": os.getenv("SIMULATION_ENABLED", "true").lower() == "true",
     "adaptive": os.getenv("FEATURE_ADAPTIVE", "false").lower() == "true",
     "self_training": os.getenv("FEATURE_SELF_TRAINING", "false").lower() == "true",
     "experimental": os.getenv("FEATURE_EXPERIMENTAL", "false").lower() == "true",
@@ -344,5 +346,6 @@ def get_config():
         learning_schedule_interval = LEARNING_SCHEDULE_INTERVAL
         learning_batch_size = LEARNING_BATCH_SIZE
         learning_topics = LEARNING_TOPICS
+        sentinel_enabled = FEATURES["sentinel"]
 
     return Config()

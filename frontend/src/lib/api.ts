@@ -1,5 +1,6 @@
 import type {
   AnalyzeRequest,
+  ScamGuardianResponse,
   CaseRecord,
   ConfigStatusResponse,
   DeepHealthResponse,
@@ -51,12 +52,31 @@ export class MiroOrgClient {
     return response.json();
   }
 
-  // Analysis endpoints
-  async analyze(request: AnalyzeRequest): Promise<CaseRecord> {
+  // AI Assistant endpoints
+  async run(userInput: string, context?: any): Promise<any> {
     const response = await fetch(`${this.getBaseUrl()}/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_input: userInput, context }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "AI query failed");
+    }
+    return response.json();
+  }
+
+  // Backward compatibility / General analysis
+  async analyze(request: AnalyzeRequest): Promise<ScamGuardianResponse> {
+    const response = await fetch(`${this.getBaseUrl()}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...request, query: request.user_input }),
+      body: JSON.stringify({
+        text: request.user_input,
+        url: request.url,
+        image_base64: request.image_base64,
+        source: request.source || 'janus-client',
+      }),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -242,4 +262,51 @@ export class FinanceClient {
   }
 }
 
+
 export const financeClient = new FinanceClient();
+
+// Scam Guardian endpoints
+export class GuardianClient {
+  private baseUrl?: string;
+
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  private getBaseUrl(): string {
+    return this.baseUrl ?? getApiBaseUrl();
+  }
+
+  async analyze(payload: { text?: string; url?: string; image_base64?: string; source?: string }) {
+    const res = await fetch(`${this.getBaseUrl()}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Analysis failed");
+    return res.json();
+  }
+
+  async getHistory() {
+    const res = await fetch(`${this.getBaseUrl()}/history`);
+    if (!res.ok) throw new Error("Failed to fetch history");
+    return res.json();
+  }
+
+  async getEvent(id: string) {
+    const res = await fetch(`${this.getBaseUrl()}/history/${id}`);
+    if (!res.ok) throw new Error("Failed to fetch event detail");
+    return res.json();
+  }
+
+  async submitFeedback(payload: { analyze_id: string; is_scam: boolean; notes?: string }) {
+    const res = await fetch(`${this.getBaseUrl()}/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return res.json();
+  }
+}
+
+export const guardianClient = new GuardianClient();

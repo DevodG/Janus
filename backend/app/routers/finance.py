@@ -105,22 +105,22 @@ def analyze_text(req: AnalyzeTextRequest):
 
 
 @router.get("/ticker/{symbol}")
-def ticker_intelligence(symbol: str):
+async def ticker_intelligence(symbol: str):
     """
     Full intelligence package for a ticker:
     quote + company overview + recent news + AI signal
     """
     symbol = symbol.upper().strip()
     try:
-        quote = get_quote(symbol)
-        overview = get_company_overview(symbol)
+        quote = await get_quote(symbol)
+        overview = await get_company_overview(symbol)
 
         company_name = overview.get("Name") or symbol
-        news = get_company_news(company_name, days_back=7, symbol=symbol)
+        news = await get_company_news(company_name, days_back=7, symbol=symbol)
 
         # Run stance detection on news headlines
         headlines_text = " ".join(
-            a.get("title", "") + " " + (a.get("description") or "") for a in news[:10]
+            (a.get("title") or "") + " " + (a.get("description") or "") for a in news[:10]
         )
         stance = (
             detect_stance(headlines_text)
@@ -135,7 +135,7 @@ def ticker_intelligence(symbol: str):
         )
 
         # Build AI signal using LLM
-        ai_signal = _generate_ai_signal(
+        ai_signal = await _generate_ai_signal(
             symbol, company_name, quote, overview, news[:5], stance, events
         )
 
@@ -156,7 +156,7 @@ def ticker_intelligence(symbol: str):
             "news": [
                 {
                     "title": a.get("title"),
-                    "source": a.get("source", {}).get("name"),
+                    "source": a.get("source", {}).get("name") if isinstance(a.get("source"), dict) else a.get("source"),
                     "url": a.get("url"),
                     "published_at": a.get("publishedAt"),
                     "description": (a.get("description") or "")[:200],
@@ -175,10 +175,10 @@ def ticker_intelligence(symbol: str):
 
 
 @router.get("/search/{query}")
-def search_ticker(query: str):
+async def search_ticker(query: str):
     """Search for ticker symbols by company name or keyword."""
     try:
-        results = search_symbol(query)
+        results = await search_symbol(query)
         return [
             {
                 "symbol": r.get("1. symbol"),
@@ -204,16 +204,16 @@ def get_historical(symbol: str, period: str = "3mo"):
 
 
 @router.post("/news/analyze")
-def analyze_news(req: NewsAnalysisRequest):
+async def analyze_news(req: NewsAnalysisRequest):
     """
     Fetch news for a query and run full intelligence analysis on each article.
     """
     try:
-        articles = get_company_news(req.query, days_back=7)
+        articles = await get_company_news(req.query, days_back=7)
         if not articles:
             from app.domain_packs.finance.news import search_news
 
-            articles = search_news(req.query, page_size=req.limit)
+            articles = await search_news(req.query, page_size=req.limit)
 
         analyzed = []
         for article in articles[: req.limit]:
@@ -230,7 +230,7 @@ def analyze_news(req: NewsAnalysisRequest):
             analyzed.append(
                 {
                     "title": article.get("title"),
-                    "source": article.get("source", {}).get("name"),
+                    "source": article.get("source", {}).get("name") if isinstance(article.get("source"), dict) else article.get("source"),
                     "url": url,
                     "published_at": article.get("publishedAt"),
                     "description": (article.get("description") or "")[:200],
@@ -251,10 +251,10 @@ def analyze_news(req: NewsAnalysisRequest):
 
 
 @router.get("/headlines")
-def get_headlines():
+async def get_headlines():
     """Get top business headlines with full intelligence analysis."""
     try:
-        articles = get_top_headlines(category="business", page_size=10)
+        articles = await get_top_headlines(category="business", page_size=10)
         analyzed = []
         for article in articles[:10]:
             text = (
@@ -270,7 +270,7 @@ def get_headlines():
             analyzed.append(
                 {
                     "title": article.get("title"),
-                    "source": article.get("source", {}).get("name"),
+                    "source": article.get("source", {}).get("name") if isinstance(article.get("source"), dict) else article.get("source"),
                     "url": url,
                     "published_at": article.get("publishedAt"),
                     "description": (article.get("description") or "")[:200],
@@ -292,7 +292,7 @@ def get_headlines():
 # ── AI Signal Generator ───────────────────────────────────────────────────────
 
 
-def _generate_ai_signal(
+async def _generate_ai_signal(
     symbol: str,
     company_name: str,
     quote: dict,

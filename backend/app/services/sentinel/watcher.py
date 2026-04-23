@@ -47,11 +47,14 @@ class SentinelAlert:
         }
 
 
+from app.config import DATA_DIR
+
+
 class SentinelWatcher:
     """Scans system for health issues."""
     
     def __init__(self):
-        self.data_dir = Path("backend/app/data")
+        self.data_dir = DATA_DIR
         self._last_scan_time: Optional[datetime] = None
         self._last_scan_result: Optional[bool] = None
         self._cache_duration = timedelta(minutes=5)

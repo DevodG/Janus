@@ -1,70 +1,67 @@
 ---
-title: Janus
-emoji: 🧠
+title: Janus ZeroTrust Sentinel
+emoji: 🛡️
 colorFrom: indigo
-colorTo: purple
+colorTo: slate
 sdk: docker
 app_file: app.py
-pinned: false
+pinned: true
 ---
-# Rebuild trigger Fri Apr 10 15:59:28 IST 2026
 
-## Hosted Deployment
+# Janus: The Multimodal Intelligence Sentinel
 
-This repo is now set up to run as a single Docker service:
+Janus is a self-evolving, multi-agent cognitive system designed for high-fidelity financial intelligence and proactive **ZeroTrust** protection. It doesn't just process data; it **dreams**, **reflects**, and **intercepts** scam journeys before they manifest.
 
-- FastAPI serves the API on port `7860`
-- a bundled Next.js standalone server runs internally on port `3000`
-- FastAPI proxies the frontend, so the public app and API share one origin
+## 🌊 The Janus Cognitive Signal Flow
 
-For a Hugging Face Docker Space:
+Every signal entering the Janus cluster undergoes a multi-stage cognitive transformation:
 
-- add `HUGGINGFACE_API_KEY` in Space Secrets
-- add `TAVILY_API_KEY` in Space Secrets if you want web search
-- optionally add `HF_STORE_REPO=username/private-dataset-repo` if you want memory/cases to survive restarts
-- do not create a separate frontend Space for this repo
-- do not set `NEXT_PUBLIC_API_URL` unless you intentionally want the UI to call some external API host
+1.  **Smart Routing**: The `SmartRouter` classifies intent (Finance, Security, Research) and determines the optimal agent swarm configuration.
+2.  **ZeroTrust Audit**: The `GuardianInterceptor` performs an immediate heuristic and relational scan for deception patterns.
+3.  **Parallel Execution**:
+    - **Curiosity Node**: Proactively discovers market anomalies and news pulses.
+    - **Research Swarm**: Performs deep-web evidence gathering and credibility scoring.
+    - **Mirofish Simulation**: Runs predictive scenario modeling (Monte Carlo / Predictive AI).
+4.  **The Reflection Loop**:
+    - **Dream Engine**: Generates speculative "what-if" scenarios based on current discoveries.
+    - **Self-Reflection**: Critical audit of agent outputs to minimize hallucination and bias.
+5.  **Synthesis & Verification**: The `Verifier` node merges disparate outputs into a unified, high-confidence brief.
+6.  **Adaptive Memory**: Learnings are enrolled in the persistent `ScamGraph` and context engine for future recall.
 
-Important:
+## 🛡️ ZeroTrust Defensive Architecture
 
-- free Hugging Face Spaces can sleep when idle, so they are not truly 24/7
-- for always-on uptime, use upgraded HF hardware or another always-on host
+- **Active Interception**: Autonomous signal squashing for confirmed scam trajectories.
+- **Multimodal Dissonance Fusion**: Fuses link heuristics with the **MMSA Engine** for YouTube/Video forensic probing.
+- **Relational Threat Mapping**: Tracks persistent "Scam Journeys" by linking scattered entities in the `ScamGraph`.
+- **Forensic Safety Gateway**: A dedicated portal for deep-probing SMS, Chat logs, and malicious files.
 
-## Run Locally
+## 📈 Financial & Adaptive Intelligence
 
-Start the backend and frontend together from the repo root:
+- **Autonomous Curiosity**: The system never sleeps; it continuously scans global markets and sentiment shifts.
+- **Dream-to-Reality Synthesis**: Uses historical market data and generative dreaming to predict volatility and opportunities.
+- **Cross-Case Pattern Analysis**: Identifies systemic patterns (e.g., typosquatting clusters or sector-wide anomalies) across unrelated user cases.
+- **Market Watcher**: Real-time integration with AlphaVantage and NewsAPI for live-streaming financial truth.
+
+## 🚀 Deployment (Hugging Face Spaces / Docker)
+
+Janus is a unified Docker service:
+
+1.  **Secrets Configuration**:
+    - `HUGGINGFACE_API_KEY`: Core cognitive reasoning.
+    - `TAVILY_API_KEY`: Deep-web evidence gathering.
+    - `HF_STORE_REPO`: Persistent dataset storage.
+2.  **Unified Origin**: FastAPI proxies the Next.js Sentinel Dashboard, serving the entire system from a single origin (Port `7860`).
+
+## 🛠️ Run Locally
 
 ```bash
 ./run-dev.sh
 ```
 
-Default local URLs:
+### Prerequisites
+- **Cognitive**: Python 3.10+ (backend/.venv)
+- **Visuals**: Next.js 14+ (frontend/)
+- **Sensory**: `easyocr` (OCR), `pymupdf` (PDF), `yt-dlp` (MMSA Video).
 
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:7860`
-
-Prerequisites:
-
-- backend virtualenv at `backend/.venv`
-- frontend dependencies installed in `frontend/`
-- required secrets available in your shell or environment manager
-
-Useful env vars:
-
-```bash
-export HUGGINGFACE_API_KEY=...
-export TAVILY_API_KEY=...
-export JANUS_DATA_DIR=./data
-```
-
-Optional overrides:
-
-```bash
-API_PORT=7860 WEB_PORT=3000 NEXT_PUBLIC_API_URL=http://localhost:7860 ./run-dev.sh
-```
-
-## Hugging Face Spaces
-
-- this repo should be deployed as one Docker Space
-- backend defaults to public port `7860`
-- the frontend is bundled into the same container and served through the backend
+---
+*Janus adapts. Janus Dreams. Janus Protects.*

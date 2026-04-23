@@ -27,26 +27,10 @@ class MarketWatcher:
     def __init__(self, watchlist: List[str] = None):
         self.api_key = os.getenv("ALPHAVANTAGE_API_KEY", "")
         self.watchlist = watchlist or [
-            "AAPL",
-            "MSFT",
-            "NVDA",
-            "AMZN",
-            "GOOGL",
-            "META",
-            "TSLA",
-            "TSM",
-            "ASML",
-            "JPM",
-            "XOM",
-            "SPY",
-            "QQQ",
-            "DIA",
-            "IWM",
-            "EEM",
-            "FXI",
-            "EWJ",
-            "INDA",
-            "EWG",
+            "AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA",
+            "TSM", "ASML", "JPM", "XOM", "V", "PYPL", "CRWD", "PANW",
+            "LLY", "MRNA", "VRTX", "WMT", "COST", "SPY", "QQQ", "DIA",
+            "IWM", "EEM", "FXI", "EWJ", "INDA", "EWG",
         ]
         self.price_history: Dict[str, List[Dict]] = {}
         self._load_history()
