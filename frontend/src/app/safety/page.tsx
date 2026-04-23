@@ -38,10 +38,7 @@ export default function SafetyGateway() {
     setIsAnalyzing(true);
     try {
       // We use the general analyze endpoint but force a high-diligence report
-      const res = await apiClient.analyze({ 
-        user_input: inputText,
-        context: { mode: 'forensic', source: 'manual_intake' }
-      });
+      const res = await apiClient.run(inputText, { mode: 'forensic', source: 'manual_intake' });
       
       const newResult: AnalysisResult = {
         id: `res-${Date.now()}`,

@@ -155,7 +155,7 @@ export default function MarketsPage() {
     setResearchLoading(true); setResearchResult(null); setResearchStage(0);
     if (stageTimer.current) clearInterval(stageTimer.current);
     stageTimer.current = setInterval(() => setResearchStage(p => (p + 1) % STAGES.length), 3000);
-    try { const res = await apiClient.analyze({ user_input: q }); setResearchResult(res); } catch { /* silent */ }
+    try { const res = await apiClient.run(q); setResearchResult(res); } catch { /* silent */ }
     finally { setResearchLoading(false); if (stageTimer.current) clearInterval(stageTimer.current); }
   };
 

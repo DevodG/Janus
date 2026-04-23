@@ -81,7 +81,7 @@ export default function IntelPage() {
     if (stageTimer.current) clearInterval(stageTimer.current);
     stageTimer.current = setInterval(() => setResearchStage(p => (p + 1) % STAGES.length), 3000);
     try {
-      const res = await apiClient.analyze({ user_input: articleText });
+      const res = await apiClient.run(articleText);
       setResearchResult(res);
     } catch { /* silent */ }
     finally {
