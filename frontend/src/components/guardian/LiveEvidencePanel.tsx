@@ -1,3 +1,4 @@
+// Janus Forensic Component - v1.1.5
 import React from 'react';
 
 type EvidenceItem = {

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Link, Image as ImageIcon, Search, AlertTriangle, CheckCircle, XCircle, Info, Hash, ExternalLink, Brain } from 'lucide-react';
 import { apiClient, guardianClient } from '@/lib/api';
 import type { ScamGuardianResponse } from '@/lib/types';
-import LiveEvidencePanel from '@/components/guardian/LiveEvidencePanel';
+import LiveEvidencePanel from './guardian/LiveEvidencePanel';
 
 export default function ScamGuardian() {
   const [activeTab, setActiveTab] = useState<'text' | 'url' | 'image'>('text');
