@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Zap, ArrowUp, Brain } from 'lucide-react';
+import { Send, Sparkles, Zap, ArrowUp, Brain, MessageSquare, ShieldAlert, ChevronRight } from 'lucide-react';
 import { apiClient } from '@/lib/api';
+import ScamGuardian from '@/components/ScamGuardian';
 
 // ─── Types ───────────────────────────────────────────────
 interface Message {
@@ -305,6 +306,7 @@ function EmptyState({ onSelect }: { onSelect: (q: string) => void }) {
 //  MAIN CHAT PAGE
 // ═══════════════════════════════════════════════════════════
 export default function ChatPage() {
+  const [view, setView] = useState<'ai' | 'scam'>('ai');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -400,9 +402,51 @@ export default function ChatPage() {
   const isEmpty = messages.length === 0 && !isThinking;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Conversation area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+    <div className="h-full flex overflow-hidden bg-[#0A0A0A]">
+      {/* Sidebar Navigation */}
+      <div className="w-20 sm:w-64 shrink-0 border-r border-white/[0.04] bg-[#0d0d0d] flex flex-col pt-6">
+        <div className="px-6 mb-10 flex items-center gap-3">
+          <JanusOrb size={32} />
+          <span className="hidden sm:block text-lg font-black tracking-tighter text-white">JANUS</span>
+        </div>
+
+        <nav className="flex-1 px-3 space-y-2">
+          <button
+            onClick={() => setView('ai')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+              view === 'ai' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
+            }`}
+          >
+            <MessageSquare size={20} />
+            <span className="hidden sm:block text-sm font-semibold">AI Assistant</span>
+            {view === 'ai' && <ChevronRight size={14} className="ml-auto hidden sm:block" />}
+          </button>
+
+          <button
+            onClick={() => setView('scam')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
+              view === 'scam' ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'
+            }`}
+          >
+            <ShieldAlert size={20} />
+            <span className="hidden sm:block text-sm font-semibold">Scam Guardian</span>
+            {view === 'scam' && <ChevronRight size={14} className="ml-auto hidden sm:block" />}
+          </button>
+        </nav>
+
+        <div className="p-6 border-t border-white/[0.04]">
+          <div className="hidden sm:block p-4 rounded-xl bg-gradient-to-br from-indigo-500/5 to-purple-500/5 border border-indigo-500/10">
+            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Mirofish Node v2</p>
+            <p className="text-[11px] text-gray-500 leading-tight">Switchboard active. Multi-agent pipeline ready.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col min-w-0 bg-[#0c0c0c]">
+        {view === 'ai' ? (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Conversation area */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto pt-4">
         {isEmpty ? (
           <EmptyState onSelect={(q) => { setInput(q); sendMessage(q); }} />
         ) : (
@@ -421,34 +465,38 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Input bar */}
-      <div className="shrink-0 border-t border-white/[0.04] px-4 py-3">
-        <div className="max-w-[768px] mx-auto">
-          <div className="input-bar flex items-end gap-2 px-4 py-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              disabled={isThinking}
-              placeholder="Message Janus..."
-              rows={1}
-              className="flex-1 bg-transparent text-[14px] text-gray-200 placeholder-gray-600 resize-none focus:outline-none disabled:opacity-40 leading-relaxed py-1.5 max-h-40"
-            />
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => sendMessage(input)}
-              disabled={isThinking || !input.trim()}
-              className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white transition-all shrink-0 mb-0.5"
-            >
-              <ArrowUp size={16} />
-            </motion.button>
+            </div>
+
+            {/* Input bar */}
+            <div className="shrink-0 border-t border-white/[0.04] px-4 py-6">
+              <div className="max-w-[768px] mx-auto">
+                <div className="input-bar flex items-end gap-2 px-4 py-2 bg-[#181818] rounded-3xl border border-white/[0.06] shadow-xl">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    disabled={isThinking}
+                    placeholder="Message Janus..."
+                    rows={1}
+                    className="flex-1 bg-transparent text-[14px] text-gray-200 placeholder-gray-600 resize-none focus:outline-none disabled:opacity-40 leading-relaxed py-1.5 max-h-40"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => sendMessage(input)}
+                    disabled={isThinking || !input.trim()}
+                    className="p-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 disabled:text-gray-600 text-white transition-all shrink-0 mb-0.5"
+                  >
+                    <ArrowUp size={18} />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-center text-[11px] text-gray-700 mt-2">
-            Janus can make mistakes. Verify important analysis independently.
-          </p>
-        </div>
+        ) : (
+          <ScamGuardian />
+        )}
       </div>
     </div>
   );

@@ -116,8 +116,40 @@ export interface ConfigStatusResponse {
 
 // Request types
 export interface AnalyzeRequest {
-  user_input: string;
+  user_input?: string;
+  url?: string;
+  image_base64?: string;
+  source?: string;
   context?: Record<string, any>;
+}
+
+export interface ScamGuardianResponse {
+  id: string;
+  text: string;
+  source: string;
+  risk_score: number;
+  decision: string;
+  reasons: string[];
+  intent: {
+    urgency: number;
+    impersonation: number;
+    payment: number;
+    fear: number;
+  };
+  entities: {
+    phones: string[];
+    upi_ids: string[];
+    domains: string[];
+    brands: string[];
+  };
+  similarity?: {
+    matches: Array<{
+      event_id: string;
+      similarity: number;
+      ts: string;
+      text: string;
+    }>;
+  };
 }
 
 export interface SimulationRequest {

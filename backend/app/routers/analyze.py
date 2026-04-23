@@ -9,9 +9,9 @@ from app.services.risk_service import risk_service
 from app.services.similarity_service import similarity_service
 from app.services.memory_service import memory_service
 
-router = APIRouter(prefix="/analyze", tags=["scam-guardian"])
+router = APIRouter(tags=["scam-guardian"])
 
-@router.post("/", response_model=AnalyzeResponse)
+@router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_scam(request: AnalyzeRequest):
     # 1. Normalize Input
     processed = await input_processor.process(request)
@@ -43,5 +43,19 @@ async def analyze_scam(request: AnalyzeRequest):
     
     # 6. Persist to DB (Background or async)
     await memory_service.save_event(response, processed["metadata"], embedding)
+    
+    # 7. Real-time Broadcast (Optimization for live demo)
+    try:
+        from app.routers.websocket import manager as ws_manager
+        await ws_manager.broadcast({
+            "type": "NEW_SCAM_EVENT",
+            "event_id": response.id,
+            "source": response.source,
+            "risk_score": response.risk_score,
+            "decision": response.decision,
+            "reasons": response.reasons
+        })
+    except Exception:
+        pass # Don't fail the primary request if broadcast fails
     
     return response

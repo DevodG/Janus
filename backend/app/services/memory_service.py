@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import ScamEvent, Entity, EventEntity
 from app.schemas.response import AnalyzeResponse

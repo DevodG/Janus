@@ -170,9 +170,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Bundled frontend failed to start: %s", e)
 
-    # 5. Daemon — exactly once even if uvicorn reloads
+    # 5. DB & Daemon — exactly once even if uvicorn reloads
     if not _started:
         _started = True
+        
+        # Database Initialization (Tables + pgvector)
+        try:
+            from app.db.session import init_db
+            await init_db()
+            logger.info("Database initialized successfully (Tables + Extension).")
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}")
         try:
             from app.services.daemon import JanusDaemon
             import concurrent.futures
@@ -1783,10 +1791,10 @@ def create_app() -> FastAPI:
 
     # ── Routers — always on ───────────────────────────────────────────────
     from app.routers.finance import router as finance_router
-    from app.routes.analyze import router as analyze_router
-    from app.routes.history import router as history_router
-    from app.routes.feedback import router as feedback_router
-    from app.routes.websocket import router as websocket_router
+    from app.routers.analyze import router as analyze_router
+    from app.routers.history import router as history_router
+    from app.routers.feedback import router as feedback_router
+    from app.routers.websocket import router as websocket_router
 
     app.include_router(finance_router)
     app.include_router(analyze_router)

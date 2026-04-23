@@ -12,6 +12,8 @@ class ExtractedEntities(BaseModel):
     domains: List[str]
     upi_ids: List[str]
     brands: List[str]
+    crypto: List[str] = []
+    accounts: List[str] = []
 
 class AnalyzeResponse(BaseModel):
     id: str

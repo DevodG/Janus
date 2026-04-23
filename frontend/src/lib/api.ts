@@ -1,5 +1,6 @@
 import type {
   AnalyzeRequest,
+  ScamGuardianResponse,
   CaseRecord,
   ConfigStatusResponse,
   DeepHealthResponse,
@@ -52,11 +53,16 @@ export class MiroOrgClient {
   }
 
   // Analysis endpoints
-  async analyze(request: AnalyzeRequest): Promise<CaseRecord> {
-    const response = await fetch(`${this.getBaseUrl()}/run`, {
+  async analyze(request: AnalyzeRequest): Promise<ScamGuardianResponse> {
+    const response = await fetch(`${this.getBaseUrl()}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...request, query: request.user_input }),
+      body: JSON.stringify({
+        text: request.user_input,
+        url: request.url,
+        image_base64: request.image_base64,
+        source: request.source || 'janus-client',
+      }),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -258,7 +264,7 @@ export class GuardianClient {
   }
 
   async analyze(payload: { text?: string; url?: string; image_base64?: string; source?: string }) {
-    const res = await fetch(`${this.getBaseUrl()}/analyze/`, {
+    const res = await fetch(`${this.getBaseUrl()}/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -268,7 +274,7 @@ export class GuardianClient {
   }
 
   async getHistory() {
-    const res = await fetch(`${this.getBaseUrl()}/history/`);
+    const res = await fetch(`${this.getBaseUrl()}/history`);
     if (!res.ok) throw new Error("Failed to fetch history");
     return res.json();
   }
@@ -280,7 +286,7 @@ export class GuardianClient {
   }
 
   async submitFeedback(payload: { analyze_id: string; is_scam: boolean; notes?: string }) {
-    const res = await fetch(`${this.getBaseUrl()}/feedback/`, {
+    const res = await fetch(`${this.getBaseUrl()}/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
