@@ -54,21 +54,13 @@ class MMSADissonanceEngine:
             "RESTRICT": "Potential Fraud: Dissonance and metadata conflicts. Do not share OTP."
         }
 
-    def _lazy_load(self):
+    def _lazy_load(self) -> bool:
         """Load MMSA and MediaPipe Tasks resources."""
         global MMSA, mp, tasks, vision, cv2, torch, yt_dlp, static_ffmpeg
         if self._models_loaded:
-            return
+            return True
 
         try:
-            import sys
-            import os
-            # Dynamic discovery of site-packages for the active environment
-            py_version = f"python{sys.version_info.major}.{sys.version_info.minor}"
-            site_pkgs = os.path.join(sys.prefix, "lib", py_version, "site-packages")
-            if site_pkgs not in sys.path:
-                sys.path.append(site_pkgs)
-            
             import torch
             import mediapipe as mp
             from mediapipe.tasks import python as tasks
@@ -85,26 +77,39 @@ class MMSADissonanceEngine:
             
             # Initialize MediaPipe Face Landmarker
             model_path = os.path.join(os.path.dirname(__file__), 'face_landmarker.task')
-            base_options = tasks.BaseOptions(model_asset_path=model_path)
-            options = vision.FaceLandmarkerOptions(
-                base_options=base_options,
-                output_face_blendshapes=True,
-                output_facial_transformation_matrixes=True,
-                num_faces=1
-            )
-            self.landmarker = vision.FaceLandmarker.create_from_options(options)
+            if os.path.exists(model_path):
+                base_options = tasks.BaseOptions(model_asset_path=model_path)
+                options = vision.FaceLandmarkerOptions(
+                    base_options=base_options,
+                    output_face_blendshapes=True,
+                    output_facial_transformation_matrixes=True,
+                    num_faces=1
+                )
+                self.landmarker = vision.FaceLandmarker.create_from_options(options)
             
             self._models_loaded = True
             logger.info("[MMSA-ENGINE] Tri-Modal sensors and Learning Memory active.")
+            return True
+        except ImportError as e:
+            logger.warning(f"[MMSA-ENGINE] Deep Modal dependencies missing (MMSA/MediaPipe): {e}")
+            return False
         except Exception as e:
             logger.error(f"[MMSA-ENGINE] Failed to load sensors: {e}")
-            raise
+            return False
 
     def analyze(self, audio_path: str, transcript: str, video_path: Optional[str] = None) -> Dict[str, Any]:
         """
         Analyze the trinity of modalities for deception and emotional leakage.
         """
-        self._lazy_load()
+        if not self._lazy_load():
+            return {
+                "error": "Multimodal Dissonance Engine unavailable.",
+                "reason": "MMSA dependencies (MMSA-FET, ctc-segmentation) not installed.",
+                "dissonance_score": 0.0,
+                "is_dissonant": False,
+                "safe_action": "Unable to perform multimodal scan. Default to text heuristics."
+            }
+        
         start_time = time.time()
         
         try:
@@ -195,7 +200,12 @@ class MMSADissonanceEngine:
         """
         Download media from YouTube/Stream and analyze for dissonance.
         """
-        self._lazy_load()
+        if not self._lazy_load():
+            return {
+                "error": "URL Dissonance Engine unavailable.",
+                "reason": "MMSA dependencies (yt-dlp, static-ffmpeg, MMSA) not fully installed.",
+                "safe_action": "Unable to scan video link depth. Verify sender via secondary channel."
+            }
         import tempfile
         import shutil
         from static_ffmpeg import run as ffmpeg_run
@@ -339,7 +349,8 @@ class MMSADissonanceEngine:
         """
         Run a benchmark against the SOTA MOSEI test subset.
         """
-        self._lazy_load()
+        if not self._lazy_load():
+            return {"status": "error", "message": "MMSA dependencies missing."}
         logger.info("[MMSA-ENGINE] Running SOTA Calibration against CMU-MOSEI...")
         # Simulated benchmark result for prototype
         return {
