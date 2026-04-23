@@ -1,3 +1,4 @@
+from typing import List
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import ScamEvent, Entity, EventEntity
@@ -75,5 +76,25 @@ class MemoryService:
         # Link to event
         link = EventEntity(event_id=event_id, entity_id=entity.id)
         session.add(link)
+
+    async def check_overlap(self, phones: List[str], upis: List[str], domains: List[str]) -> List[dict]:
+        """Detect if these entities have appeared in previous reports."""
+        async with AsyncSessionLocal() as session:
+            overlaps = []
+            all_vals = [("phone", p) for p in phones] + [("upi", u) for u in upis] + [("domain", d) for d in domains]
+            
+            for e_type, val in all_vals:
+                stmt = select(Entity).where(Entity.type == e_type, Entity.value == val)
+                result = await session.execute(stmt)
+                entity = result.scalar_one_or_none()
+                if entity:
+                    overlaps.append({
+                        "source": "Janus Memory Graph",
+                        "signal": "infrastructure_overlap",
+                        "value": val,
+                        "severity": "high",
+                        "explanation": f"This '{val}' has been encountered in previous reports. Recidivism detected."
+                    })
+            return overlaps
 
 memory_service = MemoryService()

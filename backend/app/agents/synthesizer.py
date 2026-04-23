@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Synthesizer agent — MiroOrg v2.
 Final voice in the pipeline. Accepts all upstream outputs and produces
@@ -32,7 +33,7 @@ class SynthesizerOutput(BaseModel):
 logger = logging.getLogger(__name__)
 
 
-def _extract_json_from_text(text: str) -> dict | None:
+def _extract_json_from_text(text: str) -> Optional[dict]:
     """Extract JSON object from text that may contain markdown or prose."""
     # Try direct parse first
     try:

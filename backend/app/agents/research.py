@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Research agent — Janus.
 Uses lightweight HTTP crawler (no Playwright needed), Knowledge Store, and API Discovery
@@ -9,6 +10,7 @@ import json
 import re
 import logging
 from urllib.parse import quote_plus
+from typing import Optional, List, Dict, Any
 import httpx
 from app.agents._model import call_model
 from app.agents.api_discovery import discover_apis, call_discovered_api
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 JINA_READER_BASE = os.getenv("JINA_READER_BASE", "https://r.jina.ai/")
 
 
-def _extract_json(text: str) -> dict | None:
+def _extract_json(text: str) -> Optional[dict]:
     """Robustly extract JSON from model response."""
     try:
         return json.loads(text)
@@ -53,8 +55,8 @@ def _deterministic_research_result(
     deep_bundle: dict,
     news: list[dict],
     knowledge: list[dict],
-    simulation: dict | None,
-    finance: dict | None,
+    simulation: Optional[dict],
+    finance: Optional[dict],
 ) -> dict:
     synthesis = deep_bundle.get("synthesis", {}) if isinstance(deep_bundle, dict) else {}
     top_sources = synthesis.get("top_sources", []) if isinstance(synthesis.get("top_sources"), list) else []
@@ -166,7 +168,7 @@ def _duckduckgo_urls(query: str, max_results: int = 5) -> list[str]:
     return urls
 
 
-def _extract_content(url: str) -> str | None:
+def _extract_content(url: str) -> Optional[str]:
     """Extract clean content from a URL using Jina Reader (free, no key needed)."""
     try:
         jina_url = f"{JINA_READER_BASE}{url}"

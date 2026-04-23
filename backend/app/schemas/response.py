@@ -42,3 +42,13 @@ class AnalyzeResponse(BaseModel):
     next_steps: List[str] = []
     similarity: Optional[Dict[str, Any]] = None
     timeline_link: Optional[str] = None
+    breadcrumbs: List[str] = []
+
+class LearningStatusResponse(BaseModel):
+    enabled: bool
+    storage: Dict[str, Any]
+    last_run: Dict[str, str]
+
+class LearningInsightsResponse(BaseModel):
+    recent_knowledge: List[Dict[str, Any]]
+    storage_stats: Dict[str, Any]

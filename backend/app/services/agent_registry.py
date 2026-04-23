@@ -1,4 +1,5 @@
-from typing import Dict, Any, List
+from __future__ import annotations
+from typing import Dict, Any, List, Optional
 
 from app.config import PROMPTS_DIR
 from app.agents import switchboard
@@ -54,7 +55,7 @@ def list_agents() -> List[Dict[str, Any]]:
     ]
 
 
-def get_agent(name: str) -> Dict[str, Any] | None:
+def get_agent(name: str) -> Optional[Dict[str, Any]]:
     meta = AGENTS.get(name)
     if not meta:
         return None
@@ -69,9 +70,9 @@ def get_agent(name: str) -> Dict[str, Any] | None:
 def run_single_agent(
     agent: str,
     user_input: str,
-    research_output: str | None = None,
-    planner_output: str | None = None,
-    verifier_output: str | None = None,
+    research_output: Optional[str] = None,
+    planner_output: Optional[str] = None,
+    verifier_output: Optional[str] = None,
 ) -> Dict[str, Any]:
     state = {
         "user_input": user_input,

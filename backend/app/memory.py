@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
@@ -5,6 +6,7 @@ import glob
 import logging
 import time
 import uuid
+from typing import Optional
 
 from app.config import MEMORY_DIR, DATA_DIR
 
@@ -84,7 +86,7 @@ class KnowledgeStore:
         path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
         return item_id
 
-    def list_all(self, limit: int | None = None) -> list[dict]:
+    def list_all(self, limit: Optional[int] = None) -> list[dict]:
         items = self._iter_items()
 
         def _sort_key(item: dict) -> float:
@@ -109,7 +111,7 @@ class KnowledgeStore:
         query: str,
         domain: str = "general",
         top_k: int = 5,
-        limit: int | None = None,
+        limit: Optional[int] = None,
     ) -> list[dict]:
         results = []
         query_lower = query.lower()

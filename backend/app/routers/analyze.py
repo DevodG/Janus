@@ -50,6 +50,19 @@ async def analyze_scam(request: AnalyzeRequest):
         brands=entities.brands
     )
     
+    # Check for infrastructure overlap in memory graph
+    try:
+        memory_overlaps = await memory_service.check_overlap(
+            entities.phones, entities.upi_ids, entities.domains
+        )
+        if memory_overlaps:
+            live_intel["evidence"].extend(memory_overlaps)
+            live_intel["risk_boost"] = min(60, live_intel["risk_boost"] + 30)
+            live_intel["reasons"].append("Detected reuse of known scam infrastructure.")
+            live_intel["breadcrumbs"].append("Infrastructure REUSE detected via Janus Graph!")
+    except Exception as e:
+        print(f"Memory overlap check failed: {e}")
+    
     final_risk = min(100.0, float(risk_result["score"]) + float(live_intel["risk_boost"]))
     final_reasons = list(dict.fromkeys([*risk_result["reasons"], *live_intel["reasons"]]))
     final_decision = _decision_from_risk(final_risk)
@@ -67,6 +80,7 @@ async def analyze_scam(request: AnalyzeRequest):
         claimed_brand=live_intel.get("claimed_brand"),
         official_verify=live_intel.get("official_verify"),
         next_steps=live_intel.get("next_steps", []),
+        breadcrumbs=live_intel.get("breadcrumbs", []),
         similarity={"matches": matches} if matches else {"matches": []}
     )
     

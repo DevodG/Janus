@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Autonomous Learner for Janus.
 
@@ -41,7 +42,7 @@ class AutonomousLearner:
         self,
         max_gaps: int = 3,
         max_datasets_per_gap: int = 3,
-        max_samples_per_dataset: int | None = None,
+        max_samples_per_dataset: Optional[int] = None,
         **kwargs,
     ) -> Dict:
         """

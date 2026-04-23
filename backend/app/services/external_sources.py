@@ -1,3 +1,4 @@
+from __future__ import annotations
 import re
 import time
 import logging
@@ -225,7 +226,7 @@ def _base_domain(domain: str) -> str:
     return domain.lower()
 
 
-def score_source_credibility(url: str, metadata: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def score_source_credibility(url: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     metadata = metadata or {}
     parsed = urlparse(url)
     domain = parsed.netloc.lower().replace("www.", "")
@@ -274,7 +275,7 @@ def score_source_credibility(url: str, metadata: Dict[str, Any] | None = None) -
     return {"score": min(score, 0.9), "reason": reason, "domain": domain}
 
 
-def plan_deep_research(query: str, max_results: int = 5, follow_links: int = 1) -> Dict[str, int]:
+def plan_deep_research(query: str, max_results: int = 5, follow_links: int = 1) -> Dict[str, Any]:
     query_lower = (query or "").lower()
     deep_terms = [
         "across the web",

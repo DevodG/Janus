@@ -1,12 +1,8 @@
-"""
-Janus Daemon — Background intelligence engine.
-Runs 24/7 with circadian rhythms, watches markets, fetches news, detects events, explores autonomously.
-Generates "pending thoughts" — things the system naturally wants to share.
-"""
-
+from __future__ import annotations
 import time
 import json
 import logging
+import asyncio
 from datetime import datetime
 from pathlib import Path
 from app.services.market_watcher import MarketWatcher
@@ -155,7 +151,7 @@ class JanusDaemon:
 
         return new_thoughts
 
-    def run(self):
+    async def run(self):
         """Main daemon loop — runs forever with circadian awareness."""
         logger.info("=" * 60)
         logger.info("JANUS DAEMON STARTED — Living Intelligence Engine")
@@ -182,7 +178,7 @@ class JanusDaemon:
                 
                 # ACTIVE GUARDIAN: Audit and Intervene on Scams
                 unfiltered_signals = market_signals + news_signals
-                all_signals, interventions = guardian_interceptor.process_signals(unfiltered_signals)
+                all_signals, interventions = await guardian_interceptor.process_signals(unfiltered_signals)
                 
                 if interventions:
                     logger.warning(f"[DAEMON] Guardian blocked {len(interventions)} high-risk scam signals!")
@@ -338,7 +334,7 @@ class JanusDaemon:
 
             sleep_time = phase_config.get("poll_interval", 900)
             logger.info(f"[DAEMON] Sleeping for {sleep_time}s ({phase.value} phase)")
-            time.sleep(sleep_time)
+            await asyncio.sleep(sleep_time)
 
     def get_status(self) -> dict:
         """Get daemon status."""

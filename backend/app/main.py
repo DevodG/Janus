@@ -10,6 +10,8 @@ Key differences from local dev:
   6. /health supports HEAD (HF health checker uses HEAD)
 """
 
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime
 import json
@@ -186,15 +188,11 @@ async def lifespan(app: FastAPI):
             import concurrent.futures
 
             daemon = JanusDaemon()
-            loop = asyncio.get_event_loop()
-            executor = concurrent.futures.ThreadPoolExecutor(
-                max_workers=1, thread_name_prefix="daemon"
-            )
-            future = loop.run_in_executor(executor, daemon.run)
-            _services["daemon_future"] = future
-            _services["daemon_executor"] = executor
+            # Daemon is now async and handles internal loops with await asyncio.sleep
+            daemon_task = asyncio.create_task(daemon.run())
+            _services["daemon_task"] = daemon_task
             _services["daemon"] = daemon
-            logger.info("Daemon thread started")
+            logger.info("Daemon async task started")
         except Exception as e:
             logger.error("Daemon failed to start: %s", e)
 
@@ -285,7 +283,7 @@ def _log_config_warnings():
         )
 
 
-def _normalize_route(route: dict | None) -> dict:
+def _normalize_route(route: Optional[dict]) -> dict:
     normalized = dict(route or {})
     domain = normalized.get("domain_pack") or normalized.get("domain") or "general"
     normalized.setdefault("domain", domain)
@@ -302,7 +300,7 @@ def _normalize_route(route: dict | None) -> dict:
     return normalized
 
 
-def _merge_context(base: dict, incoming: dict | None) -> dict:
+def _merge_context(base: dict, incoming: Optional[dict]) -> dict:
     if not incoming:
         return base
     merged = dict(base)
@@ -325,7 +323,7 @@ def _time_of_day() -> str:
     return "late night"
 
 
-def _build_runtime_context(app: FastAPI, user_input: str, requested: dict | None) -> dict:
+def _build_runtime_context(app: FastAPI, user_input: str, requested: Optional[dict]) -> dict:
     from app.services.context_engine import context_engine
     from app.services.memory_manager import memory_manager
     from app.services.self_reflection import self_reflection
@@ -401,7 +399,7 @@ def _build_runtime_context(app: FastAPI, user_input: str, requested: dict | None
 def _build_case_outputs(result: dict) -> list[dict]:
     outputs = []
 
-    def _append(agent: str, details: dict | None) -> None:
+    def _append(agent: str, details: Optional[dict]) -> None:
         if not isinstance(details, dict) or not details:
             return
         summary = (
@@ -784,7 +782,7 @@ def _check_provider_auth(request: Request) -> None:
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 
-def _extract_ticker_symbol(text: str) -> str | None:
+def _extract_ticker_symbol(text: str) -> Optional[str]:
     import re
 
     company_map = {
@@ -816,7 +814,7 @@ def _extract_ticker_symbol(text: str) -> str | None:
 
 def _select_provider_tool_call(
     user_input: str, route: dict, tools: list[dict], tool_choice
-) -> dict | None:
+) -> Optional[dict]:
     if not tools:
         return None
     if tool_choice == "none":
@@ -924,7 +922,7 @@ def _split_stream_text(text: str, target_size: int = 80) -> list[str]:
     return chunks
 
 
-def _sse_event(payload: dict, event: str | None = None) -> str:
+def _sse_event(payload: dict, event: Optional[str] = None) -> str:
     prefix = f"event: {event}\n" if event else ""
     return prefix + f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
@@ -1440,7 +1438,7 @@ def _embed_text(text: str, dimensions: int = 256) -> list[float]:
 
 
 def _build_chat_completion_response(
-    model: str, case_response: dict, tool_call: dict | None = None
+    model: str, case_response: dict, tool_call: Optional[dict] = None
 ) -> dict:
     content = case_response.get("final_answer", "")
     prompt_tokens = _approx_tokens(case_response.get("user_input", ""))
@@ -1485,7 +1483,7 @@ def _build_chat_completion_response(
 
 
 def _build_responses_api_response(
-    model: str, case_response: dict, tool_call: dict | None = None
+    model: str, case_response: dict, tool_call: Optional[dict] = None
 ) -> dict:
     content = case_response.get("final_answer", "")
     prompt_tokens = _approx_tokens(case_response.get("user_input", ""))
@@ -1529,7 +1527,7 @@ def _build_responses_api_response(
 
 
 async def _stream_chat_completion_response(
-    model: str, case_response: dict, tool_call: dict | None = None
+    model: str, case_response: dict, tool_call: Optional[dict] = None
 ):
     stream_id = f"chatcmpl-{uuid.uuid4().hex}"
     created = int(time.time())
@@ -1596,7 +1594,7 @@ async def _stream_chat_completion_response(
 
 
 async def _stream_responses_api_response(
-    model: str, case_response: dict, tool_call: dict | None = None
+    model: str, case_response: dict, tool_call: Optional[dict] = None
 ):
     response_id = f"resp_{uuid.uuid4().hex}"
     created = int(time.time())
@@ -1638,7 +1636,7 @@ async def _stream_responses_api_response(
     )
 
 
-def _frontend_server_path() -> str | None:
+def _frontend_server_path() -> Optional[str]:
     import pathlib
 
     frontend_dir = os.getenv("NEXT_STANDALONE_DIR", "").strip()
