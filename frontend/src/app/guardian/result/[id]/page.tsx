@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { AlertTriangle, CheckCircle, ShieldAlert, Phone, Globe, CreditCard, Tag } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ShieldAlert, Phone, Globe, CreditCard, Tag, Activity } from 'lucide-react';
 
 import { guardianClient } from '@/lib/api';
 
