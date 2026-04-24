@@ -1,0 +1,3 @@
+# Pending patches directory
+# This directory stores patches awaiting human review
+# Format: {patch_id}.patch.json

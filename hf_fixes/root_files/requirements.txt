@@ -1,0 +1,38 @@
+# ── Janus backend requirements — HF Spaces compatible ────────────────────────
+# Pin versions to avoid breaking changes on HF Space rebuilds
+
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+python-multipart==0.0.12
+
+# HTTP client
+httpx==0.27.2
+
+# AI / LLM
+langchain==0.3.7
+langchain-core==0.3.15
+langchain-community==0.3.7
+langgraph==0.2.56
+
+# Market data — primary free source (no rate limits for daily data)
+yfinance==0.2.44
+
+# HF Spaces persistence
+huggingface_hub==0.26.0
+
+# Research / search
+tavily-python==0.5.0
+
+# Monitoring (optional — remove if Space is RAM-constrained)
+# prometheus-fastapi-instrumentator==7.0.0
+
+# Utilities
+python-dotenv==1.0.1
+aiofiles==24.1.0
+tenacity==9.0.0
+
+# Data processing
+numpy==1.26.4

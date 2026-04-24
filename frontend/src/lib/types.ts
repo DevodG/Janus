@@ -1,0 +1,191 @@
+// Core types
+export interface RouteDecision {
+  task_family: string;
+  domain_pack: string;
+  complexity: string;
+  execution_mode: string;
+  risk_level: string;
+}
+
+export interface AgentOutput {
+  agent: string;
+  summary: string;
+  details: Record<string, unknown>;
+  confidence: number;
+}
+
+export interface CaseRecord {
+  case_id: string;
+  user_input: string;
+  route?: RouteDecision;
+  outputs?: AgentOutput[];
+  final_answer?: string;
+  final_answer_preview?: string;
+  saved_at?: string;
+  simulation_id?: string;
+  // Extended fields from /run response
+  final?: {
+    response?: string;
+    summary?: string;
+    confidence?: number;
+    data_sources?: string[];
+  };
+  domain?: string;
+  query_type?: string;
+  cached?: boolean;
+  elapsed_seconds?: number;
+  learned?: boolean;
+  learning_reason?: string;
+  adaptive_context?: Record<string, any>;
+  research?: Record<string, any>;
+  finance?: Record<string, any>;
+  simulation?: Record<string, any>;
+  planner?: Record<string, any>;
+  verifier?: Record<string, any>;
+  guardian?: {
+    risk_score: number;
+    is_scam: boolean;
+    reason: string;
+    safe_action: string;
+    details: Record<string, any>;
+  };
+}
+
+export interface SimulationRecord {
+  simulation_id: string;
+  title: string;
+  prediction_goal: string;
+  status: 'submitted' | 'running' | 'completed' | 'failed';
+  report?: string;
+  case_id?: string;
+  remote_payload?: Record<string, unknown>;
+}
+
+// Health and config types
+export interface HealthResponse {
+  status: string;
+  version: string;
+}
+
+export interface ProviderHealth {
+  configured: boolean;
+  reachable: boolean;
+  status_code: number | null;
+}
+
+export interface DeepHealthResponse extends HealthResponse {
+  checks: {
+    memory_dir_writable: boolean;
+    prompt_files: Record<string, boolean>;
+    prompts_loaded: boolean;
+    primary_provider: string;
+    primary_provider_health: ProviderHealth;
+    fallback_provider: string;
+    fallback_provider_health: ProviderHealth;
+    openrouter_key_present: boolean;
+    openai_key_present: boolean;
+    ollama_enabled: boolean;
+    tavily_enabled: boolean;
+    newsapi_enabled: boolean;
+    alphavantage_enabled: boolean;
+    mirofish_enabled: boolean;
+    mirofish_health: {
+      reachable: boolean;
+      status_code: number | null;
+      body: string;
+    };
+    httpx_available: boolean;
+    langgraph_available: boolean;
+    dotenv_available: boolean;
+  };
+}
+
+export interface ConfigStatusResponse {
+  app_version: string;
+  primary_provider: string;
+  fallback_provider: string;
+  openrouter_key_present: boolean;
+  ollama_enabled: boolean;
+  mirofish_enabled: boolean;
+  tavily_enabled: boolean;
+  newsapi_enabled: boolean;
+  alphavantage_enabled: boolean;
+  memory_dir: string;
+  prompts_dir: string;
+}
+
+// Request types
+export interface AnalyzeRequest {
+  user_input?: string;
+  url?: string;
+  image_base64?: string;
+  source?: string;
+  context?: Record<string, any>;
+}
+
+export interface EvidenceItem {
+  source: string;
+  signal: string;
+  value?: string | number | boolean | null;
+  severity: string;
+  explanation: string;
+}
+
+export interface OfficialVerify {
+  brand?: string | null;
+  instruction: string;
+  official_site?: string | null;
+}
+
+export interface ScamGuardianResponse {
+  id: string;
+  text: string;
+  source: string;
+  risk_score: number;
+  decision: string;
+  reasons: string[];
+  intent: {
+    urgency: number;
+    impersonation: number;
+    payment: number;
+    fear: number;
+  };
+  entities: {
+    phones: string[];
+    upi_ids: string[];
+    domains: string[];
+    brands: string[];
+    crypto?: string[];
+    accounts?: string[];
+  };
+  evidence?: EvidenceItem[];
+  claimed_brand?: string | null;
+  official_verify?: OfficialVerify | null;
+  next_steps?: string[];
+  similarity?: {
+    matches: Array<{
+      event_id: string;
+      similarity: number;
+      ts: string;
+      text: string;
+    }>;
+  };
+  verdict_synthesis?: string | null;
+  breadcrumbs?: string[];
+}
+
+export interface SimulationRequest {
+  title: string;
+  seed_text: string;
+  prediction_goal: string;
+  mode?: string;
+  metadata?: {
+    case_id?: string;
+  };
+}
+
+// Prompt types
+export interface PromptInfo {
+  name: string;
+  content: string;
+}

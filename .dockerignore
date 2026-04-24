@@ -1,0 +1,15 @@
+.git
+.venv
+.ruff_cache
+.DS_Store
+frontend/node_modules
+frontend/.next
+backend/.venv
+backend/app/data/*
+!backend/app/data/knowledge/
+!backend/app/data/knowledge/global_markets_seed.json
+backend/data
+data
+*.log
+**/__pycache__
+**/.pytest_cache

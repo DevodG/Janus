@@ -1,0 +1,91 @@
+# ── Python ────────────────────────────────────────────────────
+backend/.venv/
+.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# ── Environment / Secrets ─────────────────────────────────────
+backend/.env
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ── Frontend ──────────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+frontend/out/
+
+# ── Runtime data (never commit) ───────────────────────────────
+backend/data/
+data/
+
+backend/app/data/memory/*.json
+backend/app/data/simulations/*.json
+backend/app/data/logs/*
+backend/app/data/knowledge/*.json
+!backend/app/data/knowledge/global_markets_seed.json
+backend/app/data/skills/*.json
+backend/app/data/prompt_versions/*.json
+backend/app/data/learning/*.json
+backend/app/data/cache/
+backend/app/data/adaptive/
+
+# Daemon + background systems runtime state
+backend/app/data/daemon/
+backend/app/data/curiosity/
+backend/app/data/dreams/
+backend/app/data/fine_tuning/
+backend/app/data/router_state/
+backend/app/data/memory_graph/
+backend/app/data/context/
+backend/app/data/workflows/
+backend/app/data/curation/
+backend/app/data/api_metadata/
+backend/app/data/api_catalog_cache.json
+
+# Sentinel runtime data
+backend/app/data/sentinel/*.json
+backend/app/data/sentinel/pending_patches/*.json
+!backend/app/data/sentinel/.gitkeep
+!backend/app/data/sentinel/pending_patches/.gitkeep
+
+# ── Planning docs (not part of the product) ───────────────────
+ARCHITECTURE_ANALYSIS.md
+ARCHITECTURE_TRANSFORMATION.md
+CACHING_IMPLEMENTATION.md
+INTEGRATION_CHECKLIST.md
+INTELLIGENT_CACHING.md
+KAGGLE_DISTILLATION.md
+KAGGLE_IMPLEMENTATION.md
+PHASE_1_IMPLEMENTATION.md
+SPRINT_TIMELINE.md
+TODO.md
+UNIFIED_IMPLEMENTATION_PLAN.md
+
+# ── OS / Editor ───────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+.vscode/settings.json
+.vscode/launch.json
+*.log
+
+# ── Misc ──────────────────────────────────────────────────────
+*.bak
+*.tmp
+*_new.tsx
+*_old.tsx
+
+# Stray nested directory
+backend/backend/
+backend/app/services/face_landmarker.task

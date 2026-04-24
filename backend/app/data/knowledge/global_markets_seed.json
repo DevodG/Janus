@@ -1,0 +1,102 @@
+[
+  {
+    "id": "seed-global-equity-benchmarks",
+    "title": "Global equity benchmarks",
+    "topic": "global markets",
+    "domain": "finance",
+    "source": "seed:global_markets",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Key benchmark equity indexes include the S&P 500, Nasdaq 100, Dow Jones Industrial Average, FTSE 100, Euro Stoxx 50, DAX, CAC 40, Nikkei 225, Hang Seng, Sensex, and Nifty 50.",
+    "text": "Global market benchmarks: S&P 500 and Nasdaq 100 track large US equities, the Dow Jones tracks major US blue chips, FTSE 100 tracks large UK companies, Euro Stoxx 50 and DAX track major euro area and German equities, Nikkei 225 tracks Japan, Hang Seng tracks Hong Kong, and Sensex and Nifty 50 track major Indian equities. These indexes are commonly used to judge regional market risk appetite, sector leadership, and macro sensitivity."
+  },
+  {
+    "id": "seed-us-megacaps",
+    "title": "US megacap leaders",
+    "topic": "top companies",
+    "domain": "finance",
+    "source": "seed:top_companies",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Major US megacaps often include Apple, Microsoft, Nvidia, Amazon, Alphabet, Meta, Berkshire Hathaway, Tesla, and JPMorgan.",
+    "text": "Top global companies often discussed in US equity markets include Apple, Microsoft, Nvidia, Amazon, Alphabet, Meta Platforms, Berkshire Hathaway, Tesla, and JPMorgan Chase. These names dominate index weights, earnings season narratives, AI infrastructure spending, consumer demand signals, cloud growth, digital advertising, and broad market leadership."
+  },
+  {
+    "id": "seed-semiconductor-stack",
+    "title": "Semiconductor leaders",
+    "topic": "semiconductors",
+    "domain": "technology",
+    "source": "seed:top_companies",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Important semiconductor and chip-equipment names include Nvidia, TSMC, ASML, AMD, Broadcom, Qualcomm, Samsung Electronics, Intel, Micron, and Applied Materials.",
+    "text": "Core semiconductor leaders include Nvidia for AI accelerators, TSMC for foundry capacity, ASML for extreme ultraviolet lithography equipment, AMD and Broadcom for compute and networking exposure, Qualcomm for mobile and edge chips, Samsung Electronics for memory and foundry, Intel for CPU and foundry transition, Micron for memory, and Applied Materials for semiconductor equipment. Semiconductor supply, AI capex, memory pricing, and export controls often move these companies together."
+  },
+  {
+    "id": "seed-energy-majors",
+    "title": "Energy majors",
+    "topic": "energy markets",
+    "domain": "finance",
+    "source": "seed:top_companies",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Important energy names include Saudi Aramco, Exxon Mobil, Chevron, Shell, BP, and TotalEnergies, with Brent and WTI crude acting as major reference prices.",
+    "text": "Energy market leadership is often tracked through Saudi Aramco, Exxon Mobil, Chevron, Shell, BP, and TotalEnergies. Brent crude and WTI crude are the two most watched oil benchmarks. Oil prices are influenced by OPEC decisions, geopolitics, global demand, shipping disruptions, refinery capacity, and the US dollar."
+  },
+  {
+    "id": "seed-global-banks",
+    "title": "Global banking leaders",
+    "topic": "banks",
+    "domain": "finance",
+    "source": "seed:top_companies",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Large global banks often monitored by investors include JPMorgan, Bank of America, Goldman Sachs, Morgan Stanley, HSBC, UBS, and ICBC.",
+    "text": "Large global financial institutions include JPMorgan Chase, Bank of America, Goldman Sachs, Morgan Stanley, HSBC, UBS, and ICBC. Bank stocks tend to react to interest-rate expectations, credit quality, deposit growth, capital markets activity, trading income, and regulatory changes."
+  },
+  {
+    "id": "seed-asia-market-leaders",
+    "title": "Asia market leaders",
+    "topic": "asia markets",
+    "domain": "finance",
+    "source": "seed:global_markets",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Key Asian market names include TSMC, Samsung Electronics, Toyota, Sony, Tencent, Alibaba, Reliance Industries, HDFC Bank, TCS, and Infosys.",
+    "text": "Asian market leadership often revolves around TSMC and Samsung Electronics in semiconductors, Toyota and Sony in Japan, Tencent and Alibaba in China internet, and Reliance Industries, HDFC Bank, ICICI Bank, TCS, and Infosys in India. Asia market sentiment is highly sensitive to the China growth cycle, export demand, currency moves, and semiconductor supply chains."
+  },
+  {
+    "id": "seed-europe-market-leaders",
+    "title": "Europe market leaders",
+    "topic": "europe markets",
+    "domain": "finance",
+    "source": "seed:global_markets",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Important European companies include ASML, SAP, Novo Nordisk, Nestle, Roche, Siemens, LVMH, and TotalEnergies.",
+    "text": "Major European large-cap companies include ASML, SAP, Novo Nordisk, Nestle, Roche, Siemens, LVMH, and TotalEnergies. European equities often respond to European Central Bank policy, euro strength, industrial demand, luxury spending, health-care innovation, and energy prices."
+  },
+  {
+    "id": "seed-india-market-core",
+    "title": "India market core names",
+    "topic": "india markets",
+    "domain": "finance",
+    "source": "seed:global_markets",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Key Indian market names often include Reliance Industries, HDFC Bank, ICICI Bank, Infosys, TCS, Bharti Airtel, Larsen and Toubro, and Hindustan Unilever.",
+    "text": "India market discussion often centers on Nifty 50 and Sensex along with heavyweight companies such as Reliance Industries, HDFC Bank, ICICI Bank, TCS, Infosys, Bharti Airtel, Larsen and Toubro, and Hindustan Unilever. India equities react strongly to domestic growth, RBI policy, oil prices, elections, capital flows, and private-sector capex."
+  },
+  {
+    "id": "seed-central-banks-and-macro",
+    "title": "Central banks and macro drivers",
+    "topic": "macro drivers",
+    "domain": "policy",
+    "source": "seed:macro",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "The Federal Reserve, European Central Bank, Bank of Japan, People's Bank of China, and Reserve Bank of India are major macro drivers for global markets.",
+    "text": "Top market-moving macro institutions include the Federal Reserve, European Central Bank, Bank of Japan, People's Bank of China, and Reserve Bank of India. Investors watch inflation, bond yields, credit spreads, labor markets, GDP, oil prices, and the US dollar because these variables influence valuations, sector leadership, and capital flows across global markets."
+  },
+  {
+    "id": "seed-commodities-and-fx",
+    "title": "Commodities and foreign exchange watchpoints",
+    "topic": "commodities and fx",
+    "domain": "finance",
+    "source": "seed:macro",
+    "saved_at": "2026-04-19T00:00:00Z",
+    "summary": "Common macro watchpoints include Brent crude, WTI crude, gold, copper, natural gas, DXY, EURUSD, and USDJPY.",
+    "text": "Important cross-asset watchpoints include Brent crude and WTI crude for oil, gold as a defensive asset, copper as a growth-sensitive industrial metal, natural gas for energy stress, the DXY dollar index, EURUSD, and USDJPY. These instruments help explain inflation pressure, commodity demand, geopolitical stress, and risk appetite across equities and bonds."
+  }
+]
