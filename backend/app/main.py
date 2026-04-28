@@ -1876,20 +1876,20 @@ def create_app() -> FastAPI:
             "features": {
                 "simulation": os.getenv("SIMULATION_ENABLED", "true") == "true",
                 "sentinel": os.getenv("SENTINEL_ENABLED", "true") == "true",
-                "learning": os.getenv("LEARNING_ENABLED", "false") == "true",
-                "adaptive": os.getenv("ADAPTIVE_INTELLIGENCE_ENABLED", "false")
-                == "true",
-                "training": os.getenv("CONTINUOUS_TRAINING_ENABLED", "false") == "true",
+                "learning": True, # Enabled by persistence manager
+                "adaptive": os.getenv("ADAPTIVE_INTELLIGENCE_ENABLED", "false") == "true",
+                "training": bool(os.getenv("KAGGLE_CONFIG")),
                 "curiosity": os.getenv("CURIOSITY_ENGINE_ENABLED", "false") == "true",
             },
             "data_sources": {
-                "yfinance": True,  # always available, no key needed
+                "yfinance": True,
                 "alphavantage": bool(os.getenv("ALPHAVANTAGE_API_KEY")),
                 "finnhub": bool(os.getenv("FINNHUB_API_KEY")),
                 "fmp": bool(os.getenv("FMP_API_KEY")),
                 "eodhd": bool(os.getenv("EODHD_API_KEY")),
                 "tavily": bool(os.getenv("TAVILY_API_KEY")),
                 "newsapi": bool(os.getenv("NEWS_API_KEY") or os.getenv("NEWSAPI_KEY")),
+                "kaggle": bool(os.getenv("KAGGLE_CONFIG")),
             },
             "persistence": {
                 "hf_store": bool(os.getenv("HF_STORE_REPO")),
