@@ -29,7 +29,7 @@ except ImportError:
 
 CURIOSITY_DIR = Path(DATA_DIR) / "curiosity"
 MAX_DISCOVERIES = 200
-LLM_TIMEOUT = 45
+LLM_TIMEOUT = 120
 
 # Default seed interests — used when nothing has been learned yet (e.g. after HF restart)
 DEFAULT_SEED_INTERESTS = {

@@ -27,7 +27,7 @@ except ImportError:
 
 DREAMS_DIR = Path(DATA_DIR) / "dreams"
 MAX_DREAMS_STORED = 50   # rolling window
-LLM_TIMEOUT = 45         # seconds per dream cycle LLM call
+LLM_TIMEOUT = 120        # seconds per dream cycle LLM call
 
 
 def _call_with_timeout(fn, timeout: float):

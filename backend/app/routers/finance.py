@@ -13,7 +13,7 @@ Exposes domain pack capabilities directly as API endpoints:
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.domain_packs.finance.ticker_resolver import extract_tickers, resolve_ticker
@@ -99,6 +99,35 @@ def analyze_text(req: AnalyzeTextRequest):
     except Exception as e:
         logger.error(f"Text analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Analysis failed")
+
+
+@router.post("/analyze/emotion-conflict")
+async def analyze_emotion_conflict(
+    audio: UploadFile = File(...), 
+    transcript: str = Form(...)
+):
+    """
+    Cross-modal emotion conflict detection.
+    Compares spoken audio tone vs transcript meaning in VAD space.
+    """
+    import tempfile
+    import os
+    from app.services.mmsa_engine import mmsa_engine
+
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        f.write(await audio.read())
+        tmp = f.name
+        
+    try:
+        # The MMSA engine handles wav2vec2, DistilBERT, VAD projection, and fusion
+        result = mmsa_engine.analyze(audio_path=tmp, transcript=transcript)
+        return result
+    except Exception as e:
+        logger.error(f"Emotion conflict analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
 
 
 # ── Ticker Intelligence ───────────────────────────────────────────────────────

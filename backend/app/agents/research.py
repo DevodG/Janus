@@ -17,6 +17,11 @@ from app.agents.api_discovery import discover_apis, call_discovered_api
 from app.config import load_prompt, CRAWLER_ENABLED, NEWS_API_KEY, TAVILY_API_KEY
 from app.memory import knowledge_store
 from app.services.external_sources import deep_web_research_bundle
+from app.services.distillation_engine import KnowledgeDistiller
+from app.services.metrics_collector import MetricsCollector
+
+distiller = KnowledgeDistiller()
+metrics = MetricsCollector()
 
 logger = logging.getLogger(__name__)
 
@@ -286,6 +291,7 @@ def news_search(query: str, max_articles: int = 5) -> list[dict]:
 
 
 def run(state: dict) -> dict:
+    start_time_research = time.perf_counter()
     route = state.get("route", {})
     intent = route.get("intent", state.get("user_input", ""))
     domain = route.get("domain", "general")
@@ -445,6 +451,17 @@ def run(state: dict) -> dict:
             f"[Finance Data]\n{json.dumps(state['finance'], indent=2)}"
         )
 
+    # NEW: Distilled Domain Insights
+    model_insights = []
+    if domain != "general":
+        domain_model = distiller.load_model(domain)
+        if domain_model:
+            model_insights = distiller.query_model(domain_model, intent, top_k=3)
+            if model_insights:
+                formatted = "\n".join(f"• {insight}" for insight in model_insights)
+                context_blocks.append(f"[Distilled Domain Insights ({domain})]\n{formatted}")
+                logger.info(f"[RESEARCH-MODEL] Injected {len(model_insights)} insights for {domain}")
+
     # Build context block
     context_str = (
         "\n\n".join(context_blocks)
@@ -585,5 +602,17 @@ def run(state: dict) -> dict:
         "top_sources": deep_brief.get("top_sources", []),
         "key_points": deep_brief.get("key_points", []),
     }
+
+    # Log metrics
+    try:
+        metrics.log_query(
+            domain=domain,
+            model_enhanced=len(model_insights) > 0,
+            insight_count=len(model_insights),
+            latency_ms=(time.perf_counter() - start_time_research) * 1000 if 'start_time_research' in locals() else 0,
+            query=intent
+        )
+    except Exception:
+        pass
 
     return {**state, "research": result}

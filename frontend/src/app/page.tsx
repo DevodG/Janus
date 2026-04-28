@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, Zap, ArrowUp, Brain, MessageSquare, ShieldAlert, ChevronRight } from 'lucide-react';
-import { apiClient } from '@/lib/api';
+import { Send, Sparkles, Zap, ArrowUp, Brain, MessageSquare, ShieldAlert, ChevronRight, Volume2, Loader2, Square } from 'lucide-react';
+import { apiClient, getApiBaseUrl } from '@/lib/api';
 
 // ─── Types ───────────────────────────────────────────────
 interface Message {
@@ -139,6 +139,52 @@ function ThinkingIndicator({ stage }: { stage: string }) {
 // ─── Message Bubble ───────────────────────────────────────
 function MessageBubble({ message, isLatest }: { message: Message; isLatest: boolean }) {
   const isUser = message.role === 'user';
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [isTypingDone, setIsTypingDone] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlayAudio = async () => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioRef.current && !audioRef.current.paused) {
+        // Just in case it's playing but state is out of sync
+        audioRef.current.pause();
+    }
+
+    try {
+      setIsLoadingAudio(true);
+      const res = await fetch(`${getApiBaseUrl()}/voice/synthesize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: message.content }),
+      });
+
+      if (!res.ok) throw new Error('Speech synthesis failed');
+      
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => { setIsPlaying(false); setIsLoadingAudio(false); };
+      
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  };
 
   let content = message.content;
   let thoughtProcess = '';
@@ -251,11 +297,35 @@ function MessageBubble({ message, isLatest }: { message: Message; isLatest: bool
         {/* Response content */}
         <div className="text-[15px] text-[#d1d5db] leading-[1.7] whitespace-pre-wrap">
           {isLatest ? (
-            <Typewriter text={content} speed={6} />
+            <Typewriter text={content} speed={6} onComplete={() => setIsTypingDone(true)} />
           ) : (
             content
           )}
         </div>
+        
+        {/* Play Audio Button */}
+        {(!isLatest || isTypingDone) && !isUser && content && (
+            <div className="mt-3 flex">
+                <button
+                    onClick={handlePlayAudio}
+                    disabled={isLoadingAudio}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        isPlaying 
+                            ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' 
+                            : 'bg-white/[0.03] text-gray-400 border border-white/[0.05] hover:bg-white/[0.08] hover:text-gray-200'
+                    }`}
+                >
+                    {isLoadingAudio ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : isPlaying ? (
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                    ) : (
+                        <Volume2 className="w-3.5 h-3.5" />
+                    )}
+                    {isLoadingAudio ? 'Synthesizing...' : isPlaying ? 'Stop' : 'Listen'}
+                </button>
+            </div>
+        )}
       </div>
     </motion.div>
   );

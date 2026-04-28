@@ -106,7 +106,7 @@ OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY", "")
 HUGGINGFACE_KEY = os.getenv("HUGGINGFACE_API_KEY", os.getenv("HF_TOKEN", ""))
 CF_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
 CF_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
-TIMEOUT = 90
+TIMEOUT = 120
 OLLAMA_REACHABILITY_TIMEOUT = 1.5
 
 
@@ -276,7 +276,7 @@ def _call_cloudflare(messages: List[Dict[str, str]], **kwargs) -> str:
 def _call_ollama(messages: List[Dict[str, str]], **kwargs) -> str:
     """Ollama — local fallback."""
     base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    model = os.getenv("OLLAMA_MODEL", "llama3.2")
+    model = os.getenv("OLLAMA_MODEL", "llama3")
 
     body = {
         "model": model,

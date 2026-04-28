@@ -289,3 +289,23 @@ class SentinelCycleReport(BaseModel):
     patches_applied: int
     patches_pending_review: int
     capability_snapshot: CapabilitySnapshot
+
+
+# Kaggle Training & Metrics Schemas
+
+class ModelTrainingResult(BaseModel):
+    """Result of a domain model training cycle."""
+    domain: str
+    selected_pairs: int
+    size_kb: float
+    avg_relevance: float
+    timestamp: str
+
+class ModelMetrics(BaseModel):
+    """Impact of distilled models on query quality."""
+    total_queries: int
+    enhanced_queries: int
+    enhancement_rate: str
+    avg_insights: float
+    avg_latency_ms: float
+    domains: Dict[str, int]

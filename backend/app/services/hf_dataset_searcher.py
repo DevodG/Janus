@@ -17,7 +17,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-# High-quality instruction-tuning datasets to prioritize
+# High-quality instruction-tuning and multimodal emotion datasets
 CURATED_DATASETS = [
     {
         "name": "HuggingFaceH4/instruction-dataset",
@@ -54,6 +54,19 @@ CURATED_DATASETS = [
         "description": "Truthful question answering",
         "size": "~800 examples",
         "topics": ["truthfulness", "factual", "reasoning"],
+    },
+    # ── Cross-modal emotion datasets for DissonanceEngine calibration ──
+    {
+        "name": "dair-ai/emotion",
+        "description": "Text emotion dataset — suitable alternative for CMU-MOSEI sentiment calibration",
+        "size": "~20,000 tweets",
+        "topics": ["emotion", "sentiment", "text", "dissonance"],
+    },
+    {
+        "name": "confit/CREMA-D",
+        "description": "CREMA-D (publicly accessible) — 7,442 clips, 6 emotions, 91 actors of diverse ethnicity",
+        "size": "~7,442 clips",
+        "topics": ["emotion", "audio", "speech", "dissonance", "crema-d"],
     },
 ]
 
@@ -193,14 +206,17 @@ class HFDatasetSearcher:
             # Get dataset info
             ds_info = api.dataset_info(dataset_name)
 
-            # Try to get a small sample from the dataset card or README
+            card_data = getattr(ds_info, "card_data", {})
+            dataset_info = card_data.get("dataset_info", {}) if hasattr(card_data, "get") else {}
+            description = ""
+            if isinstance(dataset_info, dict):
+                description = dataset_info.get("description", "")
+            elif isinstance(dataset_info, list) and len(dataset_info) > 0 and isinstance(dataset_info[0], dict):
+                description = dataset_info[0].get("description", "")
+
             sample_data = {
                 "dataset_name": dataset_name,
-                "description": getattr(ds_info, "card_data", {})
-                .get("dataset_info", {})
-                .get("description", "")
-                if hasattr(ds_info, "card_data") and ds_info.card_data
-                else "",
+                "description": description,
                 "tags": getattr(ds_info, "tags", []) or [],
                 "downloads": getattr(ds_info, "downloads", 0) or 0,
             }

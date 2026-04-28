@@ -167,6 +167,26 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Observation/classification init failed: %s", e)
 
+    # 4e. Kaggle Training and Persistence (HF Spaces)
+    try:
+        from app.services.model_training_scheduler import ModelTrainingScheduler
+        from app.services.curation.persistence_manager import PersistenceManager
+        from app.services.metrics_collector import MetricsCollector
+
+        persistence = PersistenceManager()
+        # Pull data on startup to survive restarts
+        persistence.download_all()
+        
+        scheduler = ModelTrainingScheduler()
+        app.state.training_scheduler = scheduler
+        app.state.metrics_collector = MetricsCollector()
+        
+        # Start training schedule in background
+        asyncio.create_task(scheduler.start_schedule(interval_hours=168))
+        logger.info("Kaggle training and persistence services ready")
+    except Exception as e:
+        logger.error("Kaggle/Persistence init failed: %s", e)
+
     try:
         await _start_frontend_server()
     except Exception as e:
@@ -761,17 +781,20 @@ async def _execute_case_request(app: FastAPI, body: dict) -> dict:
 
     result = await run_case(user_input, runtime_context)
     final = result.get("final", {})
+    research_data = result.get("research", {})
     response = {
         "case_id": result.get("case_id"),
         "user_input": user_input,
         "route": _normalize_route(result.get("route")),
-        "research": result.get("research", {}),
+        "research": research_data,
         "planner": result.get("planner", {}),
         "verifier": result.get("verifier", {}),
         "simulation": result.get("simulation"),
         "finance": result.get("finance"),
         "final": final,
         "final_answer": final.get("response") or final.get("summary") or "",
+        "model_enhanced": research_data.get("model_enhanced", False),
+        "model_insights": research_data.get("model_insights", []),
         "elapsed_seconds": round(time.perf_counter() - started_at, 1),
     }
     response["outputs"] = _build_case_outputs(response)
@@ -1813,8 +1836,10 @@ def create_app() -> FastAPI:
     # Sentinel (always on, checks internal feature flag for logic)
     from app.routers.sentinel import router as sentinel_router
     from app.routers.status import router as status_router
+    from app.routers.voice import router as voice_router
     app.include_router(sentinel_router)
     app.include_router(status_router)
+    app.include_router(voice_router)
 
     # ── Health (supports HEAD for HF health checker) ──────────────────────
     @app.api_route("/health", methods=["GET", "HEAD"])
@@ -1829,6 +1854,13 @@ def create_app() -> FastAPI:
             "version": "1.0.0",
             "error_detail": getattr(getattr(app, "state", None), "graph_error", "none"),
         }
+
+    @app.get("/metrics/model-impact")
+    async def get_model_metrics(request: Request):
+        collector = getattr(request.app.state, "metrics_collector", None)
+        if not collector:
+            raise HTTPException(status_code=503, detail="Metrics collector not initialized")
+        return collector.get_stats()
 
     @app.get("/health/graph_error")
     async def health_graph_error():

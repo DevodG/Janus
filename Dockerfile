@@ -38,7 +38,7 @@ COPY --from=frontend-builder /frontend-standalone /app/frontend
 
 COPY backend/ ./backend/
 RUN ln -sf /app/backend/app /app/app
-RUN mkdir -p /app/backend/app/data/context /app/backend/app/data/daemon /app/backend/app/data/adaptive /app/backend/app/data/knowledge /app/backend/app/data/memory /app/backend/app/data/simulations
+RUN mkdir -p /app/backend/app/data/context /app/backend/app/data/daemon /app/backend/app/data/adaptive /app/backend/app/data/knowledge /app/backend/app/data/memory /app/backend/app/data/simulations /app/backend/app/data/distilled_models /app/backend/app/data/metrics /app/backend/app/data/kaggle
 
 ENV PATH=/opt/venv/bin:$PATH
 ENV PYTHONUNBUFFERED=1

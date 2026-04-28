@@ -112,7 +112,10 @@ class KnowledgeStore:
         domain: str = "general",
         top_k: int = 5,
         limit: Optional[int] = None,
+        **kwargs,
     ) -> list[dict]:
+        if kwargs:
+             logger.debug(f"KnowledgeStore.search ignoring: {kwargs}")
         results = []
         query_lower = query.lower()
         requested = limit or top_k

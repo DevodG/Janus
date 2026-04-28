@@ -137,6 +137,9 @@ class NewsPulse:
         """Fetch from NewsAPI.org."""
         url = f"https://newsapi.org/v2/everything?q={topic}&sortBy=publishedAt&language=en&pageSize=10&apiKey={key}"
         r = httpx.get(url, timeout=10)
+        if r.status_code == 429:
+            logger.warning("[NEWS] NewsAPI rate limited (429)")
+            return []
         r.raise_for_status()
         return r.json().get("articles", [])
 

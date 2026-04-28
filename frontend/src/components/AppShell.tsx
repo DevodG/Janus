@@ -7,7 +7,7 @@ import { getApiBaseUrl } from '@/lib/api';
 import {
   MessageSquare, Globe, BarChart3, Layers, Activity,
   Zap, Shield, Terminal, Settings, Plus,
-  ChevronLeft, ChevronRight, Menu, X, Brain
+  ChevronLeft, ChevronRight, Menu, X, Brain, Mic
 } from 'lucide-react';
 
 const navSections = [
@@ -26,6 +26,7 @@ const navSections = [
     items: [
       { path: '/guardian/intake', label: 'Forensic Intake', icon: Plus },
       { path: '/guardian/journey', label: 'Journey Graph', icon: Activity },
+      { path: '/guardian/dissonance', label: 'Deception Radar', icon: Mic },
     ],
   },
   {

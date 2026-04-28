@@ -236,7 +236,7 @@ class ContinuousSelfTrainer:
         for topic in topics_to_crawl:
             try:
                 # Search knowledge store for existing knowledge
-                existing = knowledge_store.search(topic, limit=5)
+                existing = knowledge_store.search(topic, top_k=5)
                 if len(existing) < 3:
                     # Need more knowledge on this topic
                     knowledge_added += 1

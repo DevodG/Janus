@@ -41,6 +41,7 @@ alpha-vantage>=2.3.0
 
 # HF Spaces persistence
 huggingface_hub>=0.26.0
+kaggle>=1.6.0
 
 # Research / search
 tavily-python>=0.5.0
@@ -57,3 +58,9 @@ datasets>=3.0.0
 # Monitoring
 prometheus-fastapi-instrumentator>=7.1.0
 textblob>=0.18.0
+
+# Audio / Prosody / Cross-modal Emotion
+librosa>=0.10.0          # prosody extraction: F0, RMS, speech rate
+scipy>=1.11.0            # cosine divergence in VAD space
+edge-tts>=0.14.0         # edge TTS speech synthesis
+# funasr>=1.1.0          # optional: emotion2vec UPGRADE 2 (gate with USE_EMOTION2VEC=true)
