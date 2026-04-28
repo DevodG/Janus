@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, Field
 from typing import Optional, List
 
 class AnalyzeRequest(BaseModel):
@@ -12,3 +12,11 @@ class FeedbackRequest(BaseModel):
     is_scam: bool
     correct_category: Optional[str] = None
     notes: Optional[str] = None
+
+class KnowledgeIngestionRequest(BaseModel):
+    """Request to ingest knowledge."""
+    topics: List[str] = Field(..., description="Topics to ingest knowledge about")
+
+class SkillDistillRequest(BaseModel):
+    """Request to distill skills."""
+    min_frequency: int = Field(default=3, description="Minimum pattern frequency")

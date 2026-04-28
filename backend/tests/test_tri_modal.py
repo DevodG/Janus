@@ -13,8 +13,10 @@ sys.path.append(os.path.join(os.getcwd(), "backend"))
 
 def generate_probes():
     print("--- 🛠️ Generating Tri-Modal Probes ---")
+    # Use script directory as base
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     # 1. Audio Probe
-    audio_path = "tests/test_audio.wav"
+    audio_path = os.path.join(base_dir, "test_audio.wav")
     with wave.open(audio_path, 'wb') as f:
         f.setnchannels(1)
         f.setsampwidth(2)
@@ -22,7 +24,7 @@ def generate_probes():
         f.writeframes(struct.pack('h', 0) * 44100)
     
     # 2. Video Probe (using OpenCV)
-    video_path = "tests/test_video.mp4"
+    video_path = os.path.join(base_dir, "test_video.mp4")
     import cv2
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_path, fourcc, 10.0, (640, 480))

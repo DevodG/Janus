@@ -7,4 +7,15 @@ from app.schemas.response import (
     OfficialVerify,
     LearningStatusResponse,
     LearningInsightsResponse,
+    KnowledgeItem,
+    Skill,
+    SourceTrust,
+    PromptVersion,
+    FreshnessScore,
+)
+from app.schemas.request import (
+    AnalyzeRequest,
+    FeedbackRequest,
+    KnowledgeIngestionRequest,
+    SkillDistillRequest,
 )
