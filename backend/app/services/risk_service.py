@@ -18,8 +18,15 @@ class RiskService:
         risk_score += intent.impersonation * 40
         risk_score += intent.payment * 30
         
-        if intent.urgency > 0.8: reasons.append("Aggressive urgency detected")
-        if intent.impersonation > 0.8: reasons.append("Possible high-authority impersonation")
+        if intent.urgency > 0.6: 
+            risk_score += 20
+            reasons.append("Aggressive urgency detected (Psychological Trigger)")
+        if intent.impersonation > 0.6: 
+            risk_score += 25
+            reasons.append("Possible high-authority impersonation detected")
+        if intent.fear > 0.6:
+            risk_score += 20
+            reasons.append("Fear-based manipulation detected (Coercive Trigger)")
 
         # 2. Entity Rules (Depth: Cross-Entity Matching)
         if entities.upi_ids and entities.domains:
@@ -53,9 +60,20 @@ class RiskService:
             risk_score += (dissonance * 40)
             reasons.append("Emotional Dissonance: Content conflicts with emotional tone")
 
-        # 5. Optimization: Market Factual Dissonance
-        # If brands contains a ticker (mock check)
+        # 5. Optimization: Market & Brand Factual Dissonance
         for brand in entities.brands:
+            # Brand-Domain Mismatch (ZeroTrust Core)
+            if entities.domains:
+                brand_lower = brand.lower()
+                for domain in entities.domains:
+                    domain_lower = domain.lower()
+                    # If brand mentioned but domain doesn't match official brand domain
+                    # Very simple check for now
+                    if brand_lower in ["sbi", "hdfc", "icici", "axis", "paytm", "amazon", "flipkart"]:
+                        if brand_lower not in domain_lower:
+                            risk_score += 40
+                            reasons.append(f"Brand Mismatch: Claimed brand '{brand}' does not match link destination '{domain}'")
+
             status = market_watcher.get_watchlist_status()
             match = next((s for s in status if s["symbol"] == brand.upper()), None)
             if match and match["price"]:

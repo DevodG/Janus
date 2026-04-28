@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Link, Image as ImageIcon, Search, AlertTriangle, CheckCircle, XCircle, Info, Hash, ExternalLink, Brain, Sparkles } from 'lucide-react';
+import { ShieldAlert, Link, Image as ImageIcon, Search, AlertTriangle, CheckCircle, XCircle, Info, Hash, ExternalLink, Brain, Sparkles, Upload } from 'lucide-react';
 import { apiClient, guardianClient } from '@/lib/api';
 import type { ScamGuardianResponse } from '@/lib/types';
 import LiveEvidencePanel from './guardian/LiveEvidencePanel';
@@ -17,6 +17,9 @@ export default function ScamGuardian() {
   const [guardianStatus, setGuardianStatus] = useState<any>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const liveEvents = useGuardianFeed();
 
   // Load history and status on mount
@@ -35,13 +38,18 @@ export default function ScamGuardian() {
   };
 
   const handleAnalyze = async () => {
-    if (!inputValue.trim() && activeTab !== 'image') return;
+    if (!inputValue.trim() && !selectedFile) return;
     setIsAnalyzing(true);
     setFeedbackSubmitted(null);
     try {
       const payload: any = { source: 'guardian-ui' };
       if (activeTab === 'text') payload.text = inputValue;
       if (activeTab === 'url') payload.url = inputValue;
+      
+      if (activeTab === 'image' && selectedFile) {
+        const base64 = await fileToBase64(selectedFile);
+        payload.image_base64 = base64;
+      }
       
       const res = await guardianClient.analyze(payload);
       setResult(res as unknown as ScamGuardianResponse);
@@ -50,6 +58,23 @@ export default function ScamGuardian() {
       console.error(err);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -156,10 +181,35 @@ export default function ScamGuardian() {
                 />
               )}
               {activeTab === 'image' && (
-                <div className="h-32 border-2 border-dashed border-white/[0.06] rounded-2xl flex flex-col items-center justify-center text-gray-700 group hover:border-indigo-500/30 transition-all cursor-pointer">
-                   <ImageIcon size={24} className="mb-2 group-hover:text-indigo-500 transition-colors" />
-                   <span className="text-[10px] uppercase tracking-widest font-black">Upload Forensic Screenshot</span>
-                   <span className="text-[9px] mt-1 opacity-40">MMSA Emotional Dissonance engine will process.</span>
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`h-32 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer relative overflow-hidden group ${
+                    previewUrl ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/[0.06] text-gray-700 hover:border-indigo-500/30'
+                  }`}
+                >
+                   <input 
+                     type="file" 
+                     ref={fileInputRef}
+                     onChange={handleFileChange}
+                     accept="image/*"
+                     className="hidden"
+                   />
+                   {previewUrl ? (
+                     <>
+                       <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+                       <div className="relative z-10 flex flex-col items-center">
+                         <Upload size={20} className="mb-1 text-indigo-400" />
+                         <span className="text-[10px] uppercase font-black text-indigo-400">Change Image</span>
+                         <span className="text-[9px] text-gray-500 mt-0.5">{selectedFile?.name}</span>
+                       </div>
+                     </>
+                   ) : (
+                     <>
+                       <ImageIcon size={24} className="mb-2 group-hover:text-indigo-500 transition-colors" />
+                       <span className="text-[10px] uppercase tracking-widest font-black">Upload Forensic Screenshot</span>
+                       <span className="text-[9px] mt-1 opacity-40">MMSA Emotional Dissonance engine will process.</span>
+                     </>
+                   )}
                 </div>
               )}
 

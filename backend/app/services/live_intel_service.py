@@ -234,6 +234,18 @@ class LiveIntelService:
                 if isinstance(result, list):
                     evidence.extend(result)
 
+        # Local Heuristic Evidence (Works without API keys)
+        for domain in domains:
+            tld = "." + domain.split(".")[-1]
+            if tld in [".top", ".xyz", ".buzz", ".live", ".work"]:
+                evidence.append({
+                    "source": "Janus Infrastructure Scan",
+                    "signal": "risky_tld",
+                    "value": tld,
+                    "severity": "medium",
+                    "explanation": f"Domain uses a risky TLD ({tld}) frequently used in phishing."
+                })
+        
         # Deduplicate similar evidence entries
         seen = set()
         cleaned: List[dict] = []
