@@ -1,7 +1,7 @@
 {
   "null": [
     {
-      "timestamp": 1776893843.7160408,
+      "timestamp": 1776893994.423158,
       "dissonance": 2.0,
       "deception": 0.7,
       "tags": [
@@ -10,15 +10,62 @@
       ]
     }
   ],
-  "null": [
+  "local_file": [
     {
-      "timestamp": 1776893994.423158,
-      "dissonance": 2.0,
-      "deception": 0.7,
-      "tags": [
-        "Sarcasm/Irony Detected",
-        "High-Fidelity Cognitive Dissonance"
-      ]
+      "timestamp": 1777406616.0122612,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777406652.5540118,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777406667.401427,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777409135.1982982,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777409162.639246,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777409299.2074208,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777409308.106467,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
+    },
+    {
+      "timestamp": 1777409324.4277701,
+      "dissonance": 0.0,
+      "deception": 0.0,
+      "sarcasm": false,
+      "tags": []
     }
   ]
 }

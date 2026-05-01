@@ -244,7 +244,7 @@ class CuriosityEngine:
             return None
 
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             key_insight    = data.get("key_insight", "")
             why_it_matters = data.get("why_it_matters", "")
@@ -285,7 +285,7 @@ class CuriosityEngine:
         if err or not result:
             return []
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             return data.get("topics", [])[:3]
         except Exception:
