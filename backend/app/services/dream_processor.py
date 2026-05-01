@@ -210,7 +210,7 @@ class DreamCycleProcessor:
             return {"insights": [], "patterns_found": 0, "error": str(err)}
 
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             insights = data.get("insights", [])
             if isinstance(insights, list):
@@ -246,7 +246,7 @@ class DreamCycleProcessor:
             return {"hypotheses": [], "hypotheses_generated": 0}
 
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             hyps = data.get("hypotheses", [])
             return {"hypotheses": hyps, "hypotheses_generated": len(hyps)}
@@ -281,7 +281,7 @@ class DreamCycleProcessor:
             return {"corrections": [], "improvements_identified": 0}
 
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             corrections = data.get("corrections", [])
             return {"corrections": corrections, "improvements_identified": len(corrections)}
@@ -314,7 +314,7 @@ class DreamCycleProcessor:
             return {"actions": [], "actions_taken": 0}
 
         try:
-            from app.agents.smart_router import safe_parse
+            from app.agents._model import safe_parse
             data = safe_parse(result)
             actions = data.get("actions", [])
             return {"actions": actions, "actions_taken": len(actions)}
