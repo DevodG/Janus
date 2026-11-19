@@ -1,1 +1,1 @@
-/Users/shashwat/projects/miroorg-basic-v2/backend/app
+backend/app

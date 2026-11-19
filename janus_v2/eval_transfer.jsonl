@@ -1,0 +1,8 @@
+{"id": "tr-01", "question": "Worker A finishes a job alone in 6 hours and worker B finishes it alone in 3 hours. How long do they take working together in hours?", "check": {"type": "numeric", "expected": 2, "tol": 0.02}}
+{"id": "tr-02", "question": "What is the factorial of 6?", "check": {"type": "numeric", "expected": 720, "tol": 0.01}}
+{"id": "tr-03", "question": "Is 29 a prime number? Answer yes or no in words: state whether 29 is prime.", "check": {"type": "contains", "terms": ["prime"]}}
+{"id": "tr-04", "question": "What is the greatest common divisor of 48 and 36?", "check": {"type": "numeric", "expected": 12, "tol": 0.01}}
+{"id": "tr-05", "question": "Convert 98.6 degrees Fahrenheit to Celsius.", "check": {"type": "numeric", "expected": 37, "tol": 0.02}}
+{"id": "tr-06", "question": "What is the reverse of 'orchid' string? Reverse the string 'orchid'.", "check": {"type": "contains", "terms": ["dihcro"]}}
+{"id": "tr-07", "question": "How many vowels are in 'umbrella'?", "check": {"type": "numeric", "expected": 3, "tol": 0.01}}
+{"id": "tr-08", "question": "What is the next number in the sequence 5, 10, 20, 40?", "check": {"type": "numeric", "expected": 80, "tol": 0.01}}

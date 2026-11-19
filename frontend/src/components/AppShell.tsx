@@ -37,6 +37,7 @@ const navSections = [
       { path: '/sentinel', label: 'Sentinel', icon: Shield },
       { path: '/safety', label: 'Safety Gateway', icon: Zap },
       { path: '/prompts', label: 'Prompts', icon: Terminal },
+      { path: '/v2', label: 'Janus V2 Kernel', icon: Brain },
       { path: '/config', label: 'Config', icon: Settings },
     ],
   },

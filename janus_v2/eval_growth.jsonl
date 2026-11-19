@@ -1,0 +1,10 @@
+{"id": "gro-01", "question": "Current assets are $800, inventory is $300, and current liabilities are $250. What is the quick ratio?", "check": {"type": "numeric", "expected": 2, "tol": 0.01}}
+{"id": "gro-02", "question": "Total assets are $2,000 and sales are $1,000. What is asset turnover?", "check": {"type": "numeric", "expected": 0.5, "tol": 0.01}}
+{"id": "gro-03", "question": "Operating income is $80 on revenue of $400. What is the operating margin in percent?", "check": {"type": "numeric", "expected": 20, "tol": 0.02}}
+{"id": "gro-04", "question": "Dividends paid are $40 and net income is $160. What is the dividend payout ratio in percent?", "check": {"type": "numeric", "expected": 25, "tol": 0.02}}
+{"id": "gro-05", "question": "Share price is $90 and book value per share is $30. What is the price-to-book ratio?", "check": {"type": "numeric", "expected": 3, "tol": 0.01}}
+{"id": "gro-06", "question": "Explain what the Sharpe ratio measures.", "check": {"type": "contains", "terms": ["risk", "return"]}}
+{"id": "gro-07", "question": "Explain what WACC means for a company.", "check": {"type": "contains", "terms": ["cost of capital"]}}
+{"id": "gro-08", "question": "Explain what EBITDA stands for and measures.", "check": {"type": "contains", "terms": ["earnings", "interest", "taxes"]}}
+{"id": "gro-09", "question": "Gross profit is $150 on revenue of $500. What is the gross margin in percent?", "check": {"type": "numeric", "expected": 30, "tol": 0.02}}
+{"id": "gro-10", "question": "Explain what a stock split does to share count and price.", "check": {"type": "contains", "terms": ["shares", "price"]}}

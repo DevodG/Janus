@@ -1,0 +1,8 @@
+{"id": "th-01", "question": "A jacket costs $120. It is sold at a 25% discount and then 10% tax is added. What is the final price in dollars?", "check": {"type": "numeric", "expected": 99, "tol": 0.02}}
+{"id": "th-02", "question": "Sara buys notebooks for a total of $34 and pays with $50. How much change does she get in dollars?", "check": {"type": "numeric", "expected": 16, "tol": 0.01}}
+{"id": "th-03", "question": "A class buys 14 pens at $3 each. What is the total cost in dollars?", "check": {"type": "numeric", "expected": 42, "tol": 0.01}}
+{"id": "th-04", "question": "A car drives 100 km in 2 hours, then 60 km in 1 hours. What is its average speed in total in km/h?", "check": {"type": "numeric", "expected": 53.3333, "tol": 0.02}}
+{"id": "th-05", "question": "A phone costs $200 with a 10% discount. What is the discounted price in dollars?", "check": {"type": "numeric", "expected": 180, "tol": 0.01}}
+{"id": "th-06", "question": "Tom buys pencils for a total of $17 and pays with $20. How much change does he get in dollars?", "check": {"type": "numeric", "expected": 3, "tol": 0.01}}
+{"id": "th-07", "question": "A team buys 9 balls at $5 each. What is the total cost in dollars?", "check": {"type": "numeric", "expected": 45, "tol": 0.01}}
+{"id": "th-08", "question": "A bus drives 90 km in 3 hours, then 90 km in 2 hours. What is its average speed in total in km/h?", "check": {"type": "numeric", "expected": 36, "tol": 0.01}}

@@ -1,6 +1,6 @@
 ---
-title: Janus ZeroTrust Sentinel
-emoji: 🛡️
+title: Janus FABLE-5.2
+emoji: 🧠
 colorFrom: indigo
 colorTo: blue
 sdk: docker
@@ -8,97 +8,114 @@ app_file: app.py
 pinned: true
 ---
 
-# 🛡️ Janus: The Multimodal Intelligence Sentinel
+# 🧠 Janus FABLE-5.2 — Flagship Architecture for Broad Learning & Evolution
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Next.js 14](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-orange)](https://huggingface.co/spaces/DevodG/Janus-backend)
+A self-improving, ground-connected general agent. It reasons through a global
+workspace, learns from its own experience behind an evidence gate, roams the
+web in a real browser, lives on live sensor data, and owns its brain — 1.83M
+parameters trained from scratch on this machine.
 
-Janus is a state-of-the-art, self-evolving **Multimodal Intelligence System** designed for high-fidelity financial research and proactive **ZeroTrust** threat interception. It operates as a cognitive agentic swarm that doesn't just process data—it **dreams**, **reflects**, and **detects deception** in real-time.
+> **Honest identity:** a corrigible agentic system, not a claimed AGI. Every
+> score it reports is measured on frozen evals it cannot edit. Breadth is
+> earned per-eval, never asserted.
 
----
-
-## 🧠 Core Intelligence: Cross-Modal Emotion Conflict Detection
-> **"What you say ≠ how you feel."**
-
-One of Janus's flagship forensic capabilities is identifying **Emotional Dissonance**. Humans often rely on tone to detect sarcasm or deception; Janus automates this by measuring the divergence between spoken tone and transcript meaning.
-
-### 🔬 The Dissonance Engine
-*   **Audio Embedding**: High-fidelity prosody analysis using **wav2vec2** (`ehcalabres/wav2vec2-lg-xlsr-en-speech-emotion-recognition`).
-*   **Text Embedding**: Sentiment extraction using **DistilBERT** (`bhadresh-savani/distilbert-base-uncased-emotion`).
-*   **Fusion Logic**: Computes a **Cosine Divergence Score** between the two probability distributions.
-*   **Dataset Calibration**: Continuous self-refinement against the **CMU-MOSEI** and **CREMA-D** datasets to identify subtle sarcasm, irony, and emotional masking.
-
----
-
-## 🌊 Cognitive Signal Flow
-Every signal entering the Janus cluster undergoes a multi-stage cognitive transformation:
+## The pipeline
 
 ```mermaid
 graph TD
-    A[User Input / Multimodal Signal] --> B[InputProcessor]
-    B --> C{SmartRouter 4D}
-    
-    C -- "Task: Finance" --> D[Domain Pack: AlphaVantage/NewsAPI]
-    C -- "Task: Forensic" --> E[MMSA Dissonance Engine]
-    C -- "Task: Research" --> F[Deep-Web Crawler / Jina Reader]
-    
-    D & E & F --> G[Knowledge Evolution Layer]
-    G --> H[Cognitive Synthesis & Reflection]
-    H --> I[Final Intelligence Brief]
-    
-    subgraph "The Reflection Loop"
-        H --> J[Dream Engine: Speculative Scenarios]
-        J --> K[Self-Reflection: Bias/Hallucination Check]
-        K --> H
-    end
+    A[Request / sensor tick / goal] --> B[Input guardrail]
+    B --> C[Global workspace: plan -> task ledger]
+    C --> D[Thinking engine]
+    D -->|predict| E[World model forecast + assumption]
+    D -->|search| F[Worker branches: reasoners, programs, neural brain, routed models]
+    F --> G[Evaluator: verifier rubric picks winner]
+    G --> H[Output guardrail + receipted tools]
+    H --> I[Answer + trace + progress ledger]
+    I --> J[(Single-writer memory: workspace, cases, temporal facts, skills, corrections)]
+    J --> K[Metacognition: calibration logged]
+    J --> L[Self-model rewritten with measured gaps]
+    K --> M[Improvement loop: candidates -> frozen eval gate -> promote or discard]
+    L --> M
+    M --> F
 ```
 
----
+The loop's single rule: **no capability ships without beating the frozen eval
+with zero regression** — else it is discarded and the live system is untouched.
+That is what makes self-improvement measurement, not theater.
 
-## 🛡️ ZeroTrust & Forensic Guardian
-Janus is built to intercept "Scam Journeys" before they manifest:
-- **Active Interception**: Autonomous signal squashing for confirmed malicious trajectories.
-- **Relational Threat Mapping**: Tracks scattered entities (phone numbers, URLs, crypto addresses) in the persistent **ScamGraph**.
-- **Forensic Safety Gateway**: A dedicated portal for deep-probing SMS, chat logs, and malicious files using OCR and multimodal analysis.
+## Capabilities
 
-## 📈 Financial & Adaptive Intelligence
-- **Autonomous Curiosity**: Continuous background scanning of global markets and sentiment shifts via the **Curiosity Engine**.
-- **Mirofish Simulation**: Predictive scenario modeling (Monte Carlo) for market volatility and opportunity forecasting.
-- **Knowledge Ingestion**: Automatic distillation of web evidence into a persistent, freshness-aware knowledge base.
+| Layer | Implementation |
+|---|---|
+| Thinking | Predict-first + verifier-guided search (`thinking.py`); multi-step programmatic reasoners |
+| Own brain | Transformer from scratch (`neural.py`, 1.83M params, INT8 1.8MB) — gate status: benched at 1.7% held-out, retraining |
+| Memory | Single writer: working / episodic / temporal facts / success-rated skills / verbatim corrections (`memory.py`) |
+| Learning | Self-curriculum with ground truth, self-distillation, gated evolution (`curriculum.py`, `loop.py`) |
+| Web | Keyless crawlers (trafilatura/bs4 tiers, DDG search, RSS), real Chromium browser (`crawlers.py`, `browser.py`) |
+| Tools | Receipted registry + approval rings; MCP client for 120k+ servers (`tools.py`, `mcp_client.py`) |
+| Sensors | Weather, air quality, earthquakes, ISS, news — all live, zero keys (`sensors.py`) |
+| Social | Keyless reading (HN live); posting draft-first behind credentials + per-action approval (`social.py`), world ring |
+| Perception | Text affect sensor; V1 dissonance engine folded in (`perception.py`, `perception_audio.py`) — sensor, never lie detector |
+| Safety | Input/output guardrails, quality quarantine, diff-logged revertible memory edits |
 
----
+## Scores (frozen evals, first-attempt)
 
-## 🚀 Deployment & Tech Stack
+| Axis | Cases | SCORE |
+|---|---|---|
+| Finance (frozen) | 20 | 1.0000 |
+| Growth | 10 | 1.0000 |
+| General | 24 | 1.0000 |
+| Transfer (unseen types) | 8 | 1.0000 |
+| Multi-step thinking | 8 | 1.0000 |
 
-### Tech Stack
-*   **Backend**: FastAPI, PyTorch, Transformers (wav2vec2, BERT), MediaPipe, librosa.
-*   **Frontend**: Next.js 14, Tailwind CSS, Lucide React, Framer Motion.
-*   **Data**: ScamGraph (Relational), Mirofish (Simulation), Jina (Web Reader).
+Run them: `python -m janus_v2.eval --eval-file janus_v2/eval_general.jsonl`
+(and the other three files).
 
-### Setup & Run
-Janus is fully containerized. To run the complete cluster locally:
+## Run it
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/DevodG/Janus.git
-cd Janus
+git clone https://github.com/DevodG/Janus.git && cd Janus
 
-# 2. Run the unified development environment
-./run-dev.sh
+# API (port 7860)
+python3 -m janus_v2.api
+
+# Console (Next.js, /v2 page)
+cd frontend && npm install && npm run dev   # open http://localhost:3000/v2
+
+# Tests
+python3 -m pytest janus_v2/tests -q
+
+# Improvement loop (one cycle)
+python3 -m janus_v2.loop --rounds 12
+
+# Self-curriculum (Janus practices, finds its gaps, rewrites its self-model)
+python3 -m janus_v2.curriculum --n 40
+
+# Train Janus's own brain from scratch (local MPS/CPU)
+python3 -m janus_v2.neural --steps 1200
+python3 -m janus_v2.quantize   # INT8 + held-out audit
 ```
 
-### Environment Secrets
-To enable full cognitive capability, configure the following in `.env`:
-- `HUGGINGFACE_API_KEY`: Core reasoning models.
-- `TAVILY_API_KEY`: Deep-web research access.
-- `NEWS_API_KEY`: Real-time financial signals.
-- `ALPHAVANTAGE_API_KEY`: Market data integration.
+Offline-first: with no keys set, Janus reasons with its own registry and
+crawlers. Opt-in models: `JANUS_LLM_BASE_URL=http://localhost:11434/v1`
+(Ollama) or `ANTHROPIC_API_KEY`, selected by `JANUS_PROVIDER_ORDER`.
 
----
+## Layout
 
-> [!IMPORTANT]
-> Janus is an **Autonomous Learning System**. Every interaction refines its internal "Skills" and "Prompt Weights," making it more precise with every case it resolves.
+```
+janus_v2/              # the system (primary)
+  agent.py             # kernel: workspace + plan/act/verify/synthesize
+  reasoners.py         # pluggable worker registry (math/finance/program/language/knowledge)
+  thinking.py          # predict + verifier-guided search
+  neural.py quantize.py# own brain + INT8 with held-out audit
+  memory.py            # single-writer memory + quality quarantine
+  curriculum.py loop.py# self-learning + gated evolution
+  crawlers.py browser.py sensors.py social.py  # feet, eyes, nervous system
+  mcp_client.py        # MCP ecosystem plug-in
+  api.py               # service: /run /run/stream /live /eval /loop/status /model
+  eval*.jsonl          # frozen + growth + general + transfer + think evals
+archive_v1/            # V1 mutators and duplicate stores (relocated, not deleted)
+backend/ frontend/     # legacy V1 reference + console (V2 page at /v2)
+```
 
-*Janus Adapts. Janus Dreams. Janus Protects.*
+*Janus Adapts. Janus Dreams. Janus Protects. Every change on evidence.*

@@ -1,0 +1,24 @@
+{"id": "gen-01", "question": "What is the average of 12, 18, and 30?", "check": {"type": "numeric", "expected": 20, "tol": 0.01}}
+{"id": "gen-02", "question": "What is the next number in the sequence 2, 6, 12, 20, 30?", "check": {"type": "numeric", "expected": 42, "tol": 0.01}}
+{"id": "gen-03", "question": "If x + 7 = 19, what is x?", "check": {"type": "numeric", "expected": 12, "tol": 0.01}}
+{"id": "gen-04", "question": "A fair coin is flipped twice. What is the probability of two heads as a percent?", "check": {"type": "numeric", "expected": 25, "tol": 0.02}}
+{"id": "gen-05", "question": "Convert 10 kilometers to miles (1 km = 0.621371 miles). Give the value in miles.", "check": {"type": "numeric", "expected": 6.21371, "tol": 0.02}}
+{"id": "gen-06", "question": "A train travels 120 km in 2 hours. What is its average speed in km/h?", "check": {"type": "numeric", "expected": 60, "tol": 0.01}}
+{"id": "gen-07", "question": "Explain what photosynthesis does in a plant.", "check": {"type": "contains", "terms": ["sunlight", "energy"]}}
+{"id": "gen-08", "question": "Explain why objects fall to the ground on Earth.", "check": {"type": "contains", "terms": ["gravity"]}}
+{"id": "gen-09", "question": "Write Python code defining a function add that returns the sum of two numbers.", "check": {"type": "contains", "terms": ["def add", "return"]}}
+{"id": "gen-10", "question": "If a rectangle has length 8 and width 5, what is its area?", "check": {"type": "numeric", "expected": 40, "tol": 0.01}}
+{"id": "gen-11", "question": "What is 15 percent of 240?", "check": {"type": "numeric", "expected": 36, "tol": 0.01}}
+{"id": "gen-12", "question": "Explain what the water cycle does with water on Earth.", "check": {"type": "contains", "terms": ["evaporat", "condens"]}}
+{"id": "gen-13", "question": "What is the capital of Japan?", "check": {"type": "contains", "terms": ["tokyo"]}}
+{"id": "gen-14", "question": "What is the largest planet in the solar system?", "check": {"type": "contains", "terms": ["jupiter"]}}
+{"id": "gen-15", "question": "What is the chemical formula for water?", "check": {"type": "contains", "terms": ["h2o"]}}
+{"id": "gen-16", "question": "Who was the first president of the United States?", "check": {"type": "contains", "terms": ["washington"]}}
+{"id": "gen-17", "question": "What is the boiling point of water in degrees Celsius?", "check": {"type": "numeric", "expected": 100, "tol": 0.01}}
+{"id": "gen-18", "question": "How many sides does a hexagon have?", "check": {"type": "numeric", "expected": 6, "tol": 0.01}}
+{"id": "gen-19", "question": "What is the largest ocean on Earth?", "check": {"type": "contains", "terms": ["pacific"]}}
+{"id": "gen-20", "question": "How many bones in the adult human skeleton?", "check": {"type": "numeric", "expected": 206, "tol": 0.01}}
+{"id": "gen-21", "question": "What is the currency of Japan?", "check": {"type": "contains", "terms": ["yen"]}}
+{"id": "gen-22", "question": "What do mitochondria do in a cell?", "check": {"type": "contains", "terms": ["energy"]}}
+{"id": "gen-23", "question": "What is the speed of light in km/s, approximately?", "check": {"type": "numeric", "expected": 300000, "tol": 0.02}}
+{"id": "gen-24", "question": "How many continents are there on Earth?", "check": {"type": "numeric", "expected": 7, "tol": 0.01}}
