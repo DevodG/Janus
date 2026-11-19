@@ -45,6 +45,23 @@ def market_quote(symbol: str) -> dict:
     return out
 
 
+def deep_search(query: str) -> dict:
+    """Massive-mode tiered web research (deep.py): search -> crawl -> roam."""
+    from janus_v2 import deep
+    out = deep.deep_search(query)
+    _receipt("deep_search", {"query": query, "pages": len(out["evidence"]),
+                             "seconds": out["seconds"]})
+    return out
+
+
+def swarm(question: str) -> dict:
+    """Massive-mode parallel workers (swarm.py): decompose, fan out, fuse."""
+    from janus_v2 import swarm as _swarm
+    out = _swarm.run_swarm(question)
+    _receipt("swarm", {"workers": len(out["workers"]), "fused": bool(out["fused"])})
+    return out
+
+
 def live_sensor(sensor: str) -> dict:
     """Live sensor grid reading (sensors.py): weather/quakes/air/ISS/news."""
     from janus_v2 import sensors
@@ -107,6 +124,8 @@ TOOLS = {
     "crawl_feed": (crawl_feed, RING_READ),
     "social_search": (social_search, RING_READ),
     "live_sensor": (live_sensor, RING_READ),
+    "deep_search": (deep_search, RING_READ),
+    "swarm": (swarm, RING_READ),
     "social_post": (social_post, RING_WORLD),
     "code_exec": (code_exec, RING_WRITE),
 }

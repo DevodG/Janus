@@ -1,5 +1,5 @@
 ---
-title: Janus FABLE-5.2
+title: Janus
 emoji: 🧠
 colorFrom: indigo
 colorTo: blue
@@ -8,7 +8,7 @@ app_file: app.py
 pinned: true
 ---
 
-# 🧠 Janus FABLE-5.2 — Flagship Architecture for Broad Learning & Evolution
+# 🧠 Janus — A Self-Improving, Ground-Connected General Agent
 
 A self-improving, ground-connected general agent. It reasons through a global
 workspace, learns from its own experience behind an evidence gate, roams the

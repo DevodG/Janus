@@ -1,4 +1,4 @@
-"""model_router.py — FABLE-5.2 model layer: route to the strongest available brain.
+"""model_router.py — model layer: route to the strongest available brain.
 
 Providers (first healthy wins, order via JANUS_PROVIDER_ORDER):
   openai-compat  JANUS_LLM_BASE_URL (+ JANUS_LLM_MODEL/API_KEY) — incl. Ollama
@@ -14,7 +14,7 @@ import os
 
 from janus_v2 import reasoners
 
-MODEL_NAME = "JANUS FABLE-5.2"
+MODEL_NAME = "JANUS"
 MODEL_CARD = {
     "name": MODEL_NAME,
     "kind": "flagship agentic system (routed models + gated self-improvement)",

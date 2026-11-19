@@ -28,6 +28,8 @@ class Memory:
             valid_from REAL, valid_to REAL, episode_id TEXT, source TEXT,
             confidence REAL)"""
         )
+        self.db.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS facts_fts USING fts5(subject, predicate, object)")
         self.db.commit()
         self._diff_log = self.root / "memory_diffs.jsonl"
 
@@ -68,8 +70,36 @@ class Memory:
         self.db.execute(
             "INSERT INTO facts VALUES(?,?,?,?,?,NULL,?,?,?)",
             (fid, subject, predicate, str(obj), now, episode_id or "", source, confidence))
+        self.db.execute("INSERT INTO facts_fts(rowid, subject, predicate, object) "
+                        "VALUES((SELECT MAX(rowid) FROM facts),?,?,?)",
+                        (subject, predicate, str(obj)))
         self.db.commit()
         return fid
+
+    # -- retrieval: FTS5 keyword + overlap fallback, fused ------------------
+    def retrieve(self, query: str, top: int = 8) -> list[dict]:
+        """Hybrid retrieval: FTS5 BM25 first, word-overlap rerank. Provenance kept."""
+        fused: dict[str, float] = {}
+        rows: dict[str, dict] = {}
+        try:
+            for subj, pred, obj, rank in self.db.execute(
+                    "SELECT f.subject, f.predicate, f.object, facts_fts.rank FROM facts_fts "
+                    "JOIN facts f ON f.rowid = facts_fts.rowid "
+                    "WHERE facts_fts MATCH ? AND f.valid_to IS NULL ORDER BY facts_fts.rank LIMIT ?",
+                    (query, top)):
+                key = subj + pred + obj
+                fused[key] = fused.get(key, 0.0) + (1.0 / (1.0 + abs(rank)))
+                rows[key] = {"subject": subj, "predicate": pred, "object": obj}
+        except Exception:
+            pass
+        for f in self.facts_now():
+            s = self._overlap(query, f"{f['subject']} {f['predicate']} {f['object']}")
+            if s > 0:
+                key = f["subject"] + f["predicate"] + f["object"]
+                fused[key] = fused.get(key, 0.0) + 0.3 * s
+                rows[key] = f
+        ranked = sorted(fused.items(), key=lambda kv: -kv[1])[:top]
+        return [rows[k] for k, _ in ranked]
 
     def facts_now(self, subject: str | None = None) -> list[dict]:
         q = "SELECT subject,predicate,object,source,confidence FROM facts WHERE valid_to IS NULL"

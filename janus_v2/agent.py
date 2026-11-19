@@ -42,10 +42,10 @@ def build_context(question: str, memory, reflection: str = "") -> list[dict]:
     epi = memory.episodic_for(question)
     if epi:
         parts["episodic"] = "\n".join(str(e.get("answer", ""))[:300] for e in epi)
-    facts = memory.facts_now()
+    facts = memory.retrieve(question)  # stage 4: hybrid FTS5+overlap retrieval
     if facts:
         parts["facts"] = "\n".join(
-            f"{f['subject']} {f['predicate']} {f['object']} [{f['source']}]" for f in facts[:10])
+            f"{f['subject']} {f['predicate']} {f['object']}" for f in facts[:10])
     if reflection:
         parts["reflection"] = reflection
     for name, text in parts.items():
@@ -60,17 +60,28 @@ def build_context(question: str, memory, reflection: str = "") -> list[dict]:
     return msgs
 
 
-def plan(question: str) -> list[str]:
-    """Decompose into steps. The plan, not a domain, drives the pipeline."""
+def understand(question: str) -> dict:
+    """Stage 2: parse intent, quantities, entities — the plan's input."""
     q = question.lower()
-    steps = ["recall-memory"]
-    if any(c.isdigit() for c in q):
-        steps += ["parse-quantities", "compute"]
-    elif "explain" in q or "what" in q or "who" in q or "how many" in q:
-        steps += ["recall-knowledge"]
-    else:
-        steps += ["reason"]
-    steps += ["verify", "synthesize"]
+    from janus_v2.perception import perceive_text
+    return {"intent": ("compute" if any(c.isdigit() for c in q)
+                       else "explain" if q.startswith(("explain", "what", "who", "how"))
+                       else "query"),
+            "quantities": [float(x.replace(",", "")) for x in
+                           __import__("re").findall(r"-?\d[\d,]*(?:\.\d+)?", q)],
+            "affect": perceive_text(question),
+            "needs_tools": any(k in q for k in ("search", "quote", "live", "news", "browse"))}
+
+
+def plan(question: str) -> list[str]:
+    """Stage 3: decompose. The plan, not a domain, drives the pipeline."""
+    u = understand(question)
+    steps = ["perceive", "understand", "retrieve"]
+    if u["needs_tools"]:
+        steps.append("use-tools")
+    steps.append({"compute": "compute", "explain": "recall-knowledge",
+                  "query": "reason"}[u["intent"]])
+    steps += ["reflect", "verify", "synthesize", "learn"]
     return steps
 
 
@@ -82,7 +93,7 @@ def new_workspace(question: str) -> dict:
 
 
 def llm(messages: list[dict]) -> tuple[str, float]:
-    """Model call behind one function — FABLE-5.2 router (strongest healthy brain)."""
+    """Model call behind one function — model router (strongest healthy brain)."""
     from janus_v2 import model_router
     text, conf, _provider = model_router.route(messages)
     return text, conf
@@ -134,6 +145,9 @@ def run(question: str, memory, first_attempt_only: bool = False) -> dict:
     first_attempt_only = SCORE gate path (no retry).
     """
     ws = new_workspace(question)
+    ws["provenance"] = {"stages": ["perceive", "understand", "retrieve",
+                                   "act", "reflect", "verify", "synthesize", "learn"],
+                        "inputs": [question], "stage_outputs": {}}
     ws["task_ledger"] = [{"step": s, "status": "pending"} for s in ws["plan"]]
     ws["progress_ledger"] = []
     trip = guardrail_in(question)
@@ -158,7 +172,7 @@ def run(question: str, memory, first_attempt_only: bool = False) -> dict:
         ws["branches"] = thought["branches"]
         winner = (thought["answer"], thought["confidence"], thought["method"]) \
             if thought["answer"] is not None else None
-        if winner is None:  # no branch fired -> routed model (FABLE-5.2)
+        if winner is None:  # no branch fired -> routed model
             ans, conf = llm(msgs)
             winner = (ans, conf, "model-router")
         ws["answer"], ws["confidence"], ws["method"] = winner
@@ -173,6 +187,7 @@ def run(question: str, memory, first_attempt_only: bool = False) -> dict:
         reflection = "Previous attempt failed checks: " + "; ".join(
             f"{e['check_id']}: expected {e['expected']}, got {e['got']}" for e in ws["errors"])
     trace = {"question": question, "answer": ws["answer"], "confidence": ws["confidence"],
+             "provenance": ws.get("provenance", {}),
              "attempts": attempt, "errors": ws["errors"], "tools": ws["tools"],
              "sources": ws["sources"], "plan": ws["plan"], "steps": ws["steps"],
              "method": ws["method"], "claims": ws["claims"],

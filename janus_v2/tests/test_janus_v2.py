@@ -118,6 +118,18 @@ def test_workspace_trace_has_plan_and_method(mem):
     assert tr["plan"] and tr["method"] == "math.average" and tr["steps"]
 
 
+def test_six_stage_pipeline_and_retrieval(mem):
+    mem.add_fact("AAPL", "thesis", "bullish on AI chips", source="test")
+    mem.add_fact("TSLA", "thesis", "bearish on margins", source="test")
+    hits = mem.retrieve("AAPL thesis bullish")
+    assert hits and hits[0]["subject"] == "AAPL"
+    tr = agent.run("What is the average of 10 and 20?", mem, first_attempt_only=True)
+    stages = tr["provenance"]["stages"]
+    assert stages == ["perceive", "understand", "retrieve", "act", "reflect",
+                      "verify", "synthesize", "learn"]
+    assert "perceive" in tr["plan"] and "retrieve" in tr["plan"]
+
+
 def test_memory_quality_gate_quarantines_bad_writes(mem):
     assert mem.add_fact("", "is", "x") == ""  # rejected, not stored
     assert mem.facts_now() == []
@@ -149,7 +161,7 @@ def test_model_router_offline_fallback():
     text, conf, provider = model_router.route(
         [{"role": "user", "content": "What is the factorial of 5?"}])
     assert "120" in text and provider.startswith("offline")
-    assert model_router.MODEL_CARD["name"] == "JANUS FABLE-5.2"
+    assert model_router.MODEL_CARD["name"] == "JANUS"
 
 
 def test_stream_endpoint_paces_and_completes():
@@ -159,7 +171,7 @@ def test_stream_endpoint_paces_and_completes():
     with c.stream("POST", "/run/stream", json={"question": "What is 15 percent of 240?"}) as r:
         body = "".join(r.iter_text())
     assert '"done": true' in body and "36" in body
-    assert c.get("/model").json()["name"] == "JANUS FABLE-5.2"
+    assert c.get("/model").json()["name"] == "JANUS"
 
 
 def test_self_curriculum_learns_and_updates_self_model(mem):
@@ -237,6 +249,20 @@ def test_social_posting_guard_and_draft():
     out = tools.call_tool("social_post", platform="mastodon", text="hello janus",
                           preview_token="approved-by-user")
     assert out["posted"] is False and out["draft"]["status"] == "draft"
+
+
+def test_swarm_fuses_worker_results(mem):
+    from janus_v2 import swarm
+    out = swarm.run_swarm("What is the average of 10 and 20?", workers=4)
+    assert out["workers"] and out["fused"] and "15" in out["fused"]["answer"]
+    assert out["provenance"]["fan_out"] >= 2
+
+
+def test_deep_search_provenance_shape():
+    from janus_v2 import deep
+    r = deep.deep_search("Janus AGI architecture", pages=2)
+    assert r["provenance"] and r["provenance"][0]["tier"] == 1
+    assert "evidence" in r and "seconds" in r
 
 
 def test_stub_quote_never_fabricates():
