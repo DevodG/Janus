@@ -67,7 +67,7 @@ def heldout_accuracy(use_quantized: bool, n: int = 60, seed: int = 999) -> float
             nums_exp = evalmod.re.findall(r"-?\d[\d,]*(?:\.\d+)?", expected)
             nums_got = evalmod.re.findall(r"-?\d[\d,]*(?:\.\d+)?", "".join(out))
             passed += bool(nums_exp and nums_got and
-                           abs(float(nums_got[0]) - float(nums_exp[0])) < 0.51)
+                           abs(float(nums_got[0].replace(",", "")) - float(nums_exp[0].replace(",", ""))) < 0.51)
     return round(passed / n, 4)
 
 

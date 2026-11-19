@@ -265,6 +265,13 @@ def test_deep_search_provenance_shape():
     assert "evidence" in r and "seconds" in r
 
 
+def test_train_loop_side_by_side_gate(tmp_path):
+    from janus_v2 import train_loop
+    hist = train_loop.run(steps=60, rounds=1)
+    assert hist and hist[0]["event"] in ("PROMOTED", "DISCARDED")
+    assert "rules_acc" in hist[0] and "brain_acc" in hist[0]
+
+
 def test_stub_quote_never_fabricates():
     out = tools.market_quote("ZZZZINVALID")
     assert out["price"] is None or out["stub"] is False
